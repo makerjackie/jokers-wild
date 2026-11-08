@@ -1,0 +1,27 @@
+{
+  "name": "jokers-wild",
+  "version": "0.1.0",
+  "description": "王炸 / JOKERS WILD: a pure-code animated short about the AI arms race. three.js rendering, synthesized score, one offline HTML file.",
+  "author": "MakerJackie",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "repository": "github:makerjackie/jokers-wild",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "build:min": "node tools/build.mjs --min",
+    "serve": "node tools/serve.mjs 5207",
+    "snap": "node tools/snap.mjs",
+    "contact": "node tools/contact.mjs",
+    "audio": "node tools/render-audio.mjs",
+    "render": "node tools/render.mjs",
+    "pops": "node tools/pops.mjs",
+    "perf": "node tools/perf.mjs",
+    "shots": "python -X utf8 tools/shotlist.py"
+  },
+  "dependencies": {
+    "esbuild": "^0.24.2",
+    "puppeteer-core": "^23.11.1",
+    "three": "^0.170.0"
+  }
+}

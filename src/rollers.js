@@ -1,0 +1,45 @@
+// 《失控》 v2 — small things that roll out from under a card: the ant's bread crumb (1-06) and the kings' crowns (8-06).
+//   makeRollers(ctx) -> { root, update(st.rollers) };  st.rollers = [{ kind: 'crumb' | 'crown', pos, q, scale, side }]
+import * as THREE from 'three';
+import { celMaterial } from './materials.js';
+import { lathe } from './geom.js';
+import { CAMP } from './layout.js';
+
+export const CROWN_R = 0.1;
+export function makeRollers() {
+  const root = new THREE.Group(); root.name = 'rollers';
+  const gold = celMaterial({ color: '#c9a25e', id: 5, gloss: 0.85 });
+  const crumbMat = celMaterial({ color: '#d9a85a', id: 175, gloss: 0.1 });
+  // a crown: a band (lathe), five spikes with balls; a gem in the camp colour
+  const crownGeom = (() => {
+    const g = new THREE.Group();
+    const band = new THREE.Mesh(lathe([[CROWN_R, 0], [CROWN_R * 1.04, 0.012], [CROWN_R, 0.05], [CROWN_R * 0.93, 0.05], [CROWN_R * 0.96, 0.012], [CROWN_R * 0.9, 0]], 32), gold);
+    g.add(band);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const sp = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.06, 8), gold); sp.position.set(Math.cos(a) * CROWN_R, 0.078, Math.sin(a) * CROWN_R); g.add(sp);
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.009, 10, 8), gold); b.position.set(Math.cos(a) * CROWN_R, 0.112, Math.sin(a) * CROWN_R); g.add(b);
+    }
+    return g;
+  })();
+  const crowns = [];
+  for (let i = 0; i < 10; i++) {
+    const c = crownGeom.clone(true);
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.014), celMaterial({ color: i < 5 ? CAMP.CN : CAMP.US, id: 160, gloss: 0.9 }));
+    gem.position.set(0, 0.03, CROWN_R * 1.03); c.add(gem); c.userData.gem = gem;
+    c.visible = false; root.add(c); crowns.push(c);
+  }
+  const crumb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0022, 1), crumbMat); crumb.visible = false; root.add(crumb);
+  function update(list = []) {
+    let ci = 0; crumb.visible = false; for (const c of crowns) c.visible = false;
+    for (const r of list) {
+      const o = r.kind === 'crumb' ? crumb : crowns[ci++];
+      if (!o) continue;
+      o.visible = true; o.position.set(...r.pos);
+      if (r.q) o.quaternion.set(...r.q);
+      o.scale.setScalar(r.scale ?? 1);
+      if (r.kind === 'crown' && r.side) o.userData.gem.material.uniforms && 0;
+    }
+  }
+  return { root, update };
+}

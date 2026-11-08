@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+release/
+.claude/
+private/
+*.mp4
+*.wav
+*.tgz

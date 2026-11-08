@@ -1,0 +1,305 @@
+date,company,country,model,open_weights,headline_claim,source_url
+2023-02-06,Google,US,Bard（发布预告；03-21开放测试）,no,An important next step on our AI journey,https://blog.google/technology/ai/bard-google-ai-search-updates/
+2023-02-07,Microsoft,US,[product] 新必应 Bing Chat（基于GPT-4）,no,"Reinventing search with a new AI-powered Microsoft Bing and Edge, your copilot for the web",https://blogs.microsoft.com/blog/2023/02/07/reinventing-search-with-a-new-ai-powered-microsoft-bing-and-edge-your-copilot-for-the-web/
+2023-02-24,Meta,US,LLaMA（7B–65B；研究许可，权重随后遭泄露）,yes,"a foundational, 65-billion-parameter large language model",https://ai.meta.com/blog/large-language-model-llama-meta-ai/
+2023-03-14,Zhipu (Z.ai),CN,ChatGLM-6B 开源（同日 ChatGLM 千亿对话模型邀测）,yes,支持在单张消费级显卡上进行推理使用,https://finance.sina.cn/tech/2023-03-22/detail-imymsuqf9667390.d.html
+2023-03-14,Anthropic,US,Claude（首版）,no,a next-generation AI assistant,https://www.anthropic.com/news/introducing-claude
+2023-03-14,OpenAI,US,GPT-4,no,the latest milestone in OpenAI's effort in scaling up deep learning,https://openai.com/index/gpt-4-research/
+2023-03-16,Baidu (ERNIE),CN,文心一言 ERNIE Bot（邀请测试）,no,~对标ChatGPT开启邀测；发布会演示为录播,https://www.wsj.com/articles/baidus-chatgpt-rival-ernie-bot-didnt-go-live-at-its-launch-party-522b1119
+2023-04-11,Alibaba (Qwen),CN,通义千问（阿里云峰会发布；04-07起企业邀测）,no,~正式发布大语言模型通义千问,https://www.reuters.com/technology/alibaba-unveils-tongyi-qianwen-an-ai-model-similar-gpt-2023-04-11/
+2023-05-06,iFlytek,CN,讯飞星火认知大模型 V1.0,no,~承诺10月前中文超越当前ChatGPT、英文比肩,http://technode.com/2023/05/08/iflytek-unveils-large-language-model-claims-it-outperforms-chatgpt/
+2023-05-10,Google,US,PaLM 2（I/O 2023）,no,our next generation large language model,https://blog.google/technology/ai/google-palm-2-ai-large-language-model/
+2023-06-15,Baichuan,CN,Baichuan-7B,yes,均取得同尺寸最好的效果,https://github.com/baichuan-inc/Baichuan-7B
+2023-06-25,Zhipu (Z.ai),CN,ChatGLM2-6B,yes,~GSM8K提升571%、上下文扩至32K,https://github.com/THUDM/ChatGLM-6B
+2023-06-27,Baidu (ERNIE),CN,文心大模型3.5,no,在综合能力得分上超过了ChatGPT,https://www.reuters.com/technology/chinas-baidu-says-its-new-ai-beat-chatgpt-some-metrics-2023-06-27/
+2023-07-07,Huawei,CN,盘古大模型3.0（HDC 2023）,no,~面向行业的盘古大模型3.0,http://www.xinhuanet.com/2023-07/07/c_1129737993.htm
+2023-07-11,Anthropic,US,Claude 2,no,"improved performance, longer responses",https://www.anthropic.com/news/claude-2
+2023-07-18,Meta,US,Llama 2,yes,free for research and commercial use,https://about.fb.com/news/2023/07/llama-2/
+2023-08-01,ByteDance (Doubao/Seed),CN,豆包 App 上线（日期仅到月）,no,~字节跳动推出AI对话助手豆包,https://en.wikipedia.org/wiki/Doubao
+2023-08-03,Alibaba (Qwen),CN,Qwen-7B / Qwen-7B-Chat（阿里首次开源）,yes,We release both Qwen-7B and Qwen-7B-Chat,https://github.com/QwenLM/Qwen
+2023-08-15,iFlytek,CN,讯飞星火 V2.0,no,~发布星火V2.0与iFlyCode 1.0,http://technode.com/2023/08/16/iflytek-unveils-updated-llm-sparkdesk-v2-0-and-new-product-iflycode-1-0/
+2023-08-24,Meta,US,Code Llama,yes,~基于Llama 2的开源代码模型,https://ai.meta.com/blog/code-llama-large-language-model-coding/
+2023-08-31,Baidu (ERNIE),CN,文心一言向全社会开放（首批获批）,no,~首批获批向公众开放的生成式AI,https://www.theverge.com/2023/8/31/23853878/baidu-launch-ernie-ai-chatbot-china
+2023-09-06,Baichuan,CN,Baichuan 2（7B/13B）,yes,取得同尺寸最佳的效果,https://github.com/baichuan-inc/Baichuan2
+2023-09-06,TII,other,Falcon 180B（阿联酋）,yes,~当时最大的开放权重模型（180B）,https://huggingface.co/blog/falcon-180b
+2023-09-07,Tencent (Hunyuan),CN,混元大模型（腾讯全球数字生态大会）,no,~面向企业的混元基础模型发布,https://www.cnbc.com/2023/09/07/tencent-releases-ai-model-hunyuan-for-businesses-amid-china-competition.html
+2023-09-25,Alibaba (Qwen),CN,Qwen-14B / Qwen-14B-Chat,yes,We release Qwen-14B and Qwen-14B-Chat,https://github.com/QwenLM/Qwen
+2023-09-25,OpenAI,US,[product] GPT-4V：ChatGPT 能看能听能说,no,"ChatGPT can now see, hear, and speak",https://openai.com/index/chatgpt-can-now-see-hear-and-speak/
+2023-09-27,Mistral,EU,Mistral 7B（磁力链接发布）,yes,the most powerful language model for its size to date,https://mistral.ai/news/announcing-mistral-7b
+2023-10-09,Moonshot (Kimi),CN,Kimi Chat 智能助手,no,~单次对话可处理20万汉字,https://techcrunch.com/2024/02/21/moonshot-ai-funding-china/
+2023-10-17,Baidu (ERNIE),CN,文心大模型4.0（百度世界2023）,no,ERNIE 4.0 has achieved a full upgrade with drastically improved performance,https://www.prnewswire.com/news-releases/baidu-launches-ernie-4-0-foundation-model-leading-a-new-wave-of-ai-native-applications-301958681.html
+2023-10-24,iFlytek,CN,讯飞星火 V3.0（1024开发者节）,no,~称中文能力超越ChatGPT,https://www.scmp.com/tech/big-tech/article/3239031/iflytek-says-its-large-language-model-outperforms-chatgpt-chinese-ai-firm-vows-counter-us-chip-curbs
+2023-10-27,Zhipu (Z.ai),CN,ChatGLM3-6B,yes,10B 以下的基础模型中最强的性能,https://github.com/THUDM/ChatGLM3
+2023-11-02,01.AI,CN,Yi-34B / Yi-6B（Base）,yes,~称登顶HF预训练榜、超越Llama 2,https://github.com/01-ai/Yi
+2023-11-02,DeepSeek,CN,DeepSeek Coder（1.3B–33B）,yes,achieves state-of-the-art performance among open-source code models,https://github.com/deepseek-ai/DeepSeek-Coder
+2023-11-04,xAI,US,Grok-1（早期测试）,no,an AI modeled after the Hitchhiker's Guide to the Galaxy,https://x.ai/news/grok
+2023-11-06,OpenAI,US,GPT-4 Turbo + GPTs（DevDay）,no,~更强、更便宜、128K上下文,https://openai.com/index/new-models-and-developer-products-announced-at-devday/
+2023-11-21,Anthropic,US,Claude 2.1,no,an industry-leading 200K token context window,https://www.anthropic.com/news/claude-2-1
+2023-11-29,DeepSeek,CN,DeepSeek LLM 67B,yes,DeepSeek LLM 67B Base outperforms Llama2 70B Base,https://github.com/deepseek-ai/DeepSeek-LLM
+2023-11-30,Alibaba (Qwen),CN,Qwen-72B / Qwen-1.8B,yes,"We release Qwen-72B and Qwen-72B-Chat, which are trained on 3T tokens",https://github.com/QwenLM/Qwen
+2023-12-06,Google,US,Gemini 1.0（Ultra/Pro/Nano）,no,our largest and most capable AI model,https://blog.google/technology/ai/google-gemini-ai/
+2023-12-11,Mistral,EU,Mixtral 8x7B（12-08先发磁力链接）,yes,the strongest open-weight model with a permissive license,https://mistral.ai/news/mixtral-of-experts
+2024-01-11,DeepSeek,CN,DeepSeekMoE 16B,yes,"comparable performance with DeekSeek 7B and LLaMA2 7B, with only about 40% of computations",https://github.com/deepseek-ai/DeepSeek-MoE
+2024-01-16,Zhipu (Z.ai),CN,GLM-4,no,closely rivals or outperforms GPT-4 in terms of general metrics,https://arxiv.org/abs/2406.12793
+2024-01-30,iFlytek,CN,讯飞星火 V3.5,no,~称语言理解、数学超越GPT-4 Turbo,http://technode.com/2024/01/31/iflytek-claims-the-latest-version-of-its-ai-model-is-as-powerful-as-gpt-4-turbo-on-certain-metrics/
+2024-02-04,Alibaba (Qwen),CN,Qwen1.5（0.5B–72B）,yes,在所有基准测试中都远远超越了Llama2-70B,https://qwenlm.github.io/zh/blog/qwen1.5/
+2024-02-05,DeepSeek,CN,DeepSeekMath 7B,yes,~竞赛级MATH基准51.7%（不借助外部工具）,https://zh.wikipedia.org/wiki/深度求索
+2024-02-08,Google,US,Gemini Ultra 1.0 / Bard 更名 Gemini（Gemini Advanced）,no,~Bard更名Gemini并推出Gemini Advanced,https://blog.google/products/gemini/bard-gemini-advanced-app/
+2024-02-15,Google,US,Gemini 1.5 Pro（100万上下文）,no,Our next-generation model: Gemini 1.5,https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/
+2024-02-15,OpenAI,US,[video] Sora（预告；与Gemini 1.5同日）,no,Sora can generate videos up to a minute long,https://openai.com/index/sora/
+2024-02-21,Google,US,Gemma（2B/7B）,yes,"a family of lightweight, state-of-the-art open models",https://blog.google/technology/developers/gemma-open-models/
+2024-02-26,Mistral,EU,Mistral Large + Le Chat,no,our new cutting-edge text generation model,https://mistral.ai/news/mistral-large
+2024-03-04,Anthropic,US,Claude 3（Opus/Sonnet；03-13 Haiku）,no,sets new industry benchmarks across a wide range of cognitive tasks,https://www.anthropic.com/news/claude-3-family
+2024-03-17,xAI,US,Grok-1 开放权重（314B MoE）,yes,~开放314B参数Grok-1权重,https://x.ai/news/grok-os
+2024-03-18,Moonshot (Kimi),CN,Kimi 200万字无损长上下文（内测）,no,~上下文提升至200万汉字,https://www.ft.com/content/4e6676c8-eaf9-4d4a-a3dc-71a09b220bf8
+2024-03-23,StepFun,CN,Step-1 千亿 / Step-2 万亿参数MoE（预览）,no,~发布万亿参数MoE语言大模型预览版,https://zh.wikipedia.org/wiki/阶跃星辰
+2024-03-27,Databricks,US,DBRX,yes,a new state-of-the-art open LLM,https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm
+2024-03-28,xAI,US,Grok-1.5,no,~长上下文与推理增强,https://x.ai/news/grok-1.5
+2024-04-17,MiniMax,CN,abab 6.5 系列（MoE）,no,~万亿参数MoE大模型abab 6.5,https://finance.sina.com.cn/money/bond/2024-07-30/doc-incfxety7988686.shtml
+2024-04-17,Mistral,EU,Mixtral 8x22B（04-10先发磁力链接）,yes,~更大的开源稀疏MoE,https://mistral.ai/news/mixtral-8x22b
+2024-04-18,Meta,US,Llama 3（8B/70B）,yes,the most capable openly available LLM to date,https://ai.meta.com/blog/meta-llama-3/
+2024-04-23,SenseTime,CN,日日新 SenseNova 5.0,no,better than OpenAI's GPT 4 in most general usage scenarios,https://www.cnbc.com/2024/04/24/sensetime-shares-soar-after-announcing-sensenova-5point0-generative-ai-model.html
+2024-04-23,Microsoft,US,Phi-3,yes,redefining what's possible with SLMs,https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/
+2024-05-06,DeepSeek,CN,DeepSeek-V2（236B MoE；引爆价格战）,yes,"A Strong, Economical, and Efficient Mixture-of-Experts Language Model",https://github.com/deepseek-ai/DeepSeek-V2
+2024-05-13,01.AI,CN,Yi-1.5,yes,~编码、数学、推理与指令遵循进一步提升,https://github.com/01-ai/Yi
+2024-05-13,OpenAI,US,"GPT-4o（Altman 当天发推""her""）",no,"our new flagship model that can reason across audio, vision, and text in real time",https://openai.com/index/hello-gpt-4o/
+2024-05-14,Google,US,Gemini 1.5 Flash + Project Astra + Veo（I/O 2024）,no,~I/O 2024：更快的Flash与通用助手Astra,https://blog.google/technology/ai/google-gemini-update-flash-ai-assistant-io-2024/
+2024-05-15,ByteDance (Doubao/Seed),CN,豆包大模型家族（火山引擎发布）,no,豆包主力模型的定价比行业便宜了99.3%,https://www.nbd.com.cn/articles/2024-05-15/3390692.html
+2024-06-05,Zhipu (Z.ai),CN,GLM-4-9B,yes,We released the GLM-4-9B series of open-source models,https://github.com/THUDM/GLM-4
+2024-06-06,Kuaishou,CN,[video] 可灵 Kling（首发内测）,no,~国产对标Sora的视频生成大模型,https://www.bloomberg.com/opinion/articles/2024-08-14/china-s-ai-video-rush-to-catch-up-to-the-us-is-a-wake-up-call
+2024-06-07,Alibaba (Qwen),CN,Qwen2（0.5B–72B）,yes,均显著超越当前领先的模型，如Llama-3-70B,https://qwenlm.github.io/zh/blog/qwen2/
+2024-06-17,DeepSeek,CN,DeepSeek-Coder-V2,yes,Breaking the Barrier of Closed-Source Models in Code Intelligence,https://github.com/deepseek-ai/DeepSeek-Coder-V2
+2024-06-20,Anthropic,US,Claude 3.5 Sonnet,no,raises the industry bar for intelligence,https://www.anthropic.com/news/claude-3-5-sonnet
+2024-06-21,Huawei,CN,盘古大模型5.0（HDC 2024）,no,~HDC 2024发布盘古5.0,https://elnion.com/2024/06/22/huawei-unveils-new-harmony-os-and-ai-model-in-continued-drive-for-tech-self-reliance/
+2024-06-27,iFlytek,CN,讯飞星火 V4.0,no,ranked number one in eight international mainstream test sets,https://technode.com/2024/06/28/iflytek-chairman-touts-latest-ai-spark-4-0-model-as-comparable-to-gpt-4-turbo-emphasizes-total-self-sufficiency/
+2024-06-27,Google,US,Gemma 2,yes,~第二代开放模型（9B/27B）,https://blog.google/technology/developers/google-gemma-2/
+2024-06-28,Baidu (ERNIE),CN,ERNIE 4.0 Turbo,no,~发布4.0 Turbo；用户数达3亿,https://www.reuters.com/technology/artificial-intelligence/baidu-launches-upgraded-ai-model-says-user-base-hits-300-mln-2024-06-28/
+2024-07-04,StepFun,CN,Step-2 正式版 / Step-1.5V / Step-1X（WAIC 2024）,no,~WAIC发布Step-2正式版,https://zh.wikipedia.org/wiki/阶跃星辰
+2024-07-18,OpenAI,US,GPT-4o mini,no,our most cost-efficient small model,https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/
+2024-07-23,Meta,US,Llama 3.1（405B）,yes,the world's largest and most capable openly available foundation model,https://ai.meta.com/blog/meta-llama-3-1/
+2024-07-24,Mistral,EU,Mistral Large 2（研究许可开放权重）,yes,Large Enough,https://mistral.ai/news/mistral-large-2407
+2024-08-01,Google,US,Gemini 1.5 Pro Exp 0801（谷歌首次登顶Chatbot Arena）,no,~实验版突袭榜首,https://en.wikipedia.org/wiki/Gemini_(language_model)
+2024-08-13,xAI,US,Grok-2,no,~Grok-2 Beta发布,https://x.ai/news/grok-2
+2024-09-05,DeepSeek,CN,DeepSeek-V2.5,yes,融合通用与代码能力的全新开源模型,https://api-docs.deepseek.com/zh-cn/news/news0905
+2024-09-05,HyperWrite,US,Reflection 70B（刷榜丑闻）,yes,~自称the world's top open-source model；第三方无法复现,https://huggingface.co/mattshumer/Reflection-Llama-3.1-70B
+2024-09-12,OpenAI,US,o1-preview / o1-mini,no,designed to spend more time thinking before they respond,https://openai.com/index/introducing-openai-o1-preview/
+2024-09-19,Alibaba (Qwen),CN,Qwen2.5 全家桶（云栖大会）,yes,可能是历史上最大的开源发布,https://qwenlm.github.io/zh/blog/qwen2.5/
+2024-09-25,Meta,US,Llama 3.2（视觉/端侧）,yes,~首个支持视觉的Llama与端侧小模型,https://ai.meta.com/blog/llama-3-2-connect-2024-vision-edge-mobile-devices/
+2024-10-16,01.AI,CN,Yi-Lightning,no,~LMSYS厂商榜与Grok-2并列第三,https://www.ft.com/content/0a6da1bb-2bda-40f3-9645-97877eb0947c
+2024-10-22,Anthropic,US,Claude 3.5 Sonnet（新）+ 3.5 Haiku + computer use,no,a groundbreaking new capability in public beta: computer use,https://www.anthropic.com/news/3-5-models-and-computer-use
+2024-11-05,Tencent (Hunyuan),CN,Hunyuan-Large（389B MoE）,yes,the largest open-source Transformer-based MoE model in the industry,https://github.com/Tencent/Tencent-Hunyuan-Large
+2024-11-14,Google,US,Gemini-Exp-1114（登顶Arena；11-20被GPT-4o更新反超；11-21 Exp-1121夺回）,no,~实验版再次突袭榜首,https://venturebeat.com/ai/google-gemini-unexpectedly-surges-to-no-1-over-openai-but-benchmarks-dont-tell-the-whole-story/
+2024-11-20,DeepSeek,CN,DeepSeek-R1-Lite-Preview,no,媲美 o1-preview 的推理效果,https://api-docs.deepseek.com/zh-cn/news/news1120
+2024-11-28,Alibaba (Qwen),CN,QwQ-32B-Preview,yes,QwQ: 思忖未知之界,https://qwenlm.github.io/zh/blog/qwq-32b-preview/
+2024-12-03,Amazon,US,Amazon Nova,no,~亚马逊自研基础模型家族,https://www.aboutamazon.com/news/aws/amazon-nova-artificial-intelligence-bedrock-aws
+2024-12-05,OpenAI,US,o1 正式版 + ChatGPT Pro（200美元/月）,no,"~""12 Days of OpenAI""第1天",https://openai.com/index/introducing-chatgpt-pro/
+2024-12-06,Meta,US,Llama 3.3 70B,yes,~70B做到接近405B的表现（据Meta）,https://en.wikipedia.org/wiki/Llama_(language_model)
+2024-12-09,OpenAI,US,[video] Sora 正式上线（距预告约10个月）,no,~Sora向付费用户开放,https://openai.com/index/sora-is-here/
+2024-12-10,DeepSeek,CN,DeepSeek-V2.5-1210,yes,~数学、代码与写作能力提升,https://api-docs.deepseek.com/zh-cn/updates
+2024-12-11,Google,US,Gemini 2.0 Flash,no,our new AI model for the agentic era,https://blog.google/technology/google-deepmind/google-gemini-ai-update-december-2024/
+2024-12-20,OpenAI,US,o3 / o3-mini（预告）,no,~o3：ARC-AGI-1半私有集75.7%（高算力87.5%）,https://arcprize.org/blog/oai-o3-pub-breakthrough
+2024-12-26,DeepSeek,CN,DeepSeek-V3（671B MoE）,yes,性能对齐海外领军闭源模型,https://api-docs.deepseek.com/zh-cn/news/news1226
+2025-01-15,MiniMax,CN,MiniMax-01（Text-01 / VL-01）,yes,it can handle up to 4 million tokens during inference,https://github.com/MiniMax-AI/MiniMax-01
+2025-01-20,DeepSeek,CN,DeepSeek-R1（MIT许可）,yes,性能对标 OpenAI o1 正式版,https://api-docs.deepseek.com/zh-cn/news/news250120
+2025-01-20,Moonshot (Kimi),CN,Kimi k1.5,no,an o1-level multi-modal model,https://github.com/MoonshotAI/Kimi-k1.5
+2025-01-22,ByteDance (Doubao/Seed),CN,Doubao-1.5-pro,no,坚持不走捷径，不使用任何其他模型的数据,https://seed.bytedance.com/zh/special/doubao_1_5_pro
+2025-01-23,OpenAI,US,[product] Operator,no,an agent that can go to the web to perform tasks for you,https://openai.com/index/introducing-operator/
+2025-01-28,Alibaba (Qwen),CN,Qwen2.5-Max（除夕发布）,no,Qwen2.5-Max 的表现超越了 DeepSeek V3,https://qwenlm.github.io/zh/blog/qwen2.5-max/
+2025-01-30,Mistral,EU,Mistral Small 3（Apache 2.0）,yes,~24B开源小模型,https://mistral.ai/news/mistral-small-3
+2025-01-31,OpenAI,US,o3-mini,no,"the newest, most cost-efficient model in our reasoning series",https://openai.com/index/openai-o3-mini/
+2025-02-02,OpenAI,US,[product] Deep Research,no,an agent that uses reasoning to synthesize large amounts of online information,https://openai.com/index/introducing-deep-research/
+2025-02-05,Google,US,Gemini 2.0 Pro（实验版）/ 2.0 Flash GA / Flash-Lite,no,~Gemini 2.0家族全面铺开,https://blog.google/technology/google-deepmind/gemini-model-updates-february-2025/
+2025-02-17,StepFun,CN,Step-Video-T2V / Step-Audio 开源,yes,~同步开源视频生成与语音交互模型,https://zh.wikipedia.org/wiki/阶跃星辰
+2025-02-17,xAI,US,Grok 3（马斯克称Smartest AI on Earth）,no,The Age of Reasoning Agents,https://x.ai/news/grok-3
+2025-02-24,Anthropic,US,Claude 3.7 Sonnet + [product] Claude Code（研究预览）,no,our most intelligent model to date and the first hybrid reasoning model on the market,https://www.anthropic.com/news/claude-3-7-sonnet
+2025-02-27,OpenAI,US,GPT-4.5,no,our largest and best model for chat yet,https://openai.com/index/introducing-gpt-4-5/
+2025-03-06,Alibaba (Qwen),CN,QwQ-32B,yes,~32B参数性能可与671B的DeepSeek-R1媲美,https://qwenlm.github.io/zh/blog/qwq-32b/
+2025-03-06,Manus,CN,[product] Manus 通用AI智能体（邀请制内测）,no,~称GAIA全部难度级别SOTA、超越OpenAI,https://global.chinadaily.com.cn/a/202503/06/WS67c9ba2fa310c240449d9276.html
+2025-03-12,Google,US,Gemma 3,yes,the most capable model you can run on a single GPU or TPU,https://blog.google/technology/developers/gemma-3/
+2025-03-16,Baidu (ERNIE),CN,文心大模型4.5,no,outperforms GPT-4.5 in multiple benchmarks while priced at just 1% of GPT-4.5,https://www.prnewswire.com/news-releases/baidu-unveils-ernie-4-5-and-reasoning-model-ernie-x1--makes-ernie-bot-free-ahead-of-schedule-302402490.html
+2025-03-16,Baidu (ERNIE),CN,文心 X1（深度思考）,no,delivers performance on par with DeepSeek R1 at only half the price,https://www.prnewswire.com/news-releases/baidu-unveils-ernie-4-5-and-reasoning-model-ernie-x1--makes-ernie-bot-free-ahead-of-schedule-302402490.html
+2025-03-24,DeepSeek,CN,DeepSeek-V3-0324,yes,各项能力全面进阶,https://api-docs.deepseek.com/zh-cn/news/news250325
+2025-03-25,Google,US,Gemini 2.5 Pro（Arena第一，领先约40分）,no,our most intelligent AI model,https://blog.google/technology/google-deepmind/gemini-model-thinking-updates-march-2025/
+2025-03-25,OpenAI,US,[image] GPT-4o 原生生图（吉卜力潮）,no,~Altman：our GPUs are melting,https://openai.com/index/introducing-4o-image-generation/
+2025-04-05,Meta,US,Llama 4 Scout / Maverick（周六发布）,yes,an experimental chat version scoring ELO of 1417 on LMArena,https://ai.meta.com/blog/llama-4-multimodal-intelligence/
+2025-04-14,Zhipu (Z.ai),CN,GLM-4-32B-0414 / GLM-Z1 系列（MIT）,yes,comparable to OpenAI's GPT series and DeepSeek's V3/R1 series,https://github.com/THUDM/GLM-4
+2025-04-14,OpenAI,US,GPT-4.1（API）,no,outperform GPT-4o and GPT-4o mini across the board,https://openai.com/index/gpt-4-1/
+2025-04-15,Kuaishou,CN,[video] 可灵 Kling 2.0,no,world's most powerful,https://www.scmp.com/tech/big-tech/article/3306631/chinas-kuaishou-unveils-worlds-most-powerful-ai-video-generator-rival-openais-sora
+2025-04-16,OpenAI,US,o3 / o4-mini,no,the smartest models we've released to date,https://openai.com/index/introducing-o3-and-o4-mini/
+2025-04-25,Baidu (ERNIE),CN,文心4.5 Turbo / X1 Turbo（Create 2025）,no,~发布Turbo版，主打更快更便宜,https://mp.weixin.qq.com/s/vsXxuaD0B_yfpnIljDJmtw
+2025-04-29,Alibaba (Qwen),CN,Qwen3（0.6B–235B-A22B；Apache 2.0）,yes,表现出极具竞争力的结果,https://qwenlm.github.io/zh/blog/qwen3/
+2025-04-30,Xiaomi,CN,MiMo-7B（首个推理模型）,yes,matching the performance of OpenAI o1-mini,https://github.com/XiaomiMiMo/MiMo
+2025-05-07,Mistral,EU,Mistral Medium 3,no,~前沿级性能、成本低8倍（据Mistral）,https://mistral.ai/news/mistral-medium-3
+2025-05-16,OpenAI,US,[product] Codex（云端编程agent）,no,a cloud-based software engineering agent that can work on many tasks in parallel,https://openai.com/index/introducing-codex/
+2025-05-20,Google,US,[video] Veo 3 + Gemini 2.5 Deep Think（I/O 2025）,no,~Veo 3原生带声音的视频生成,https://blog.google/technology/ai/google-io-2025-all-our-announcements/
+2025-05-22,Anthropic,US,Claude Opus 4 / Sonnet 4（首次启用ASL-3）,no,Claude Opus 4 is the world's best coding model,https://www.anthropic.com/news/claude-4
+2025-05-28,DeepSeek,CN,DeepSeek-R1-0528,yes,思考更深，推理更强,https://api-docs.deepseek.com/zh-cn/news/news250528
+2025-06-10,Mistral,EU,Magistral（Small版开源）,yes,our first reasoning model,https://mistral.ai/news/magistral
+2025-06-10,OpenAI,US,o3-pro（同日o3降价80%）,no,~o3-pro上线；o3价格下调80%,https://help.openai.com/en/articles/9624314-model-release-notes
+2025-06-11,ByteDance (Doubao/Seed),CN,[video] Seedance 1.0,no,原生多镜头叙事能力,https://seed.bytedance.com/zh/seedance
+2025-06-16,MiniMax,CN,MiniMax-M1（推理）,yes,"the world's first open-weight, large-scale hybrid-attention reasoning model",https://github.com/MiniMax-AI/MiniMax-M1
+2025-06-27,Tencent (Hunyuan),CN,Hunyuan-A13B（80B MoE）,yes,Compact yet Powerful,https://github.com/Tencent-Hunyuan/Hunyuan-A13B
+2025-06-30,Baidu (ERNIE),CN,文心4.5 系列开源（Apache 2.0）,yes,~文心4.5系列以Apache 2.0开源,https://github.com/PaddlePaddle/ERNIE
+2025-06-30,Huawei,CN,盘古 Pro MoE 72B / 盘古 7B 开源,yes,~宣布开源70亿稠密与720亿MoE盘古模型,http://www.news.cn/tech/20250630/ce015889d3b9400aa179179ac8a5aeb0/c.html
+2025-07-09,xAI,US,Grok 4 / Grok 4 Heavy（300美元/月）,no,the most intelligent model in the world,https://x.ai/news/grok-4
+2025-07-11,Moonshot (Kimi),CN,Kimi K2（1T MoE）,yes,Kimi K2: Open Agentic Intelligence,https://moonshotai.github.io/Kimi-K2/
+2025-07-17,OpenAI,US,[product] ChatGPT agent,no,~ChatGPT用自己的虚拟电脑替你办事,https://openai.com/index/introducing-chatgpt-agent/
+2025-07-22,Alibaba (Qwen),CN,Qwen3-Coder-480B-A35B,yes,可以与 Claude Sonnet4 媲美,https://qwenlm.github.io/zh/blog/qwen3-coder/
+2025-07-28,Zhipu (Z.ai),CN,GLM-4.5 / GLM-4.5-Air,yes,综合平均分，GLM-4.5 取得了全球模型第三,https://docs.bigmodel.cn/cn/guide/models/text/glm-4.5
+2025-07-31,StepFun,CN,Step 3（321B MoE；WAIC后开源）,yes,Step3: Cost-Effective Multimodal Intelligence,https://github.com/stepfun-ai/Step3
+2025-08-05,Anthropic,US,Claude Opus 4.1,no,~Opus 4在agent与编程上的升级版,https://www.anthropic.com/news/claude-opus-4-1
+2025-08-05,Google,US,[world] Genie 3,no,a new frontier for world models,https://deepmind.google/discover/blog/genie-3-a-new-frontier-for-world-models/
+2025-08-05,OpenAI,US,gpt-oss-120b / gpt-oss-20b,yes,state-of-the-art open-weight language models,https://openai.com/index/introducing-gpt-oss/
+2025-08-07,OpenAI,US,"GPT-5（发布会""图表犯罪""）",no,"our smartest, fastest, most useful model yet",https://openai.com/index/introducing-gpt-5/
+2025-08-11,Zhipu (Z.ai),CN,GLM-4.5V（106B 视觉）,yes,视觉推理模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2025-08-20,ByteDance (Doubao/Seed),CN,Seed-OSS-36B,yes,Trained with up-to-512K long context natively,https://github.com/ByteDance-Seed/seed-oss
+2025-08-21,DeepSeek,CN,DeepSeek-V3.1（混合推理；UE8M0 FP8面向国产芯片）,yes,更强的 Agent 能力,https://api-docs.deepseek.com/zh-cn/news/news250821
+2025-08-23,xAI,US,Grok 2.5 开放权重,yes,"~马斯克宣布开源""去年最好的模型""",https://huggingface.co/xai-org/grok-2
+2025-08-26,Google,US,[image] Nano Banana（Gemini 2.5 Flash Image）,no,~先匿名上Arena、后官宣的图像编辑模型,https://developers.googleblog.com/en/introducing-gemini-2-5-flash-image/
+2025-08-28,Microsoft,US,MAI-1-preview,no,~微软首个自研基础模型,https://microsoft.ai/news/two-new-in-house-models/
+2025-09-01,Meituan,CN,LongCat-Flash-Chat（560B MoE）,yes,achieving over 100 tokens per second (TPS) for inference,https://github.com/meituan-longcat/LongCat-Flash-Chat
+2025-09-05,Moonshot (Kimi),CN,Kimi-K2-Instruct-0905,yes,context window has been increased from 128k to 256k tokens,https://huggingface.co/moonshotai/Kimi-K2-Instruct-0905
+2025-09-11,Alibaba (Qwen),CN,Qwen3-Next-80B-A3B,yes,~新混合架构：80B总参、3B激活,https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct
+2025-09-15,OpenAI,US,GPT-5-Codex,no,~为agentic编程优化的GPT-5,https://openai.com/index/introducing-upgrades-to-codex/
+2025-09-22,DeepSeek,CN,DeepSeek-V3.1-Terminus,yes,~改进语言一致性与Code/Search Agent,https://api-docs.deepseek.com/zh-cn/updates
+2025-09-24,Alibaba (Qwen),CN,Qwen3-Max（万亿参数；云栖大会）,no,~万亿参数闭源旗舰,https://qwen.ai/blog?id=qwen3-max
+2025-09-29,DeepSeek,CN,DeepSeek-V3.2-Exp（DSA稀疏注意力）,yes,训练推理提效，API 同步降价,https://api-docs.deepseek.com/zh-cn/news/news250929
+2025-09-29,Anthropic,US,Claude Sonnet 4.5,no,the best coding model in the world,https://www.anthropic.com/news/claude-sonnet-4-5
+2025-09-30,Zhipu (Z.ai),CN,GLM-4.6,yes,GLM-4.6 的代码能力对齐 Claude Sonnet 4,https://docs.bigmodel.cn/cn/guide/models/text/glm-4.6
+2025-09-30,OpenAI,US,[video] Sora 2 + Sora App,no,~带同步音频的视频生成与社交App,https://openai.com/index/sora-2/
+2025-10-09,Ant Group,CN,Ling-1T（百灵 万亿非思考旗舰）,yes,best open-source flagship non-thinking model,https://huggingface.co/inclusionAI/Ling-1T
+2025-10-14,Ant Group,CN,Ring-1T（万亿参数思考模型）,yes,silver medal level at IMO,https://huggingface.co/inclusionAI/Ring-1T
+2025-10-15,Anthropic,US,Claude Haiku 4.5,no,~小模型达到Sonnet 4级编程水平,https://www.anthropic.com/news/claude-haiku-4-5
+2025-10-20,DeepSeek,CN,DeepSeek-OCR,yes,~以视觉压缩长文本上下文,https://github.com/deepseek-ai/DeepSeek-OCR
+2025-10-21,OpenAI,US,[product] ChatGPT Atlas 浏览器,no,~内置ChatGPT的浏览器,https://openai.com/index/introducing-chatgpt-atlas/
+2025-10-27,MiniMax,CN,MiniMax-M2（230B/10B）,yes,Its composite score ranks #1 among open-source models globally,https://github.com/MiniMax-AI/MiniMax-M2
+2025-10-29,Cognition,US,SWE-1.5（Windsurf；智谱称疑基于GLM-4.6）,no,on top of a leading open-source base model,https://simonwillison.net/2025/Oct/29/
+2025-10-29,Cursor,US,Composer（自研编码模型，底座未公开）,no,~有用户发现推理时冒出中文,https://simonwillison.net/2025/Oct/29/
+2025-11-06,Moonshot (Kimi),CN,Kimi K2 Thinking,yes,~称智能体能力击败ChatGPT（CNBC转述）,https://www.cnbc.com/2025/11/06/alibaba-backed-moonshot-releases-new-ai-model-kimi-k2-thinking.html
+2025-11-12,OpenAI,US,GPT-5.1,no,"A smarter, more conversational ChatGPT",https://openai.com/index/gpt-5-1/
+2025-11-13,Baidu (ERNIE),CN,文心大模型5.0 Preview（百度世界2025）,no,~原生全模态大模型预览版,https://www.news.cn/tech/20260122/639720e276bd47739011278789a86233/c.html
+2025-11-17,xAI,US,Grok 4.1（Thinking版短暂登顶Arena）,no,~Grok 4.1 Thinking一度登顶Arena,https://x.ai/news/grok-4-1
+2025-11-18,Google,US,Gemini 3 Pro + Antigravity（Arena 1501分）,no,our most intelligent model,https://blog.google/products/gemini/gemini-3/
+2025-11-19,OpenAI,US,GPT-5.1-Codex-Max,no,~长时程agentic编程,https://openai.com/index/gpt-5-1-codex-max/
+2025-11-20,Google,US,[image] Nano Banana Pro,no,~基于Gemini 3 Pro的图像模型,https://blog.google/technology/ai/nano-banana-pro/
+2025-11-24,Anthropic,US,Claude Opus 4.5,no,"the best model in the world for coding, agents, and computer use",https://www.anthropic.com/news/claude-opus-4-5
+2025-11-27,DeepSeek,CN,DeepSeekMath-V2,yes,~自验证数学推理模型（Apache 2.0）,https://huggingface.co/deepseek-ai/DeepSeek-Math-V2
+2025-12-01,DeepSeek,CN,DeepSeek-V3.2 正式版,yes,推理能力全球领先,https://api-docs.deepseek.com/zh-cn/news/news251201
+2025-12-01,DeepSeek,CN,DeepSeek-V3.2-Speciale,yes,性能表现媲美 Gemini-3.0-Pro,https://api-docs.deepseek.com/zh-cn/news/news251201
+2025-12-02,Mistral,EU,Mistral 3（Large 3 + Ministral；Apache 2.0）,yes,~重回开源前沿,https://mistral.ai/news/mistral-3
+2025-12-05,Tencent (Hunyuan),CN,混元 HY 2.0（406B MoE）,no,稳居国内第一梯队,https://www.ithome.com/0/902/856.htm
+2025-12-08,Zhipu (Z.ai),CN,GLM-4.6V,yes,视觉推理模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2025-12-11,OpenAI,US,"GPT-5.2（""code red""后十天）",no,~面向专业知识工作的GPT-5.2,https://openai.com/index/introducing-gpt-5-2/
+2025-12-16,Xiaomi,CN,MiMo-V2-Flash（309B/15B）,yes,surpassing models with significantly larger parameter counts,https://huggingface.co/XiaomiMiMo/MiMo-V2-Flash
+2025-12-17,Google,US,Gemini 3 Flash,no,~Gemini 3家族的快速版,https://blog.google/products/gemini/gemini-3-flash/
+2025-12-22,MiniMax,CN,MiniMax-M2.1,yes,多语言编程专家，全面升级复杂编程体验,https://platform.minimax.cn/docs/release-notes/models
+2025-12-22,Zhipu (Z.ai),CN,GLM-4.7,yes,位列开源第一、国产第一，超过 GPT-5.2,https://docs.bigmodel.cn/cn/guide/models/text/glm-4.7
+2026-01-12,Anthropic,US,[product] Claude Cowork（研究预览）,no,~面向非程序员的桌面agent,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-01-13,Baichuan,CN,Baichuan-M3（医疗）,yes,全球医疗沟通和推理能力最强的医疗大模型,https://finance.sina.com.cn/tech/roll/2026-01-13/doc-inhheixt4804513.shtml
+2026-01-19,Zhipu (Z.ai),CN,GLM-4.7-Flash,yes,免费模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2026-01-22,Baidu (ERNIE),CN,文心大模型5.0 正式版（2.4万亿参数）,no,超越Gemini-2.5-Pro、GPT-5-High等模型,https://www.news.cn/tech/20260122/639720e276bd47739011278789a86233/c.html
+2026-01-26,Alibaba (Qwen),CN,Qwen3-Max-Thinking,no,~推理增强版旗舰（仅见维基模型列表）,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-01-27,DeepSeek,CN,DeepSeek-OCR 2,yes,~论文Visual Causal Flow并开源,https://tech.ifeng.com/c/8qFwtXrZzBO
+2026-01-27,Moonshot (Kimi),CN,Kimi K2.5（1T 原生多模态；Agent集群）,yes,~迄今最智能、最全能（媒体标题措辞）,https://www.ithome.com/0/916/842.htm
+2026-01-27,MBZUAI / IFM,other,K2 Think V2（阿联酋）,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-01-31,Kuaishou,CN,[video] 可灵 3.0 系列（发布并内测；02-05全量）,no,~单次最长15秒、智能分镜、音画同步,https://finance.sina.com.cn/tech/digi/2026-01-31/doc-inhkepei6165477.shtml
+2026-02-01,Ant Group,CN,Ring-2.5-1T / Ling-2.5-1T（春节期间开源；日期仅到月）,yes,the world's first open-source trillion-parameter thinking model based on hybrid linear attention,https://huggingface.co/inclusionAI/Ring-2.5-1T
+2026-02-02,StepFun,CN,Step 3.5 Flash（196B/11B）,yes,~阶跃最强开源基座、为Agent而生,https://www.qbitai.com/2026/02/375351.html
+2026-02-05,Anthropic,US,Claude Opus 4.6（与GPT-5.3-Codex同日）,no,~2–4月Arena文本榜第一（第三方快照）,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-02-05,OpenAI,US,GPT-5.3-Codex（与Claude Opus 4.6同日）,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-02-11,iFlytek,CN,讯飞星火X2（293B MoE；全国产算力）,no,整体能力对标国际顶尖模型水平,https://www.stcn.com/article/detail/3639831.html
+2026-02-12,ByteDance (Doubao/Seed),CN,[video] Seedance 2.0（02-07起内测）,no,~音视频质量与可控性达专业生产要求,https://www.stdaily.com/web/gdxw/2026-02/12/content_473735.html
+2026-02-12,MiniMax,CN,MiniMax-M2.5（02-13开源）,yes,达到或刷新了行业的 SOTA,https://platform.minimax.cn/docs/release-notes/models
+2026-02-12,Zhipu (Z.ai),CN,GLM-5（744B）,yes,GLM-5 取得开源 SOTA 表现,https://docs.bigmodel.cn/cn/guide/models/text/glm-5
+2026-02-14,ByteDance (Doubao/Seed),CN,豆包大模型2.0 Doubao-Seed-2.0（Pro/Lite/Mini/Code）,no,达到业界第一梯队水平,https://seed.bytedance.com/zh/seed2
+2026-02-16,Alibaba (Qwen),CN,Qwen3.5（397B-A17B开源 + Qwen3.5-Plus；除夕）,yes,性能媲美Gemini 3 Pro,https://www.thepaper.cn/newsDetail_forward_32621821
+2026-02-17,Anthropic,US,Claude Sonnet 4.6,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-02-18,Sarvam AI,other,Sarvam-105B（印度）,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-02-19,Google,US,Gemini 3.1 Pro（预览）,no,~ARC-AGI-2 77.1%；称推理能力较Gemini 3 Pro翻倍以上,https://www.theregister.com/2026/02/19/google_germinates_gemini_31_pro/
+2026-02-25,Alibaba (Qwen),CN,Qwen3.5 中型（35B-A3B/122B-A10B/27B）,yes,~每百万Token低至0.2元,https://www.qbitai.com/2026/02/382054.html
+2026-03-05,OpenAI,US,GPT-5.4,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-03-10,xAI (SpaceXAI),US,Grok 4.20（多agent Beta；日期约数）,no,~多agent协作版,https://vercel.com/ai-gateway/models/grok-4.20-multi-agent
+2026-03-15,Zhipu (Z.ai),CN,GLM-5-Turbo,no,龙虾增强基座模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2026-03-17,Mistral,EU,Mistral Small 4,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-03-18,MiniMax,CN,MiniMax-M2.7,no,开启模型的自我迭代,https://platform.minimax.cn/docs/release-notes/models
+2026-03-18,Xiaomi,CN,MiMo-V2-Pro（1T+；同日V2-Omni/V2-TTS）,no,~总参超1万亿、激活42B,https://mimo.xiaomi.com/mimo-v2-pro
+2026-03-19,Cursor,US,Composer 2（被扒出基于Kimi K2.5）,no,"Yep, Composer 2 started from an open-source base!",https://www.implicator.ai/cursor-acknowledges-kimi-k2-5-as-composer-2-base-after-developer-spots-model-id
+2026-04-02,Alibaba (Qwen),CN,Qwen3.6-Plus,no,~强化编程、智能体与工具调用,https://m.caixin.com/m/2026-04-02/102430383.html
+2026-04-02,Zhipu (Z.ai),CN,GLM-5V-Turbo,no,多模态 Coding 基座模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2026-04-02,Google,US,Gemma 4,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-04-07,Zhipu (Z.ai),CN,GLM-5.1（同时提价10%）,yes,整体表现对齐 Claude Opus 4.6,https://docs.bigmodel.cn/cn/guide/models/text/glm-5.1
+2026-04-07,Anthropic,US,Claude Mythos Preview（Project Glasswing；仅限少数机构）,no,We do not plan to make Claude Mythos Preview generally available,https://www.anthropic.com/glasswing
+2026-04-08,Meta,US,Muse Spark（MSL首个模型；转向闭源）,no,~Meta超级智能实验室首个模型，不开放权重,https://www.bloomberg.com/news/articles/2026-04-08/meta-debuts-first-ai-model-from-prized-superintelligence-group
+2026-04-16,Alibaba (Qwen),CN,Qwen3.6-35B-A3B,yes,~30亿激活参数实现顶尖智能体编程,https://www.ithome.com/0/940/079.htm
+2026-04-16,Anthropic,US,Claude Opus 4.7,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-04-20,Moonshot (Kimi),CN,Kimi K2.6,yes,~代码与Agent集群开源新高、对标GPT-5.4,https://www.ithome.com/0/941/385.htm
+2026-04-22,Xiaomi,CN,MiMo-V2.5 / MiMo-V2.5-Pro（04-28 MIT开源）,yes,~V2.5-Pro专为长时间自主任务设计,https://www.donews.com/article/detail/7739/100418.html
+2026-04-23,Tencent (Hunyuan),CN,Hy3 preview（295B/21B）,yes,~混元迄今最智能的模型,https://www.tencent.com/zh-cn/articles/2202320.html
+2026-04-23,OpenAI,US,GPT-5.5,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-04-24,Ant Group,CN,Ling-2.6-1T（04-30开源）,yes,~万亿级综合旗舰模型,https://finance.sina.com.cn/stock/t/2026-04-30/doc-inhwftwk7232432.shtml
+2026-04-24,DeepSeek,CN,DeepSeek-V4 预览版（V4-Pro 1.6T / V4-Flash 284B；1M上下文；适配昇腾）,yes,迈入百万上下文普惠时代,https://api-docs.deepseek.com/zh-cn/news/news260424
+2026-04-28,Mistral,EU,Mistral Medium 3.5（Modified MIT）,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-05-09,Baidu (ERNIE),CN,文心大模型5.1,no,仅以业界同规模模型约6%的预训练成本,https://www.36kr.com/newsflashes/3801731549371905
+2026-05-18,Cursor,US,Composer 2.5,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-05-19,Google,US,Gemini 3.5 Flash（I/O 2026）,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-05-20,Alibaba (Qwen),CN,Qwen3.7-Max,no,位列国产模型第一,https://cn.chinadaily.com.cn/a/202605/20/WS6a0d97a2a310942cc49ad59b.html
+2026-05-28,StepFun,CN,Step 3.7 Flash,yes,~Apache 2.0开源（百炼平台上架日）,https://platform.qianwenai.com/docs/changelog/models
+2026-05-28,Anthropic,US,Claude Opus 4.8,no,~后来充当Fable 5敏感请求的降级接管模型,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-06-01,Alibaba (Qwen),CN,Qwen3.7-Plus,no,~文本/视频/图像输入、每百万token 0.4/1.6美元,https://venturebeat.com/technology/alibabas-qwen3-7-plus-supports-text-video-and-imagery-inputs-at-low-cost-of-0-4-1-6-per-1m-token-but-its-proprietary
+2026-06-01,MiniMax,CN,MiniMax-M3（428B/23B；1M上下文）,yes,M3 是国内第一个齐备这些要素的模型,https://www.minimax.cn/blog/minimax-m3
+2026-06-04,NVIDIA,US,Nemotron 3 Ultra,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-06-09,Anthropic,US,Claude Fable 5（06-12遭美国政府出口管制停服；07-01恢复）,no,a Mythos-class model that we've made safe for general use,https://www.anthropic.com/news/claude-fable-5-mythos-5
+2026-06-09,Anthropic,US,Claude Mythos 5（限量；经Project Glasswing）,no,"the same underlying model as Fable 5, but with the safeguards lifted in some areas",https://www.anthropic.com/news/claude-fable-5-mythos-5
+2026-06-12,Huawei,CN,openPangu 2.0（开源；最高505B）,yes,在我的字典里，从来没有第二，只有第一,https://www.chinaz.com/ainews/28886.shtml
+2026-06-15,Moonshot (Kimi),CN,Kimi K2.7 Code,yes,~编程专用模型（百炼平台上架日）,https://platform.qianwenai.com/docs/changelog/models
+2026-06-16,Zhipu (Z.ai),CN,GLM-5.2（1M上下文）,yes,是当前排名最高的开源模型,https://docs.bigmodel.cn/cn/guide/models/text/glm-5.2
+2026-06-23,ByteDance (Doubao/Seed),CN,豆包大模型2.1 Doubao-Seed-2.1 Pro/Turbo,no,~称跨过生产级应用「质变点」,http://jjckb.xinhuanet.com/20260623/6df6b0efbf124f80bb5917b2a10ac8e4/c.html
+2026-06-30,Meituan,CN,LongCat-2.0（1.6T；07-06开源）,yes,在国产算力集群上完成全流程训练与推理的万亿参数模型,https://tech.meituan.com/2026/06/30/LongCat2.0.html
+2026-06-30,Anthropic,US,Claude Sonnet 5,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-07-06,Tencent (Hunyuan),CN,Hy3 正式版（Apache 2.0）,yes,~效果比肩国内外更大尺寸旗舰模型,https://www.ithome.com/0/973/106.htm
+2026-07-08,xAI (SpaceXAI),US,Grok 4.5,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-07-09,Meta,US,Muse Spark 1.1,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-07-09,OpenAI,US,GPT-5.6（Sol；7月Hugging Face入侵事件涉及该模型）,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-07-15,Thinking Machines,US,Inkling（Apache 2.0）,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-07-16,Moonshot (Kimi),CN,Kimi K3（2.8T）,yes,It is the world's first open 3T-class model,https://www.kimi.com/blog/kimi-k3
+2026-07-19,Alibaba (Qwen),CN,Qwen3.8-Max 预览（2.4T）,no,可能是除了 Fable 5 外最强大的模型,https://www.ithome.com/0/978/730.htm
+2026-07-21,Google,US,Gemini 3.6 Flash / 3.5 Flash Lite,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-07-24,Anthropic,US,Claude Opus 5,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-07-31,ByteDance (Doubao/Seed),CN,[video] Seedance 2.5,no,~单次生成30秒、原生4K,https://news.mydrivers.com/1/1140/1140606.htm
+2026-07-31,DeepSeek,CN,DeepSeek-V4-Flash-0731（正式版API公测）,yes,~同架构重做后训练的V4-Flash正式版,https://api-docs.deepseek.com/zh-cn/updates
+2026-08-03,Alibaba (Qwen),CN,Qwen3.8 / Qwen3.8-Max 正式版（2.4T/95B激活）,no,仅次于Anthropic的Claude系列,https://www.qbitai.com/2026/08/465215.html
+2026-08-10,Meta,US,Muse Glimmer（Apache 2.0）,yes,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-08-13,Alibaba (Qwen),CN,Qwen3.8-2.4T-A95B（Max开源权重）,yes,通义千问旗舰系列的开源版本,https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B
+2026-08-13,DeepSeek,CN,DeepSeek-V4-Pro 正式版（0813）,yes,今天，我们发布 DeepSeek V4 Pro 正式版,https://api-docs.deepseek.com/zh-cn/news/news260813
+2026-08-13,Google,US,Gemini 3.7 Flash,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-08-14,Alibaba (Qwen),CN,Qwen3.8-27B（Apache 2.0）,yes,~能力接近Claude Opus 4.6,https://huggingface.co/Qwen/Qwen3.8-27B
+2026-08-14,Zhipu (Z.ai),CN,GLM-5.3（743B；两周后开源）,yes,涌现的网络安全能力,https://docs.bigmodel.cn/cn/guide/models/text/glm-5.3
+2026-08-21,DeepSeek,CN,DeepSeek-V4-Flash-Vision-Exp,no,开启多模态 API 服务,https://api-docs.deepseek.com/zh-cn/news/news260821
+2026-08-26,Alibaba (Qwen),CN,Qwen3.8-Flash / Qwen3.8-Flash-Next（Next开源）,yes,训练成本仅为前代 1/9,https://finance.sina.com.cn/tech/digi/2026-08-26/doc-inipsezh0767781.shtml
+2026-08-26,Zhipu (Z.ai),CN,GLM-5.3-Flash,yes,原生多模态模型上线,https://docs.bigmodel.cn/cn/update/new-releases
+2026-08-28,Tencent (Hunyuan),CN,Hy4 preview（770B/49B；Apache 2.0）,yes,~面向软件开发、金融分析等多步任务,https://huggingface.co/tencent/Hy4-preview
+2026-09-01,Anthropic,US,Claude Fable 5.1 / Mythos 5.1（Mythos限量）,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-09-02,Google,US,Gemini 3.8 Flash,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-09-03,OpenAI,US,GPT-6（Astra）,no,~媒体称its most powerful model；constrained to limit risks,https://lenouvelliste.com/en/article/271580/openai-launches-gpt-6-its-most-powerful-model-constrained-to-limit-risks
+2026-09-10,DeepSeek,CN,DeepSeek-V4.1-Flash（原生多模态）,yes,更强、更快、更普惠,https://api-docs.deepseek.com/zh-cn/news/news260910
+2026-09-18,Alibaba (Qwen),CN,Qwen3.8-Omni-Flash,no,Qwen 新一代原生全模态模型,https://platform.qianwenai.com/docs/changelog/models
+2026-09-20,StepFun,CN,Step 5 Preview（600B/27B；计划10-15开源）,yes,跻身全球开源前三,https://finance.sina.com.cn/stock/t/2026-09-20/doc-inismzux1576303.shtml
+2026-09-21,xAI (SpaceXAI),US,Grok 4.7（Grok 5仍未发布）,no,~xAI自2026-01-06称Grok 5 is currently in training,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-09-22,Xiaomi,CN,MiMo-V2.6-Pro / MiMo-V2.6-Flash（开源）,yes,登顶全球开源大模型第一、国产模型第一,https://finance.sina.com.cn/jjxw/2026-09-22/doc-inisspzf8873185.shtml
+2026-09-22,Anthropic,US,Claude Opus 5.5,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-09-22,OpenAI,US,GPT-6 Sol / GPT-6 Luna,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-09-28,Kuaishou,CN,[video] 可灵 Kling 4.0 Flash 预览（10月全球全量）,no,~原生30秒、4K HDR,https://kling.ai/
+2026-09-28,Anthropic,US,Claude Sonnet 5.5,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-09-29,OpenAI,US,GPT-6.1（Sol）,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-09-30,Google,US,Gemini 4 Argon（10-13 GA；10月初登顶Arena，弱来源）,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-10-07,Mistral,EU,Mistral Large 4 Preview,no,~未取得原话,https://en.wikipedia.org/wiki/List_of_large_language_models
+2026-10-07,Anthropic,US,Claude Haiku 5.5,no,~未取得原话,https://en.wikipedia.org/wiki/Claude_(language_model)
+2026-10-17,DeepSeek,CN,DeepSeek-V4.1-Flash-1017,no,许愿式编程一键成真,https://api-docs.deepseek.com/zh-cn/news/news261017
+2026-10-19,MiniMax,CN,MiniMax-M3.1 Flash,no,一个面向真实工作的日常高效主力模型,https://platform.minimax.cn/docs/release-notes/models
+2026-10-22,iFlytek,CN,讯飞星火X2.6（端云一体；端侧X2.6-4B开源）,no,~全国产算力训出1M上下文,https://digital.gmw.cn/2026-10/23/content_39062959.htm
+2026-10-24,Moonshot (Kimi),CN,Kimi K3.1 Pro（权重承诺11-04前发布）,no,我们迄今能力最强的 3 万亿级参数模型,https://platform.kimi.com/docs/guide/kimi-k3-1-pro-quickstart
+2026-10-26,OpenAI,US,GPT-6.1 Terra（二手来源）,no,~面向长时程多步agentic工作,https://www.clone-systems.com/blog/new-ai-models-november-2026-release-guide-and-security
+2026-10-28,Google,US,Gemini 4 Carbon（限量；网络安全向）,no,our strongest model with state-of-the-art cybersecurity and long horizon capabilities,https://venturebeat.com/technology/google-unveils-gemini-4-carbon-retaking-the-worlds-no-1-spot-on-updated-harder-benchmarks-but-access-is-limited
+2026-10-30,OpenAI,US,GPT-6 Rosalind（生命科学研究预览；二手来源）,no,~未取得原话,https://emergent.sh/news/openai-launches-gpt-6-rosalind-multimodal-ai
+2026-11-02,Meituan,CN,LongCat-2.5（1.6T 原生多模态）,no,总参数1.6万亿，训练全程由国产算力完成,https://www.news.cn/tech/20261103/41b545db19f348038365821485069a8b/c.html
+2026-11-04,Tencent (Hunyuan),CN,Hy4 正式版（770B；权重「近期开源」）,no,~号称首次跻身最强开源模型之列,https://www.ithome.com/1/022/035.htm
