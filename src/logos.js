@@ -15,7 +15,7 @@ export const BRAND = {
 export const WORDS = {
   openai: 'OpenAI', google: 'Gemini', anthropic: 'Claude', xai: 'xAI', meta: 'Meta',
   deepseek: 'deepseek', qwen: 'Qwen', kimi: 'Kimi', glm: 'Z.ai', doubao: '豆包', mistral: 'Mistral', nvidia: 'NVIDIA',
-  spacexai: 'SpaceXAI',
+  spacexai: 'SpaceXAI', spade: 'SPADES', heart: 'HEARTS', diamond: 'DIAMONDS', club: 'CLUBS',
 };
 const FONT = '"Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif';
 
@@ -265,6 +265,16 @@ function joker(c) {
   c.beginPath(); c.arc(-0.1, -0.08, 0.035, 0, Math.PI * 2); c.arc(0.1, -0.08, 0.035, 0, Math.PI * 2); c.fillStyle = '#141010'; c.fill();
 }
 
+// v4: the four suits (unit box, centred), red or black unless a colour is given
+export const SUIT_COL = { spade: '#16161a', club: '#16161a', heart: '#b8232f', diamond: '#b8232f' };
+export function suitPath(c, id) {
+  c.beginPath();
+  if (id === 'heart') { c.moveTo(0, 0.42); c.bezierCurveTo(-0.5, 0.05, -0.46, -0.42, -0.2, -0.42); c.bezierCurveTo(-0.06, -0.42, 0, -0.3, 0, -0.22); c.bezierCurveTo(0, -0.3, 0.06, -0.42, 0.2, -0.42); c.bezierCurveTo(0.46, -0.42, 0.5, 0.05, 0, 0.42); }
+  else if (id === 'diamond') { c.moveTo(0, -0.46); c.quadraticCurveTo(0.12, -0.16, 0.34, 0); c.quadraticCurveTo(0.12, 0.16, 0, 0.46); c.quadraticCurveTo(-0.12, 0.16, -0.34, 0); c.quadraticCurveTo(-0.12, -0.16, 0, -0.46); }
+  else if (id === 'spade') { c.moveTo(0, -0.46); c.bezierCurveTo(0.08, -0.3, 0.46, -0.1, 0.42, 0.12); c.bezierCurveTo(0.38, 0.3, 0.14, 0.32, 0.04, 0.18); c.lineTo(0.12, 0.44); c.lineTo(-0.12, 0.44); c.lineTo(-0.04, 0.18); c.bezierCurveTo(-0.14, 0.32, -0.38, 0.3, -0.42, 0.12); c.bezierCurveTo(-0.46, -0.1, -0.08, -0.3, 0, -0.46); }
+  else { c.arc(0, -0.22, 0.17, 0, Math.PI * 2); c.moveTo(-0.08, 0.06); c.arc(-0.21, 0.06, 0.17, 0, Math.PI * 2); c.moveTo(0.38, 0.06); c.arc(0.21, 0.06, 0.17, 0, Math.PI * 2); c.moveTo(-0.05, 0.05); c.lineTo(0.05, 0.05); c.lineTo(0.13, 0.44); c.lineTo(-0.13, 0.44); c.closePath(); }
+}
+function suitMark(c, id, col) { c.fillStyle = col ?? SUIT_COL[id]; suitPath(c, id); c.fill(); }
 export function drawLogo(ctx, id, x, y, size, opts = {}) {
   const S = Math.max(16, Math.ceil(size * 1.25));
   const off = offscreen(S, S);
@@ -285,6 +295,7 @@ export function drawLogo(ctx, id, x, y, size, opts = {}) {
     case 'mistral': mistralM(c); break;
     case 'nvidia': nvidiaEye(c); break;
     case 'joker': joker(c); break;
+    case 'spade': case 'heart': case 'diamond': case 'club': suitMark(c, id, opts.color); break;
     default: break;
   }
   ctx.drawImage(off, x - S / 2, y - S / 2);

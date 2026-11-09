@@ -2122,7 +2122,7 @@ function buildInk() {
 // 13 cm outside his proposal card's far edge, under the stamping arm's forearm (plate top 0.09 m). Plate frame: origin = the middle of its footprint on the tabletop, +y up, local +z = the
 // front face's heading, the name reads along local +x seen from the front.
 export const PLATE = { L: 0.25, S: 0.115, A: 1.15, T: 0.0028, X: 1.1, DZ: 0.08 };
-const PLATE_NAMES = { openai: ['OpenAI'], anthropic: ['Anthropic'], google: ['Google'], xai: ['xAI'], meta: ['Meta'], deepseek: ['DeepSeek'], qwen: ['Qwen', '通义千问'], kimi: ['Kimi'], glm: ['GLM', '智谱'], doubao: ['Doubao', '豆包'] };
+const PLATE_NAMES = { spade: ['♠ SPADES'], heart: ['♥ HEARTS'], diamond: ['♦ DIAMONDS'], club: ['♣ CLUBS'], openai: ['OpenAI'], anthropic: ['Anthropic'], google: ['Google'], xai: ['xAI'], meta: ['Meta'], deepseek: ['DeepSeek'], qwen: ['Qwen', '通义千问'], kimi: ['Kimi'], glm: ['GLM', '智谱'], doubao: ['Doubao', '豆包'] };
 export function platePos(id) { const k = KING[id]; return [SIDE_SIGN[k.side] * PLATE.X, 0, SEAT.Z[k.seat] + PLATE.DZ]; }
 export function plateYaw(id, turn = 0) { const s = SIDE_SIGN[KING[id].side]; return -s * Math.PI / 2 + s * turn; }
 // the world point at the middle of a plate's front face (for framing)

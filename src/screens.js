@@ -106,6 +106,14 @@ export function makeScreens() {
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);
+    // 淘汰: he is out; the screen goes grey
+    if (s.out) {
+      c.save(); c.globalAlpha = Math.min(1, s.out);
+      c.fillStyle = 'rgba(28,28,30,0.93)'; c.fillRect(0, 0, CW, CH);
+      c.fillStyle = '#8d877c'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `900 96px ${SANS}`; c.fillText('淘汰', CW / 2, CH * 0.44); c.font = `bold 28px ${SANS}`; c.fillText('OUT', CW / 2, CH * 0.66);
+      c.restore();
+    }
   }
   function paintEye(c, k, t) {
     c.save(); c.globalAlpha = Math.min(1, k);

@@ -292,96 +292,52 @@ function paintNum1(c, x0, y0) {
   c.font = `900 34px ${SANS}`; c.fillText('第一', CW / 2, CH * 0.72);
   c.restore();
 }
-import { FUTURE as FUTURE_NAMES } from './future-models.js';
-function paintShikong(c) {
-  for (const id in FUTURE_NAMES) FUTURE_NAMES[id].forEach((n, f) => paintFuture(c, ...cellXY(CELL[`future_${id}_${f}`]), id, n));
-  paintNum1(c, ...cellXY(CELL.num1));
-  OLD.forEach((o, g) => paintOld(c, ...cellXY(CELL[`old${g}`]), o));
-  paintChat(c);
-  {
-    const [gx, gy] = cellXY(CELL.gpt45);
-    paintModel(c, gx, gy, 'openai', { name: 'GPT-4.5', date: '2025·02', score: 97.6 }, { color: '#9a7322' });
-    c.save(); c.translate(gx, gy);
-    const g = c.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, '#f5d27a'); g.addColorStop(0.5, '#b98a2e'); g.addColorStop(1, '#f0cc6e');
-    c.strokeStyle = g; c.lineWidth = 14; rr(c, 9, 9, CW - 18, CH - 18, 14); c.stroke();
+// v4: a playing card. Corner indices, a big rank and suit in the middle (face cards get a little crown); past the
+// Ace the card goes dark and the rank glows (a rank no person has a name for)
+import { suitPath, SUIT_COL } from './logos.js';
+import { RANKS, ACE } from './models.js';
+function pip(c, suit, x, y, s, col) { c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = col; suitPath(c, suit); c.fill(); c.restore(); }
+function paintRank(c, x0, y0, suit, v) {
+  const r = RANKS[v], beyond = v > ACE, face = ['J', 'Q', 'K'].includes(r);
+  const ink = beyond ? '#f3ead2' : SUIT_COL[suit];
+  c.save(); c.translate(x0, y0);
+  c.fillStyle = beyond ? '#121014' : '#f1e9d6'; c.fillRect(0, 0, CW, CH);
+  const rnd = mulberry32(v * 31 + suit.length * 7);
+  c.fillStyle = beyond ? 'rgba(255,240,200,0.05)' : 'rgba(80,60,30,0.05)'; for (let k = 0; k < 260; k++) c.fillRect(rnd() * CW, rnd() * CH, 1.5, 1.5);
+  c.strokeStyle = beyond ? '#b8232f' : '#2a2420'; c.lineWidth = beyond ? 5 : 3; rr(c, 10, 10, CW - 20, CH - 20, 14); c.stroke();
+  for (const flip of [false, true]) {
+    c.save(); if (flip) { c.translate(CW, CH); c.rotate(Math.PI); }
+    c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.font = `900 ${r.length > 1 ? 34 : 44}px ${SERIF}`; c.fillText(r, 40, 64);
+    pip(c, suit, 40, 90, 34, ink);
     c.restore();
   }
+  const cx = CW / 2, cy = CH / 2;
+  if (face) {
+    c.strokeStyle = ink; c.lineWidth = 2; rr(c, 62, 70, CW - 124, CH - 140, 8); c.stroke();
+    c.fillStyle = '#d6a43c'; c.beginPath(); c.moveTo(cx - 40, cy - 40); c.lineTo(cx - 40, cy - 70); c.lineTo(cx - 20, cy - 52); c.lineTo(cx, cy - 78); c.lineTo(cx + 20, cy - 52); c.lineTo(cx + 40, cy - 70); c.lineTo(cx + 40, cy - 40); c.closePath(); c.fill();
+  }
+  c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (beyond) { c.shadowColor = r === '∞' ? '#ffd27a' : '#ff5a3a'; c.shadowBlur = 24; }
+  c.font = `900 ${r.length > 1 ? 104 : 136}px ${SERIF}`; c.fillText(r, cx, cy + (face ? 4 : -18));
+  c.shadowBlur = 0;
+  if (!face) pip(c, suit, cx, cy + 92, 70, ink);
+  if (beyond) { c.globalAlpha = 0.35; for (let k = 0; k < 5; k++) pip(c, suit, 40 + rnd() * (CW - 80), 120 + rnd() * (CH - 240), 22 + rnd() * 20, '#b8232f'); c.globalAlpha = 1; }
+  c.restore();
+}
+function paintShikong(c) {
+  for (const k of KINGS) RANKS.forEach((_, v) => paintRank(c, ...cellXY(CELL[`${k.id}${v}`]), k.id, v));
+  paintNum1(c, ...cellXY(CELL.num1));
 }
 
 function buildAtlas() {
   const cv = document.createElement('canvas'); cv.width = cv.height = ATLAS;
   const c = cv.getContext('2d');
   c.fillStyle = '#efe6d2'; c.fillRect(0, 0, ATLAS, ATLAS);
-  for (const k of KINGS) MODELS[k.id].forEach((m, v) => paintModel(c, ...cellXY(CELL[`${k.id}${v}`]), k.id, m));
-  paintModel(c, ...cellXY(CELL.mistral), 'mistral', MISTRAL);
   paintBack(c, ...cellXY(CELL.backCN), '#7c1a1d', '#d9b45a');
-  paintBack(c, ...cellXY(CELL.backUS), '#2c4690', '#d3d8e2');
+  paintBack(c, ...cellXY(CELL.backUS), '#23262e', '#c9ccd2');
   paintBack(c, ...cellXY(CELL.backBlack), '#0d0c0b', '#8f7036');          // gold guilloche: the storm glints in the dark
   for (let g = 0; g < 16; g++) paintGlyph(c, ...cellXY(CELL[`glyph${g}`]), g);
-  {
-    // the giant o1: the OpenAI card with a heavy gold frame (its #1 rosette is already printed)
-    const [gx, gy] = cellXY(CELL.o1gold);
-    paintModel(c, gx, gy, 'openai', MODELS.openai[3], { color: '#9a7322' });
-    c.save(); c.translate(gx, gy);
-    const g = c.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, '#f5d27a'); g.addColorStop(0.5, '#b98a2e'); g.addColorStop(1, '#f0cc6e');
-    c.strokeStyle = g; c.lineWidth = 14; rr(c, 9, 9, CW - 18, CH - 18, 14); c.stroke();
-    c.restore();
-  }
-  {
-    // Llama 4 in full make-up: the experimental build that topped the arena (#1); lashes on the two loops, lipstick, sequins
-    const [gx, gy] = cellXY(CELL.llamaMakeup);
-    paintModel(c, gx, gy, 'meta', { ...MODELS.meta[4], name: 'Llama 4 Exp.' }, { rank: 1, color: '#d2367a' });
-    c.save(); c.translate(gx, gy);
-    c.strokeStyle = '#141010'; c.lineWidth = 2.6; c.lineCap = 'round';
-    for (const sx of [-1, 1]) {
-      const ex = CW / 2 + sx * 22, ey = 226;
-      for (let k = 0; k < 7; k++) { const a = -Math.PI * (0.15 + k * 0.1); c.beginPath(); c.moveTo(ex + Math.cos(a) * 16, ey + Math.sin(a) * 12); c.lineTo(ex + Math.cos(a) * 30, ey + Math.sin(a) * 26 - 4); c.stroke(); }
-      c.fillStyle = 'rgba(230,80,120,0.45)'; c.beginPath(); c.ellipse(CW / 2 + sx * 46, 262, 13, 9, 0, 0, Math.PI * 2); c.fill();
-    }
-    c.fillStyle = '#c4122f'; c.beginPath(); c.moveTo(CW / 2 - 20, 272); c.quadraticCurveTo(CW / 2 - 8, 262, CW / 2, 268); c.quadraticCurveTo(CW / 2 + 8, 262, CW / 2 + 20, 272); c.quadraticCurveTo(CW / 2, 288, CW / 2 - 20, 272); c.fill();
-    const r2 = mulberry32(4242);
-    for (let k = 0; k < 120; k++) { c.fillStyle = r2() > 0.5 ? '#e8c060' : '#f4b8d4'; const x = 20 + r2() * (CW - 40), y = 20 + r2() * (CH - 40); c.beginPath(); c.arc(x, y, 1.2 + r2() * 2, 0, Math.PI * 2); c.fill(); }
-    c.restore();
-  }
-  {
-    // a photocopy of Claude's card: grey toner, a little blurred and skewed, speckles (Kimi's bomb, 4-04)
-    const tmp = document.createElement('canvas'); tmp.width = CW; tmp.height = CH;
-    paintModel(tmp.getContext('2d'), 0, 0, 'anthropic', MODELS.anthropic[4]);
-    const [gx, gy] = cellXY(CELL.claudeCopy);
-    c.save(); c.translate(gx, gy);
-    c.beginPath(); c.rect(0, 0, CW, CH); c.clip();
-    c.fillStyle = '#e9e7e2'; c.fillRect(0, 0, CW, CH);
-    c.filter = 'grayscale(0.55) blur(1.6px) contrast(1.25)';
-    c.translate(CW / 2, CH / 2); c.rotate(0.025); c.drawImage(tmp, -CW / 2 + 3, -CH / 2 + 2);
-    c.restore();
-    c.save(); c.translate(gx, gy);
-    const r3 = mulberry32(777);
-    c.fillStyle = 'rgba(20,20,20,0.5)'; for (let k = 0; k < 300; k++) c.fillRect(r3() * CW, r3() * CH, 1 + r3() * 1.5, 1 + r3());
-    c.fillStyle = 'rgba(30,30,30,0.18)'; c.fillRect(0, 0, 6, CH); c.fillRect(CW - 5, 0, 5, CH);
-    c.restore();
-  }
-  for (const [cell, lever] of [[CELL.makerSelf, 0], [CELL.makerSelf2, 1]]) {
-    const [gx, gy] = cellXY(cell);
-    c.save(); c.translate(gx, gy);
-    c.fillStyle = '#efe6d2'; c.fillRect(0, 0, CW, CH);
-    c.strokeStyle = '#16110c'; c.lineWidth = 6; rr(c, 12, 12, CW - 24, CH - 24, 12); c.stroke();
-    c.lineWidth = 1.5; rr(c, 21, 21, CW - 42, CH - 42, 9); c.stroke();
-    c.restore();
-    paintMakerScene(c, gx + CW / 2 - 18, gy + CH / 2, 2.0, lever);
-  }
-  paintMakerFace(c, ...cellXY(CELL.makerFace));
-  {
-    // Doubao's crib sheet: a scrap of paper, tiny hand-copied answers under other companies' logos
-    const [gx, gy] = cellXY(CELL.cheat);
-    c.save(); c.translate(gx, gy);
-    c.fillStyle = '#e8e0cc'; c.fillRect(0, 0, CW, CH);
-    const r4 = mulberry32(99);
-    c.strokeStyle = '#2a3a8a'; c.lineWidth = 1.4;
-    for (let y = 70; y < CH - 30; y += 15) { c.beginPath(); let x = 26; c.moveTo(x, y); while (x < CW - 26) { const w = 6 + r4() * 18; c.lineTo(x + w, y + (r4() - 0.5) * 3); x += w + 5; c.moveTo(x, y); } c.stroke(); }
-    drawLogo(c, 'openai', 52, 42, 34); drawLogo(c, 'anthropic', 104, 42, 34); drawLogo(c, 'google', 156, 42, 34);
-    c.fillStyle = '#b51f2b'; c.font = `bold 22px ${SERIF}`; c.textAlign = 'center'; c.fillText('✓ ✓ ✓', CW / 2 + 40, CH - 34);
-    c.restore();
-  }
   paintFullJoker(c, ...cellXY(CELL.jokerCN), 'CN'); paintFullJoker(c, ...cellXY(CELL.jokerUS), 'US');
   paintBack(c, ...cellXY(CELL.backPurple), '#4a1f5e', '#c9a0d8');
   // ---- v3 reel: the 批准？ box, the stamp marks, placeholders for the court cards and the paper pair
@@ -719,7 +675,7 @@ export function makeCards(ctx = {}, deps = {}) {
         if (sm.clearR) { const rr = Math.hypot(x, z / 1.9); if (rr < sm.clearR) { const k2 = sm.clearR / Math.max(rr, 1e-3); x *= k2; z *= k2; } }
         P.set(x, y, z);
         Q.setFromEuler(E.set(Math.sin(age * 3 + ph) * 1.2, a + Math.PI / 2, Math.cos(age * 2.3 + ph) * 0.8));
-        const cell = kind < 0.5 ? CELL[`glyph${i % 16}`] : CELL[`${KINGS[i % 10].id}${i % 4}`];
+        const cell = kind < 0.5 ? CELL[`glyph${i % 16}`] : CELL[`${KINGS[i % KINGS.length].id}${i % 4}`];
         put(P, Q, 0.9, cell, CELL.backBlack, kind < 0.5 ? 0 : Math.max(glyph, 0.0), CELL[`glyph${(i * 7) % 16}`]);
       }
       // streams wound round paths (the seals' chains)

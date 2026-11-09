@@ -866,7 +866,7 @@ function logoPlate(id, variant) {
     x.fillText('SPACEX', 128, 112); x.font = 'bold 30px "Helvetica Neue", Arial, sans-serif'; x.fillText('AI', 128, 152);
     x.strokeStyle = '#f2f2f2'; x.lineWidth = 4; x.beginPath(); x.arc(150, 118, 70, -2.4, -0.6); x.stroke();
   } else {
-    const light = ['openai', 'xai', 'kimi'].includes(id);
+    const light = ['openai', 'xai', 'kimi'].includes(id) && !['spade', 'club', 'heart', 'diamond'].includes(id);
     drawLogo(x, id, 128, 128, 170, light ? { color: '#f2f2f2' } : {});
   }
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.NoColorSpace; tx.anisotropy = 8; tx.generateMipmaps = true;
@@ -1104,6 +1104,17 @@ const HAIR = {
   glm:       { tex: 5, gloss: 0.25, specTh: 0.98, front: [1.12, 1.2], bottom: [-3.0, -5.6, -12.6], thick: [1.4, 2.3], flare: 2.0 },
   doubao:    { tex: 0, gloss: 0.4, specTh: 0.97, front: [0.94, 1.14], bottom: [-0.4, 2.6, -8.4], thick: [0.85, 1.1], ears: 1 },
 };
+// v4: the four suit kings borrow a body, a face and hair from the old court kings; their own colours; a suit on the
+// crown plate (no company anywhere)
+{
+  const SUIT_KINGS = {
+    spade:   ['openai',   { robe: '#1d1d22', trim: '#cfd2d6', crown: 'tall', metal: '#d4d6da', plate: '#ece6d6' }],
+    club:    ['xai',      { robe: '#22301f', trim: '#a9b39b', crown: 'spike', metal: '#7d8178', plate: '#ece6d6' }],
+    heart:   ['deepseek', { robe: '#6e1d22', trim: '#d6cba8', crown: 'fin', metal: '#c9a25e', plate: '#ece6d6' }],
+    diamond: ['qwen',     { robe: '#7a4a1c', trim: '#e0cfa0', crown: 'gems', metal: '#c9a25e', plate: '#ece6d6' }],
+  };
+  for (const [id, [base, st]] of Object.entries(SUIT_KINGS)) { STYLE[id] = { ...STYLE[base], ...st }; FACE[id] = { ...FACE[base] }; HAIR[id] = { ...HAIR[base] }; }
+}
 function hairBottom(H, ang) {
   const [ySb, yEar, yBack] = H.bottom;
   return ang < 1.45 ? ySb + (yEar - ySb) * sstep(1.28, 1.45, ang) : yEar + (yBack - yEar) * sstep(1.85, 2.6, ang);
