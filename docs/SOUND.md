@@ -1,5 +1,14 @@
 # 《失控》 OUT OF CONTROL — sound
 
+> **v4 (四王), 2026-11-09, temp score.** 2:35.6, R1–R10. The four suit kings: hearts and diamonds on the left, spades
+> and clubs on the right; hearts and spades are the finalists. R3: the race on a beat grid from the slaps; a heartbeat while
+> Clubs is stuck; his chair (chairBack, plus a falling trombone glissando) after lightOff. R4: a heartbeat, the Ace a
+> bright stab, Diamonds out the same way. R5 from the duel; R6–R8 as v3 (the end slam in the black). **R9 end titles:**
+> the race theme in D major, music box alone, then pizzicato, strings and horns, ending on a held D major chord before
+> 9-01. **R10 egg:** no music (crownRoll, antStep, crownDrag, cardTap). New kinds: lightOff (switch click, a fizz dying),
+> chairBack (the chair slide), crownDrag (a tugged scrape, rim ticks). Gates: 7-01 and 9-01 exact zero. Measured: -16.8
+> LUFS, -1.2 dBTP, 65/66 shots in class (2-04 wall 2.0 LU low), no clicks.
+
 > **v3 (榜首), 2026-11-08, temp score.** 2:21.2, R1–R8 on the new CUES. New kinds: blast {dur} (ChatGPT's shockwave:
 > boom, rushing air, cards torn away), denied {who} (要不起: a dull falling two-note bonk), errorAlarm {who} (系统异常: a harsh
 > two-tone alert), screenEye {who} (a low glassy tritone swell), pressure {dur} (the giant card's growing low air);

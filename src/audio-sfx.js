@@ -32,9 +32,9 @@ export const MIX = {
   yawn: [0.5, 0.3, 'b'], creakS: [0.1, 0.15, 's'], whoosh: [0.5, 0.2, 's'],
   // v2 (托管)
   screenTap: [0.35, 0.06, 's'], hintDing: [0.8, 0.25, 's'], autoOn: [0.7, 0.15, 's'], autoPlay: [0.4, 0.12, 's'], cancelPress: [0.7, 0.08, 's'],
-  screenDeal: [0.5, 0.3, 's'], crumbRoll: [0.6, 0.05, 's'], crownRoll: [0.22, 0.3, 's'], endSlam: [1.1, 0.32, 'b'],
+  screenDeal: [0.5, 0.3, 's'], crumbRoll: [0.6, 0.05, 's'], crownRoll: [1.0, 0.3, 's'], endSlam: [1.1, 0.32, 'b'],
   // v3 (榜首)
-  blast: [2.4, 0.3, 'b'], denied: [0.7, 0.06, 's'], errorAlarm: [0.35, 0.15, 's'], screenEye: [0.4, 0.3, 'b'], pressure: [0.6, 0.2, 'b'], boardFlip: [0.5, 0.1, 's'],
+  blast: [2.4, 0.3, 'b'], lightOff: [0.6, 0.2, 's'], chairBack: [0.9, 0.28, 'b'], crownDrag: [0.8, 0.1, 's'], denied: [0.7, 0.06, 's'], errorAlarm: [0.35, 0.15, 's'], screenEye: [0.4, 0.3, 'b'], pressure: [0.6, 0.2, 'b'], boardFlip: [0.5, 0.1, 's'],
 };
 const mixOf = (k) => MIX[k] ?? [1, 0.15, 's'];
 // the ant's-eye impacts go to the big room (the hall far away)
@@ -43,16 +43,15 @@ export const groupOf = (e) => (e.solo ? 'x' : e.group ?? (e.pov === 'ant' && ANT
 
 // the re-recording mix: dB by kind for events starting in a row (or a named range); the narrowest wins
 export const SCENE = {
-  cardSlap: { '1-05': 2, '2-05': 7, '3-01': 6, '4-01': -14, '4-03': 6, '6-01': -9, '6-02': -12, '6-03': -24, '6-04': -18, '6-05': -14, '6-06': -12, '6-08': -28 },
-  cardToss: { '1-02': -2, '1-03': -2, '3-01': 6 },
-  screenTap: { '2-04': 10, '3-01': 8, '4-03': 6 },
+  cardSlap: { '1-05': 2, '2-04': 7, '3-01': 4, '6-01': -9, '6-02': -12, '6-03': -24, '6-04': -18, '6-05': -14, '6-06': -12, '6-08': -28 },
+  cardToss: { '1-02': -2, '1-03': -2 },
+  screenTap: { '2-03': 10 },
   autoPlay: { '6-01': -8, '6-02': -12, '6-03': -24, '6-04': -18, '6-05': -14, '6-06': -12, '6-08': -28, '6-09': -4 },
-  boardFlip: { '6-03': -12, '2-07': 16, '3-04': 12 },
-  towerCrash: { '3-03': 14 },
-  cardSkim: { '3-03': 8 },
-  crumbRoll: { '1-06': -10 },
+  boardFlip: { '6-03': -12, '2-06': 16, '4-01': 16, '3-01': 6 },
+  crownRoll: { '9-02': 12 },
   cancelPress: { '6-04': 6 },
-  hintDing: { '4-02': 8, '4-04': 4 },
+  hintDing: { '4-03': 8, '4-05': 6 },
+  crumbRoll: { '1-06': -10 },
 };
 // whole rows pulled back, all kinds but a few: { row: [dB, [kinds kept]] }
 export const HUSH = {};
@@ -93,8 +92,8 @@ const dbAt = (keys, t) => { if (t <= keys[0][0]) return keys[0][1]; for (let i =
 
 // ---- pans: the events carry none. Seen from the table's foot: CN kings on the left, US on the right; the two finalists
 // (DeepSeek, OpenAI) nearer the middle, the eight others wider.
-const HEAD = new Set(['deepseek', 'openai']);
-const CN_KINGS = new Set(['deepseek', 'qwen', 'kimi', 'glm', 'doubao', 'CN']);
+const HEAD = new Set(['deepseek', 'openai', 'heart', 'spade']);
+const CN_KINGS = new Set(['deepseek', 'qwen', 'kimi', 'glm', 'doubao', 'CN', 'heart', 'diamond']);
 export function panOf(e) {
   if (e.pan !== undefined) return e.pan;
   const w = e.who;

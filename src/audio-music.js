@@ -20,7 +20,7 @@ import { musicBox, organNotes, choirVowel, drone, shepardInto, pizzNote } from '
 import { isUS, preOf } from './audio-kinds.js';
 import { SHOTS, CUES, ROW } from './shots.js';
 
-const CUE_NAME = { R1: '蚂蚁 the ant', R2: '榜首 number one', R3: '比大 the race', R4: '提示 hint', R5: '托管 auto', R6: '取消托管 cancel', R7: '眼睛 the eye', R8: '发牌的人 the dealer' };
+const CUE_NAME = { R1: '蚂蚁 the ant', R2: '榜首 number one', R3: '比大 the race', R4: '提示 hint', R5: '托管 auto', R6: '取消托管 cancel', R7: '眼睛 the eye', R8: '发牌的人 the dealer', R9: '片尾 end titles', R10: '彩蛋 the egg' };
 export function cueTable() {
   const out = [];
   for (const s of SHOTS) { const l = out[out.length - 1]; if (l && l.id === s.cue) l.t1 = s.t1; else out.push({ id: s.cue, name: CUE_NAME[s.cue] ?? s.cue, t0: s.t0, t1: s.t1 }); }
@@ -170,6 +170,8 @@ function hit(k, t, chord, v, o = {}) {
   if (o.sub) k.SUB(t, t + 2.2, root - 24, (x) => Math.exp(-(x - t) / 0.7), 0.16 * o.sub);
 }
 const minor = (r) => [r, r + 3, r + 7];
+// a heartbeat: two soft low knocks on D, ~77 bpm (timpani, pizzicato basses)
+function heartbeat(k, t0, t1) { for (let t = t0; t < t1 - 0.2; t += 0.78) { k.TIMP(t, 38, 0.6, 0.6, { gain: 0.6 }); k.TIMP(t + 0.24, 38, 0.4, 0.5, { gain: 0.45 }); k.PZ(t, 26, 0.6, { n: 2, gain: 0.3, dur: 0.3 }); } }
 const slapTimes = (E, a, b, minG = 0.6, kinds = ['cardSlap']) => E.filter((e) => kinds.includes(e.kind) && e.t >= a && e.t < b && (e.gain ?? 1) >= minG).map((e) => e.t).sort((x, y) => x - y);
 const sideOf = (E, t) => { const e = E.find((x) => x.kind === 'cardSlap' && Math.abs(x.t - t) < 0.04); return e ? (isUS(e.who) ? 1 : -1) : 0; };
 
@@ -197,10 +199,10 @@ export const SCORE = {
   R2(k, C, ROW, ev, cue, X) {
     const sl = ev('cardSlap', C.chat - 0.3, C.blast + 0.3)[0], tSl = sl ? sl.t : C.chat + 1.0, t0 = C.draw + 0.3;
     k.TIMP(tSl + 0.004, 34, 1, 1.8, { gain: 1.0, pan: 0 }); k.PZ(tSl + 0.004, [34, 46], 0.9, { n: 3, gain: 0.45, pan: 0 }); k.SUB(tSl, tSl + 1.4, 34, (t) => Math.exp(-(t - tSl) / 0.45), 0.12);
-    k.ST(t0, tSl - t0 + 0.01, 81, 0.5, { n: 3, att: 0.9, rel: 0.01, vib: 0, pont: 0.5, gain: 0.15 * LV.warm, bright: 1.2, maxCut: 3800, swell: (u) => 0.4 + 0.6 * u });
+    k.ST(t0, tSl - t0 + 0.01, 81, 0.5, { n: 3, att: 0.9, rel: 0.01, vib: 0, pont: 0.5, gain: 0.25 * LV.warm, bright: 1.2, maxCut: 3800, swell: (u) => 0.4 + 0.6 * u });
     k.ST(t0 + 0.2, tSl - t0 - 0.19, [45, 57], 0.5, { n: 4, att: 1.0, rel: 0.01, vib: 0, gain: 0.12 * LV.warm, bright: 2, maxCut: 900, swell: (u) => 0.3 + 0.7 * u });
-    k.ST(C.chat, tSl - C.chat + 0.005, [81, 82, 93], 0.9, { n: 5, trem: 18, att: 0.2, rel: 0.003, swell: (u) => 0.3 + 0.7 * u * u, gain: 0.07, pont: 0.6, bright: 5, maxCut: 9000 });
-    k.SWELL(tSl, tSl - C.chat, 0.02, 1, { gain: 1.4 });
+    k.ST(C.chat, tSl - C.chat + 0.005, [81, 82, 93], 0.9, { n: 5, trem: 18, att: 0.2, rel: 0.003, swell: (u) => 0.4 + 0.6 * u * u, gain: 0.14, pont: 0.6, bright: 5, maxCut: 9000 });
+    k.SWELL(tSl, tSl - C.chat, 0.02, 1, { gain: 2.2 });
     hit(k, tSl, [58, 62, 65], 1, { dur: 0.5, tpt: true, crash: 1.2, crashRing: 2.5, timp: 1, sub: 1.5, drum2: 1, gain: 1.2, rel: 0.3 });
     k.ST(tSl + 0.1, C.awe - tSl - 0.2, [46, 47, 58, 59, 70, 71], 0.9, { n: 5, trem: 16, att: 0.05, rel: 0.1, swell: (u) => 1 - 0.85 * u, gain: 0.07, pont: 0.4, bright: 5 });
     const tW = C.awe + 0.9, tE = C.race - 0.6, dW = tE - tW;
@@ -217,61 +219,36 @@ export const SCORE = {
     return [];
   },
 
-  // R3 比大 — the race on the slaps (3-01's hero slaps, carried on), the skim and the crash, 3-03 half a beat of silence and
-  // a dumbfounded chord, 3-04 the raise into the dominant, the vacuum, the giant card's tutti, 3-05 the race tutti on a grid
-  // from the slaps, climbing to D an octave up.
+  // R3 比大 — 3-01: the race on the slaps (the theme a semitone higher every bar, carried on to the stall). 3-02 / 3-03:
+  // Clubs is stuck: a heartbeat on D, the refusals are the effects'. 3-04: his light goes out and his chair slides back
+  // into the dark: a falling glissando. 3-05: near silence, a high thin fear.
   R3(k, C, ROW, ev, cue, X) {
-    const gaps = [], E = X.events, T0 = 50;
-    const skim = ev('cardSkim', C.tower, C.gasp)[0], crashE = ev('towerCrash', C.tower, C.big)[0];
-    const tSkim = skim ? skim.t : C.tower + 2.3, dSkim = skim ? skim.dur || 0.8 : 0.8, tCrash = crashE ? crashE.t : tSkim + dSkim;
-    const big = E.find((e) => e.kind === 'bigSlam'), tBig = big ? big.t : C.big + 2.4, tVac = tBig - preOf({ kind: 'bigSlam' });
-    const B1 = extend(beatsFrom(slapTimes(E, C.race - 0.08, C.tower, 0.6, ['cardSlap', 'cardToss']), { p0: 0.6, maxFill: 1.0 }), tSkim - 0.05);
-    const bar1 = barsOf(B1, 0.3);
-    const lay1 = (t) => { const a = smooth((t - C.race) / 1.5), c = t >= C.tower ? 1 : 0; return { pzMel: 1 - 0.4 * a, pzBass: 1, tuba: 1, pzPah: 1, hnMel: 0.9 + 0.1 * a, tpMel: 0.3 + 0.6 * a, trPah: 0.5 + 0.5 * a, snare: 0.8 + 0.2 * a, bd: 1, timp: 0.6, stMel: 0.4 * c }; };
-    const P1 = march(k, B1, { tonic: T0, trAt: (b) => b, bars: bar1.bars, lay: lay1, vel: (t) => 0.75 + 0.12 * smooth((t - C.race) / (tSkim - C.race)), skip: (t) => t >= tSkim - 0.02 });
-    const trEnd1 = P1.length ? P1[P1.length - 1].tonic - T0 : 0;
-    k.ST(tSkim, tCrash - tSkim + 0.03, [T0 + trEnd1 + 31, T0 + trEnd1 + 36], 0.55, { n: 4, trem: 18, att: 0.1, rel: 0.02, pont: 0.6, gain: 0.03, bright: 4, maxCut: 9000 });
-    for (let t = tSkim + 0.05; t < tCrash - 0.03; t += 0.05) k.SNARE(t, 0.18 + 0.25 * (t - tSkim) / Math.max(0.2, tCrash - tSkim), { gain: 0.35, pan: 0.1 });
-    k.CRASH(tCrash + 0.01, 0.95, 2.0, { gain: 0.7, pan: 0.35 }); hit(k, tCrash, minor(T0 + trEnd1 + 12), 1, { dur: 0.9, tpt: true, crash: 1.2, timp: 1, sub: 1.4, drum2: 1, gain: 1.4, rel: 0.5 }); k.SWELL(tCrash, tCrash - tSkim, 0.02, 1, { gain: 1.3 }); k.TIMP(tCrash, T0 + trEnd1 - 12, 1, 1, { gain: 0.6 });
-    for (let i = 0; i < 12; i++) k.PZ(tCrash + 0.03 + 0.045 * i * (1 - 0.02 * i), T0 + trEnd1 + 24 - i * 2 + (i % 2), 0.85 - 0.04 * i, { n: 2, gain: 0.13, dur: 0.12, pan: 0.5 - 0.06 * i });
-    gaps.push([C.gasp, C.gasp + 0.32, -60, 0.015, 0.06, '3-03: half a beat of silence']);
-    const tD = C.gasp + 0.45, rD = T0 + trEnd1;
-    k.BR('trombone', tD, 0.9, [rD - 12, rD - 9, rD - 5], 0.55, { n: 3, att: 0.05, rel: 0.3, bend: (tt) => -smooth((tt - 0.35) / 0.4), swell: (u) => 1 - 0.5 * u, gain: 0.15, scoop: 0 });
-    k.BR('tuba', tD, 0.9, rD - 24, 0.55, { att: 0.05, rel: 0.3, bend: (tt) => -smooth((tt - 0.35) / 0.4), gain: 0.32, scoop: 0 });
-    // after the giant card: the race tutti, on a grid from the slaps, to 4-01
-    const tEnd = C.boardBig - 0.05, B2 = gridFrom(slapTimes(E, tBig + 0.15, tEnd, 0.6), tBig, tEnd, { pMin: 0.22, pMax: 0.5, win: 2.0 }).map((b) => ({ ...b, pan: sideOf(E, b.t) }));
-    const bar2 = barsOf(B2, 0.3), nB2 = bar2.next, tr0 = Math.max(trEnd1 + 1, 12 - (nB2 - 1)), trAt2 = (b) => Math.min(12, tr0 + b);
-    const tR = Math.max(C.big + 0.2, tD + 1.0), dom = T0 + tr0 + 7, cres = (t) => smooth((t - tR) / (tVac - tR));
-    for (let t = tR; t < tVac - 0.01; t += 0.045) k.SNARE(t, 0.3 + 0.6 * cres(t), { gain: 0.65, pan: 0.12 });
-    for (let t = tR, q = 0; t < tVac - 0.01; t += 0.07, q++) k.TIMP(t, dom - 24, 0.3 + 0.6 * cres(t), 0.4, { gain: 0.35, pan: q % 2 ? -0.2 : 0 });
-    k.ST(tR, tVac - tR + 0.01, [dom - 12, dom - 8, dom - 5, dom, dom + 4], 0.9, { n: 5, trem: 16, att: 0.3, rel: 0.01, pm: (tt) => -2 + 2 * smooth(tt / (0.8 * (tVac - tR))), swell: (u) => 0.5 + 0.5 * u * u, gain: 0.1 * LV.race, pont: 0.4, bright: 5 });
-    k.BR('horn', tR + 0.2, tVac - tR - 0.19, [dom, dom + 4], 0.95, { att: 0.5, rel: 0.01, swell: (u) => 0.45 + 0.55 * u * u, gain: 0.12 * LV.race });
-    k.BR('trombone', tR + 0.3, tVac - tR - 0.29, [dom - 12, dom - 8, dom - 5], 0.95, { n: 3, att: 0.5, rel: 0.01, swell: (u) => 0.45 + 0.55 * u * u, gain: 0.11 * LV.race });
-    k.SWELL(tVac, Math.min(2.2, tVac - tR), 0.02, 0.9, { gain: 1.2 });
-    gaps.push([tVac, tBig - 0.002, -90, 0.03, 0.002, `3-04: the vacuum before the giant card (${(tBig - tVac).toFixed(2)} s)`]);
-    hit(k, tBig, minor(T0 + 12 + tr0), 1, { dur: 1.1, tpt: true, crash: 1.2, crashRing: 3, timp: 1, sub: 1.5, drum2: 1, gain: 1.25 });
-    const lay2 = (t) => { const f = smooth((t - C.boardBig) / 1.0); return { pzBass: 0.8, tuba: 1, pzPah: 0.5, trPah: 1, hnMel: 1, tpMel: 1, stMel: 0.6, snare: 1, bd: 1, timp: 0.9, crash: 0.6 + 0.4 * f, trem: 0.6 + 0.4 * f, war: 0.4 + 0.6 * f }; };
-    march(k, B2.slice(1), { tonic: T0, trAt: trAt2, bars: bar2.bars.slice(1), pos0: 1, lay: lay2, vel: (t) => 0.85 + 0.15 * smooth((t - tBig) / (tEnd - tBig)) });
-    const top = T0 + 12 + Math.min(12, trAt2(Math.max(0, nB2 - 1)));
-    cue(B1[0]?.t ?? C.race, `R3: the race: ${B1.length} beats to the skim (D up ${trEnd1}); the giant card on ${nn(T0 + tr0)} minor; ${B2.length} beats tutti to ${nn(top)}`);
-    return gaps;
+    const E = X.events, T0 = 50;
+    const B1 = gridFrom(slapTimes(E, C.race - 0.08, C.stuck, 0.3, ['cardSlap', 'screenTap']), C.race + 0.05, C.stuck - 0.1, { pMin: 0.3, pMax: 0.55, win: 2.0, acc: 0.3 });
+    const lay = (t) => { const a = smooth((t - C.race) / 1.5); return { pzMel: 1, pzBass: 1, tuba: 1, pzPah: 1, hnMel: 1, tpMel: 0.5 + 0.5 * a, trPah: 0.7 + 0.3 * a, snare: 1, bd: 1, timp: 0.7, crash: 0.6 * a, stMel: 0.6, war: 0.4 * a }; };
+    march(k, B1, { tonic: T0, trAt: (b) => b, lay, vel: (t) => 0.8 + 0.15 * smooth((t - C.race) / 4) });
+    heartbeat(k, C.stuck + 0.1, C.out1 + 0.3);
+    for (const c of ev('chairBack', C.out1, C.fear + 1)) chairGliss(k, c.t, Math.max(0.8, c.dur || 1.6), 57, isUS(c.who) ? 1 : -1);
+    k.ST(C.fear + 0.1, ROW['3-05'].t1 - C.fear + 0.5, [81, 88], 0.45, { n: 3, att: 0.6, rel: 0.6, vib: 0, pont: 0.5, gain: 0.03, bright: 1.3, maxCut: 3600 });
+    cue(B1[0]?.t ?? C.race, `R3: the race on ${B1.length} beats; 3-02 a heartbeat (Clubs stuck); 3-04 his chair a falling glissando; 3-05 a thin fear`);
+    return [];
   },
 
-  // R4 提示 — 4-01: a heartbeat-like low pulse (timpani and pizzicato on D) while his finger hovers; the dings are the
-  // effects'; 4-05: the ding-slap becomes the beat: the theme light (pizzicato, snare) on a grid from the slaps.
+  // R4 提示 — 4-02: the heartbeat again (Spades stuck); 4-03 the hint's ding and the Ace: a bright stab on the slap; 4-06
+  // silence; 4-07 Diamonds out: the falling glissando.
   R4(k, C, ROW, ev, cue, X) {
-    for (let t = C.stuck + 0.3, i = 0; t < C.hint + 0.3; t += 0.78, i++) { k.TIMP(t, 38, 0.45, 0.6, { gain: 0.25 }); k.TIMP(t + 0.24, 38, 0.3, 0.5, { gain: 0.2 }); }
-    k.ST(C.stuck + 0.2, C.hints - C.stuck, [38, 50], 0.5, { n: 4, att: 0.8, rel: 0.5, gain: 0.04, bright: 2.4, maxCut: 800, swell: (u) => 1 - 0.6 * u });
-    const E = X.events, tE = C.auto - 0.05, B = gridFrom(slapTimes(E, C.hints, tE, 0.6), C.hints + 0.1, tE, { pMin: 0.25, pMax: 0.5, win: 1.5 });
-    march(k, B, { tonic: 50, trAt: (b) => b, lay: (t) => ({ pzMel: 1, pzBass: 1, pzPah: 0.8, hnMel: 0.5 * smooth((t - C.hints) / 2), snare: 0.6, bd: 0.6, tuba: 0.6 }), vel: () => 0.8 });
-    cue(C.stuck, `R4: a heartbeat on D; 4-05 the theme light on ${B.length} beats (the dings and slaps)`);
+    heartbeat(k, C.stuckS + 0.1, C.hint + 0.2);
+    const ace = ev('cardSlap', C.boardSA - 0.3, C.hintH)[0];
+    if (ace) hit(k, ace.t, [62, 66, 69], 0.85, { dur: 0.5, tpt: true, crash: 0.6, timp: 0.8, sub: 0.5, gain: 0.7, rel: 0.4 });
+    for (const c of ev('chairBack', C.out2, C.duel + 1)) chairGliss(k, c.t, Math.max(0.8, c.dur || 1.6), 57, isUS(c.who) ? 1 : -1);
+    cue(C.stuckS, 'R4: the heartbeat; the Ace a bright stab; 4-07 Diamonds out, a falling glissando');
     return [];
   },
 
   // R5 托管 — the theme on the machine's grid (the autoPlay slaps), brighter, the kings laughing back in their chairs: brass
   // tutti, cheerful and too fast; 5-05: the AI's drones creep in under it (D against E-flat) as the card faces go strange.
   R5(k, C, ROW, ev, cue, X) {
-    const E = X.events, tE = C.red, B = gridFrom(slapTimes(E, C.lean, tE, 0.6), C.lean + 0.1, tE, { pMin: 0.2, pMax: 0.4, win: 1.5, acc: 1 });
+    const E = X.events, tE = C.red, B = gridFrom(slapTimes(E, C.duel, tE, 0.3), C.duel + 0.1, tE, { pMin: 0.2, pMax: 0.4, win: 1.5, acc: 1 });
     const lay = (t) => { const a = smooth((t - C.allAuto) / 1); return { pzBass: 0.8, tuba: 1, pzPah: 0.6, trPah: 0.8, hnMel: 1, tpMel: 0.5 + 0.5 * a, stMel: 0.5, snare: 0.9, bd: 1, timp: 0.6 * a, crash: 0.5 * a, trem: 0.5 * a }; };
     const P = march(k, B, { tonic: 50, trAt: (b) => Math.min(7, b), lay, vel: () => 0.88 });
     const g = (t) => smooth((t - C.mountain) / 2.5);
@@ -335,6 +312,35 @@ export const SCORE = {
     cue(tE, 'R8: the end slam: the biggest hit (D, no third), then nothing but the crowns; black and the credits in silence');
     return gaps;
   },
+  // R9 片尾 — the end titles: the race theme back in D MAJOR, warm at last. 8-07: the music box alone, one phrase; 8-08:
+  // pizzicato under it, then soft strings, then horns carrying the tune, the box above; a last D major chord held and
+  // gone before 9-01.
+  R9(k, C, ROW, ev, cue) {
+    const t0 = C.title + 0.4, tEnd = C.egg - 3.4, p = 0.5, B = [];
+    for (let t = t0; t < tEnd - 0.05; t += p) B.push({ t });
+    const TH = THEME.maj, ph = (t) => (t - t0) / (8 * p);
+    B.forEach((b, i) => {
+      const j = i % 8, half = j < 4 ? 0 : 1, mel = 74 + TH[j], v = 0.75 + 0.1 * (j % 4 === 0);
+      k.MB(b.t, mel + 12, v, { send: 0.35, gain: 0.32 });
+      if (ph(b.t) >= 1) k.PZ(b.t, 38 + OOM[half][j % 4] + 12, 0.6, { n: 3, gain: 0.18, dur: p * 0.8, pan: -0.15 });
+      if (ph(b.t) >= 1) k.PZ(b.t + p / 2, PAH.maj[half].map((x) => 62 + x), 0.5, { n: 2, gain: 0.07, dur: p * 0.4, pan: 0.15 });
+      if (ph(b.t) >= 4) k.BR('horn', b.t, p * 0.9, mel - 12, 0.6, { att: 0.04, rel: 0.12, gain: 0.07, pan: 0.1 });
+    });
+    // soft strings under every half phrase (tonic, dominant) from the third phrase
+    for (let q = 2 * 8 * p, n = 0; t0 + q < tEnd - 0.1; q += 4 * p, n++) {
+      const t = t0 + q, ch = n % 2 ? [45, 57, 61, 64] : [38, 50, 54, 57];
+      k.ST(t, 4 * p + 0.05, ch, 0.55, { n: 5, att: 0.35, rel: 0.3, gain: 0.035, bright: 2.8, maxCut: 2400, vib: 5, spread: 0.6 });
+    }
+    // the last chord: D major, its third in it, held
+    k.ST(tEnd, 2.8, [38, 50, 57, 62, 66, 69, 74], 0.6, { n: 6, att: 0.2, rel: 0.6, swell: (u) => 1 - 0.9 * smooth(u), gain: 0.04, bright: 3, maxCut: 3000, vib: 5, spread: 0.7 });
+    k.BR('horn', tEnd, 2.2, [62, 66, 69], 0.55, { att: 0.15, rel: 0.6, swell: (u) => 1 - 0.85 * smooth(u), gain: 0.06 });
+    k.MB(tEnd, 86, 0.8, { send: 0.4, gain: 0.3 });
+    cue(t0, `R9: the end titles: the theme in D major, the box, then pizzicato, strings, horns (${B.length} beats); a D major chord held, gone by 9-01`);
+    return [];
+  },
+
+  // R10 彩蛋 — after the credits: no music at all (the crown, the ant, the tap are the effects').
+  R10(k, C, ROW, ev, cue) { cue(C.egg, 'R10: the egg: no music'); return []; },
 };
 
 // score one cue into its chunk's music group: returns { report, gaps }

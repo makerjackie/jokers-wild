@@ -25,7 +25,7 @@ import { preOf } from './audio-kinds.js';
 // the true-peak ceiling: -1 dBTP with 0.2 dB to spare (ffmpeg's ebur128 oversampler reads ~0.1 dB hotter than ours)
 export const PEAK_DB = -1.2;
 // staging: the race's frenzy (3-07 + 3-08) lands here before the glue; everything else is placed relative to it
-export const REF_LUFS = -11.0;
+export const REF_LUFS = -9.4;
 export const HUM_LEVEL = 0.0065, WALL_DRIVE_DB = 1.6;
 const clock = typeof performance !== 'undefined' && typeof performance.now === 'function' ? () => performance.now() : null;
 const now = () => (clock ? clock() : 0);
@@ -41,15 +41,15 @@ function seedOf(e) {
 const stopOf = (events, C = CUES) => (events.find((e) => e.kind === 'stop') ?? { t: C.stop }).t;
 // the hard gates: true digital silence (every bus, the hum too): the cut (6-01) and the title (7-09)
 export function gates(C = CUES, events = []) {
-  return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.title, DURATION, '8-07 / 8-08 (the title, the credits)']];
+  return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.egg, C.crown, '9-01 (after the credits)']];
 }
 // the walls driven into saturation in the master: [t0, t1, drive dB, ramp in, ramp out]
 export function wallDrives(C, events) {
-  const big = events.find((e) => e.kind === 'bigSlam'), tB = big ? big.t : C.big + 2.0, end = events.find((e) => e.kind === 'endSlam'), tE = end ? end.t : C.black + 0.45;
-  return [[tB, C.boardBig, WALL_DRIVE_DB, 0.002, 0.25], [C.blizzard, stopOf(events, C), WALL_DRIVE_DB, 0.05, 0.001], [tE, C.title - 1, WALL_DRIVE_DB, 0.002, 0.5]];
+  const end = events.find((e) => e.kind === 'endSlam'), tE = end ? end.t : C.black + 0.45;
+  return [[C.blizzard, stopOf(events, C), WALL_DRIVE_DB, 0.05, 0.001], [tE, C.title - 0.3, WALL_DRIVE_DB, 0.002, 0.3]];
 }
 // the chunks: [id, t0, t1, cut] (cut = { at }: everything of the chunk, music, effects and rooms, cut dead there)
-const chunks = (C, ev) => [['R1', 0, C.screen], ['R2', C.screen, C.race], ['R3', C.race, C.stuck], ['R4', C.stuck, C.auto], ['R5', C.auto, C.red], ['R6', C.red, C.stop, { at: stopOf(ev, C) }], ['R7', C.stop, C.deal, { at: C.deal + 0.05, ramp: 0.6 }], ['R8', C.deal, DURATION, { at: C.title - 0.02, ramp: 1.0 }]];
+const chunks = (C, ev) => [['R1', 0, C.board0], ['R2', C.board0, C.race], ['R3', C.race, C.boardA], ['R4', C.boardA, C.duel], ['R5', C.duel, C.red], ['R6', C.red, C.stop, { at: stopOf(ev, C) }], ['R7', C.stop, C.deal, { at: C.deal + 0.05, ramp: 0.6 }], ['R8', C.deal, C.title, { at: C.title - 0.02, ramp: 1.0 }], ['R9', C.title, C.egg, { at: C.egg, ramp: 0.3 }], ['R10', C.egg, DURATION]];
 const ROOMS = {
   m: { rt60: 2.4, damp: 4500, size: 1.35, pre: 0.022, lo: 90, wet: 0.85 },
   s: { rt60: 1.3, damp: 5200, size: 1.0, pre: 0.012, lo: 160, wet: 0.8 },
@@ -148,7 +148,7 @@ function* renderGen(sampleRate, opts) {
   yield* unit('master mono', M * 0.5, monoLowsG(L, R, 110));
   yield* unit('master eq', M, eqG(L, R, () => [Biquad.peak(300, 0.9, -1.0), Biquad.peak(2800, 1.0, 0.8), Biquad.hishelf(11000, -1.0)]));
   let linGain = 1;
-  const ref = windowLUFS(L, R, C.big, ROW['3-07'].t1, SR);
+  const ref = windowLUFS(L, R, C.blizzard, C.stop, SR);
   yield* job('master stage', M * 0.3, () => { const k = dbToGain(REF_LUFS - ref); for (let i = 0; i < N; i++) { L[i] *= k; R[i] *= k; } linGain *= k; });
   const glueGr = yield* unit('master glue', M * 1.5, glueG(L, R, { thr: -13, ratio: 1.5, knee: 10, att: 0.02, rel: 0.25, look: 0.005 }));
   const WALLS = wallDrives(C, events);

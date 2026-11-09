@@ -14,7 +14,7 @@ import { musicBox } from './audio-voices.js';
 const pair = (sec) => ({ L: new Float32Array(Math.ceil(sec * SR)), R: new Float32Array(Math.ceil(sec * SR)) });
 const addPan = (S, mono, pan, at = 0, g = 1) => { const [gl, gr] = panGains(pan); for (let i = Math.max(0, -at); i < mono.length && at + i < S.L.length; i++) { S.L[at + i] += mono[i] * gl * g; S.R[at + i] += mono[i] * gr * g; } };
 const addMid = (S, mono, at = 0, g = 1) => { for (let i = Math.max(0, -at); i < mono.length && at + i < S.L.length; i++) { const v = mono[i] * g * Math.SQRT1_2; S.L[at + i] += v; S.R[at + i] += v; } };
-const US_SIDE = new Set(['US', 'openai', 'anthropic', 'google', 'xai', 'meta']);
+const US_SIDE = new Set(['US', 'openai', 'anthropic', 'google', 'xai', 'meta', 'spade', 'club']);
 export const isUS = (who) => US_SIDE.has(who);
 const fadeIn = (b, sec = 0.002) => { const n = Math.min(b.length, Math.round(sec * SR)); for (let i = 0; i < n; i++) b[i] *= i / n; return b; };
 // a stable small integer from a string (who -> timbre variant)
@@ -1198,3 +1198,23 @@ export function sfxPressure(e, seed) {
   return S;
 }
 Object.assign(FILM_KINDS, { blast: sfxBlast, denied: sfxDenied, errorAlarm: sfxErrorAlarm, screenEye: sfxScreenEye, pressure: sfxPressure, boardFlip: V3_KINDS.boardFlip });
+
+// ======================================================================================================================
+// 《失控》 v4 (四王): a king out
+// LIGHTOFF {who} — his screen's light going out: a hard switch click, a tiny electric fizz dying, a low thump
+export function sfxLightOff(e, seed) {
+  const out = new Float32Array(Math.ceil(0.6 * SR));
+  ping(out, 0, 1450, 0.35, [[1, 1, 0.02], [2.3, 0.5, 0.012], [3.7, 0.3, 0.008]], 0.3);
+  ping(out, 0, 305, 0.3, [[1, 1, 0.03], [2.1, 0.3, 0.015]], 1.2);
+  noiseBurst(out, 0, { a: 0.0002, tau: 0.0016, f0: 4800, q: 0.9, amp: 0.6 }, new Noise(seed));
+  for (let i = 0; i < Math.round(0.35 * SR); i++) { const t = i / SR; out[i] += Math.tanh(3 * Math.sin(TAU * 100 * t)) * 0.03 * Math.exp(-t / 0.08) * (1 - t / 0.35); }
+  return fadeTail(out, 0.05);
+}
+// CROWNDRAG {dur} — a tiny crown dragged a few steps over the linen by an ant: a gritty little scrape in tugs, its rim ticking
+export function sfxCrownDrag(e, seed) {
+  const d = Math.max(0.3, e.dur || 2), out = new Float32Array(Math.ceil((d + 0.3) * SR)), r = new Rng(seed), nz = new Noise(seed), bp = new SVF(3800, 1.2);
+  for (let i = 0; i < Math.round(d * SR); i++) { const t = i / SR, tug = Math.pow(Math.max(0, Math.sin(Math.PI * 2.2 * t)), 3); bp.run(nz.white()); out[i] += bp.bp * 0.05 * tug * smooth(t / 0.1); }
+  for (let t = 0.1; t < d; t += r.range(0.2, 0.5)) ping(out, Math.round(t * SR), r.range(2600, 3400), 0.025, [[1, 1, 0.05], [2.4, 0.4, 0.03]], r.next() * 6);
+  return fadeTail(out, 0.05);
+}
+Object.assign(FILM_KINDS, { lightOff: sfxLightOff, chairBack: sfxChairBack, crownDrag: sfxCrownDrag });
