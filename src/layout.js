@@ -29,12 +29,17 @@ export const EU = { pos: [0, FLOOR_Y, 3.62] };                             // Mi
 // Ten kings, five a side, seat 0 at the head (next to the throne) .. seat 4 at the foot.
 export const SEAT = { X: 1.62, Z: [-2.5, -1.25, 0.0, 1.25, 2.5], Y: FLOOR_Y + 0.47 };
 export const KINGS = [
-  // 《失控》 v4: four fictional kings, a deck's four suits. Red suits on the -x side, black on the +x side.
-  // The two that last sit in the middle (seat 2), face to face across the pile under the lamp.
-  { id: 'heart', name: '红桃王', suit: '♥', side: 'CN', seat: 2, size: 1.06 },
-  { id: 'diamond', name: '方块王', suit: '♦', side: 'CN', seat: 1, size: 1.0 },
-  { id: 'spade', name: '黑桃王', suit: '♠', side: 'US', seat: 2, size: 1.08 },
-  { id: 'club', name: '梅花王', suit: '♣', side: 'US', seat: 1, size: 1.0 },
+  // 《失控》: the two finalists sit in the middle (seat 2), face to face across the pile under the lamp
+  { id: 'deepseek', name: 'DeepSeek', side: 'CN', seat: 2, size: 1.06 },
+  { id: 'qwen', name: 'Qwen', side: 'CN', seat: 1, size: 1.0 },
+  { id: 'kimi', name: 'Kimi', side: 'CN', seat: 3, size: 0.97 },
+  { id: 'glm', name: 'Zhipu GLM', side: 'CN', seat: 0, size: 0.98 },
+  { id: 'doubao', name: 'Doubao', side: 'CN', seat: 4, size: 0.99 },
+  { id: 'openai', name: 'OpenAI', side: 'US', seat: 2, size: 1.08 },
+  { id: 'anthropic', name: 'Anthropic', side: 'US', seat: 1, size: 1.0 },
+  { id: 'google', name: 'Google', side: 'US', seat: 3, size: 1.02 },
+  { id: 'xai', name: 'xAI', side: 'US', seat: 0, size: 0.98 },
+  { id: 'meta', name: 'Meta', side: 'US', seat: 4, size: 1.0 },
 ];
 export const KING = Object.fromEntries(KINGS.map((k) => [k.id, k]));
 export const SIDE_SIGN = { CN: -1, US: 1 };
