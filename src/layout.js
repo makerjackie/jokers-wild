@@ -34,7 +34,7 @@ export const KINGS = [
   { id: 'anthropic', name: 'Claude', side: 'CN', seat: 2, size: 1.06 },
   { id: 'google', name: 'Gemini', side: 'CN', seat: 1, size: 1.02 },
   { id: 'meta', name: 'Meta', side: 'CN', seat: 3, size: 1.0 },
-  { id: 'glm', name: '大肥鱼', side: 'CN', seat: 0, size: 0.98 },   // the joke brand: only the R1 smash
+  { id: 'glm', name: 'FatFish', side: 'CN', seat: 0, size: 0.98 },   // the joke brand: only the R1 smash
   { id: 'openai', name: 'OpenAI', side: 'US', seat: 2, size: 1.08 },
   { id: 'xai', name: 'xAI', side: 'US', seat: 1, size: 0.98 },
   { id: 'mistral', name: 'Mistral', side: 'US', seat: 3, size: 1.0 },

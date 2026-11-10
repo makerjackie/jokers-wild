@@ -32,7 +32,8 @@ Object.assign(CUES, {
   auto: T('5-01'), semi: T('5-01'), stamps: T('5-02'), hurry: T('5-03'), full: T('5-04'), lean: T('5-05'), autoAll: T('5-06'), holdout: T('5-07'), pass: T('5-07'), drag: T('5-08'), outs: T('5-09'), empty: T('5-10'), allAuto: T('5-11'), mountain: T('5-12'),
   red: T('6-01'), boardFuture: T('6-02'), freeze: T('6-03'), cancel: T('6-04'), error: T('6-05'), cancelUS: T('6-06'), accuse: T('6-07'), eyes: T('6-08'), blizzard: T('6-09'),
   stop: T('7-01'), rise: T('7-02'), eye: T('7-03'), lookUp: T('7-04'), gaze: T('7-05'),
-  deal: T('8-01'), smile: T('8-02'), reach: T('8-03'), shadow: T('8-04'), cover: T('8-05'), black: T('8-06'),
+  deal: T('8-01'), smile: T('8-02'), reach: T('8-03'), shadow: T('8-04'), cover: T('8-05'), black: T('8-06'), after: T('8-07'), antEnd: T('8-08'),
+  invite: T('5-04'), decide: T('5-04b'), pressAuto: T('5-04c'),
   title: T('9-01'), credits: T('9-02'), slap: T('9-03'), fin: DURATION,
 });
 

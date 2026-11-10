@@ -14,7 +14,7 @@ export const BRAND = {
 };
 export const WORDS = {
   openai: 'OpenAI', google: 'Gemini', anthropic: 'Claude', xai: 'xAI', meta: 'Meta',
-  deepseek: '混沌', qwen: '万问', kimi: '月饼', glm: '大肥鱼', doubao: '豆沙包', mistral: 'Mistral', nvidia: 'NVIDIA',
+  deepseek: 'Hundun', qwen: 'WanWen', kimi: 'Mooncake', glm: 'FatFish', doubao: 'Dousha', mistral: 'Mistral', nvidia: 'NVIDIA',
   spacexai: 'SpaceXAI', spade: 'SPADES', heart: 'HEARTS', diamond: 'DIAMONDS', club: 'CLUBS',
 };
 const FONT = '"Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif';

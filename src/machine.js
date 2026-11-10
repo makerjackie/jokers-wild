@@ -214,8 +214,8 @@ function buildMachine(id) {
     const cv = document.createElement('canvas'); cv.width = 512; cv.height = 192; const c = cv.getContext('2d');
     c.fillStyle = '#17120d'; c.fillRect(0, 0, 512, 192); c.strokeStyle = '#b48d4c'; c.lineWidth = 8; c.strokeRect(6, 6, 500, 180);
     const btn = (x, zh, lit, col) => { c.beginPath(); c.arc(x, 76, 52, 0, Math.PI * 2); c.fillStyle = lit ? col : '#2b2620'; c.fill(); c.lineWidth = 6; c.strokeStyle = lit ? '#fff3c9' : '#6b5a3a'; c.stroke();
-      c.fillStyle = lit ? '#fff7dc' : '#a8997c'; c.font = 'bold 40px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(zh, x, 158); };
-    btn(138, '托管', on, '#2fbf55'); btn(374, '取消', false, '#c23a2a');
+      c.fillStyle = lit ? '#fff7dc' : '#a8997c'; c.font = 'bold 30px "Segoe UI", Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(zh, x, 158); };
+    btn(138, 'AUTOPILOT', on, '#2fbf55'); btn(374, 'CANCEL', false, '#c23a2a');
     const tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4; return tx;
   };
   const plates = [plate(false), plate(true)];

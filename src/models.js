@@ -85,7 +85,7 @@ export const MODELS = {
     { name: 'Hundun 5', date: '2026·08' },
   ],
   qwen: [
-    { name: '万问', date: '2023·04', score: 72 },
+    { name: 'WanWen', date: '2023·04', score: 72 },
     { name: 'WanWen 2', date: '2024·06', score: 86 },
     { name: 'WanWen 2.5', date: '2024·09', score: 92 },
     { name: 'WanWen Max', date: '2025·01' },
@@ -95,7 +95,7 @@ export const MODELS = {
     { name: 'WanWen 3.8', date: '2026·08' },
   ],
   kimi: [
-    { name: '月饼', date: '2024·03', score: 84 },
+    { name: 'Mooncake', date: '2024·03', score: 84 },
     { name: 'Mooncake 1.5', date: '2025·01' },
     { name: 'Mooncake 2', date: '2025·07' },
     { name: 'Mooncake Think', date: '2025·11' },
@@ -113,8 +113,8 @@ export const MODELS = {
     { name: 'FatFish 4.1', date: '2026·09' },
   ],
   doubao: [
-    { name: '豆沙包', date: '2023·08', score: 77 },
-    { name: '豆沙包 Pro', date: '2024·05', score: 90 },
+    { name: 'Dousha', date: '2023·08', score: 77 },
+    { name: 'Dousha Pro', date: '2024·05', score: 90 },
     { name: 'Dousha 1.5', date: '2025·01' },
     { name: 'Dousha OSS', date: '2025·08' },
     { name: 'Dousha 2', date: '2026·02' },

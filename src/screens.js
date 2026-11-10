@@ -46,6 +46,17 @@ export function makeScreens() {
     const g = new THREE.Group();
     body.position.z = -0.011; trim.position.set(0, -(SCREEN.H + 0.03) / 2, -0.008);
     g.add(body, glass, trim);
+    { // (v11) the lid, seen from across the table: whose screen this is
+      const lc = document.createElement('canvas'); lc.width = 640; lc.height = 408; const x = lc.getContext('2d');
+      x.fillStyle = '#121217'; x.fillRect(0, 0, 640, 408);
+      x.strokeStyle = 'rgba(214,180,100,0.5)'; x.lineWidth = 3; x.strokeRect(14, 14, 612, 380);
+      const word = WORDS[k.id] ?? k.name;
+      drawLogo(x, k.id, 320, 158, 190, ['openai', 'xai'].includes(k.id) ? { color: '#efe9da' } : {});
+      x.fillStyle = '#efe9da'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold 78px "Segoe UI", Arial, sans-serif`; x.fillText(word, 320, 322, 560);
+      const lt = new THREE.CanvasTexture(lc); lt.colorSpace = THREE.NoColorSpace; lt.anisotropy = 8;
+      const lid = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.W + 0.03, SCREEN.H + 0.03), glowMaterial({ color: '#8f8f8f', map: lt, id: 7 }));
+      lid.rotation.y = Math.PI; lid.position.z = -0.0205; g.add(lid);
+    }
     const f = screenFrame(k.id);
     const m = new THREE.Matrix4().makeBasis(new THREE.Vector3(...f.right), new THREE.Vector3(...f.up), new THREE.Vector3(...f.n));
     g.quaternion.setFromRotationMatrix(m); g.position.set(...f.c);
@@ -54,7 +65,7 @@ export function makeScreens() {
   }
   const atlas = () => cardAtlas().image;
   const drawCell = (c, cell, x, y, w, h) => { const ax = (cell % ACOLS) * ACW, ay = Math.floor(cell / ACOLS) * ACH; c.drawImage(atlas(), ax, ay, ACW, ACH, x, y, w, h); };
-  const SANS = '"Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
+  const SANS = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
   // (v8) a model card drawn for the screen: big logo, big name (the atlas card's print is too small at this size)
   const INV = {};
   for (const k of KINGS) MODELS[k.id].forEach((m, v) => { INV[CELL[`${k.id}${v}`]] = { id: k.id, name: m.name }; });
@@ -70,7 +81,7 @@ export function makeScreens() {
     c.fillStyle = m.internal ? '#ffd0c8' : '#1c1a17'; c.textAlign = 'center'; c.textBaseline = 'middle';
     let fs = 17; c.font = `900 ${fs}px ${SANS}`; while (fs > 9 && Math.max(...lines.map((l) => c.measureText(l).width)) > w - 6) { fs--; c.font = `900 ${fs}px ${SANS}`; }
     lines.forEach((l, i) => c.fillText(l, x + w / 2, y + h * (lines.length > 1 ? 0.7 + i * 0.17 : 0.76)));
-    if (m.internal) { c.save(); c.translate(x + w / 2, y + h * 0.5); c.rotate(-0.35); c.strokeStyle = '#ff2a1a'; c.lineWidth = 3; c.strokeRect(-w * 0.46, -12, w * 0.92, 24); c.fillStyle = '#ff3a2a'; c.font = `900 15px ${SANS}`; c.fillText('危险', 0, 1); c.restore(); }
+    if (m.internal) { c.save(); c.translate(x + w / 2, y + h * 0.5); c.rotate(-0.35); c.strokeStyle = '#ff2a1a'; c.lineWidth = 3; c.strokeRect(-w * 0.46, -12, w * 0.92, 24); c.fillStyle = '#ff3a2a'; c.font = `900 13px ${SANS}`; c.fillText('DANGER', 0, 1); c.restore(); }
     c.restore();
   }
   function paint(id, s, t) {
@@ -105,12 +116,12 @@ export function makeScreens() {
     if ((s.flipped ?? 0) > 0 && (s.hidden ?? 0) > 0) {
       const y = slotUV(1, 0)[1] * CH - 48 - 22;
       c.fillStyle = 'rgba(160,10,8,0.92)'; c.beginPath(); c.roundRect(16, y - 16, 330, 32, 8); c.fill();
-      c.fillStyle = '#ffe2dc'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 20px ${SANS}`; c.fillText('⚠ 未发布 · 内部危险模型', 26, y + 1);
+      c.fillStyle = '#ffe2dc'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 19px ${SANS}`; c.fillText('⚠ UNRELEASED · INTERNAL ONLY', 26, y + 1);
     }
     // 要不起: nothing in his hand beats the #1
     if (s.pass && (s.hi ?? -1) < 0) {
       c.fillStyle = 'rgba(10,10,14,0.78)'; c.beginPath(); c.roundRect(CW * 0.2, CH * 0.06, CW * 0.36, 50, 25); c.fill();
-      c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `bold 32px ${SANS}`; c.fillText('要不起', CW * 0.38, CH * 0.06 + 26);
+      c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`; c.fillText("CAN'T BEAT IT", CW * 0.38, CH * 0.06 + 26);
     }
     // a card dealt from above
     if (s.deal != null) { const x = CW * 0.56 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }
@@ -122,42 +133,51 @@ export function makeScreens() {
       if (on && key !== 'hint') { c.shadowColor = onCol; c.shadowBlur = 20; }
       c.beginPath(); c.roundRect(x + (pressed ? 3 : 0), y + (pressed ? 3 : 0), w, h, 12); c.fill(); c.shadowBlur = 0;
       c.fillStyle = '#f4efe2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `bold 27px ${SANS}`; c.fillText(zh, x + w / 2, y + h * 0.4);
-      c.font = `bold 13px ${SANS}`; c.fillText(en, x + w / 2, y + h * 0.8);
+      c.font = `900 23px ${SANS}`; c.fillText(zh, x + w / 2, y + h * 0.4, w - 10);
+      c.font = `bold 12px ${SANS}`; c.globalAlpha = 0.8; c.fillText(en, x + w / 2, y + h * 0.78, w - 10); c.globalAlpha = 1;
     };
     const full = s.full || s.auto;
-    btn('hint', 'AI 提示', 'AI HINT', s.press === 'hint' || (s.hi ?? -1) >= 0 || (!!s.semi && !full));
-    btn('auto', full ? '托管中' : '托管', 'AUTO', !!full && Math.sin(t * 7) > -0.3, '#d8a020');
-    btn('cancel', '取消托管', 'CANCEL', false);
+    btn('hint', 'AI HINT', 'suggests a card', s.press === 'hint' || (s.hi ?? -1) >= 0 || (!!s.semi && !full));
+    btn('auto', 'AUTOPILOT', full ? 'ON' : 'AI plays for you', (!!full && Math.sin(t * 7) > -0.3) || (!!s.invite && Math.sin(t * 9) > 0), '#d8a020');
+    btn('cancel', 'CANCEL', 'take back control', false);
+    // (v11) the offer, kindly: too slow? let the AI play for you. An arrow at the AUTOPILOT key
+    if (s.invite && !full) {
+      const [u, v] = BTN.auto, bx = u * CW - 75, by = v * CH, w = 350, h = 112, x = bx - w - 22 + 4 * Math.sin(t * 9), y = by - h / 2;
+      c.shadowColor = 'rgba(0,0,0,0.6)'; c.shadowBlur = 18; c.fillStyle = '#f6efdc'; c.beginPath(); c.roundRect(x, y, w, h, 14); c.fill(); c.shadowBlur = 0;
+      c.beginPath(); c.moveTo(x + w - 2, by - 16); c.lineTo(x + w + 20, by); c.lineTo(x + w - 2, by + 16); c.closePath(); c.fill();
+      c.fillStyle = '#1c1a17'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `900 44px ${SANS}`; c.fillText('Too slow?', x + w / 2, y + 38);
+      c.font = `bold 26px ${SANS}`; c.fillStyle = '#7a5a10'; c.fillText('Let AI play for you  ▸', x + w / 2, y + 84);
+    }
     // (v9) 半托管: the AI's pick rises and glows; one big key to say yes
     if (s.semi && !full && s.aiPick != null) {
       const [u, v] = slotUV(0, s.aiPick), x = u * CW - 33, y = v * CH - 48 - 16;
       c.strokeStyle = '#59e3a0'; c.lineWidth = 4; c.shadowColor = '#59e3a0'; c.shadowBlur = 18; c.strokeRect(x - 4, y - 4, 74, 104); c.shadowBlur = 0;
-      c.fillStyle = '#59e3a0'; c.textAlign = 'center'; c.font = `900 16px ${SANS}`; c.fillText('AI 推荐', u * CW, y - 12);
+      c.fillStyle = '#59e3a0'; c.textAlign = 'center'; c.font = `900 15px ${SANS}`; c.fillText('AI PICK', u * CW, y - 12);
     }
     // the countdown: a ring that drains faster each round, and the seconds
     if (s.limit > 0) {
       const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = (t / per) % 1, cx = CW * 0.47, cy = 25;
       const hot = L < 1.2;
-      c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.roundRect(cx - 24, 2, 300, 46, 23); c.fill();
+      c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.roundRect(cx - 24, 2, 250, 46, 23); c.fill();
       c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,0.15)'; c.beginPath(); c.arc(cx, cy, 16, 0, Math.PI * 2); c.stroke();
       c.strokeStyle = hot ? '#ff4a3a' : '#ffd36a'; c.beginPath(); c.arc(cx, cy, 16, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - ph)); c.stroke();
       c.fillStyle = hot ? '#ff6a5a' : '#ffe39a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 34px ${SANS}`;
-      c.fillText(`限时 ${L >= 1 ? Math.round(L) : L.toFixed(1)} 秒`, cx + 24, cy + 1);
+      c.fillText(`${L >= 1 ? Math.round(L) : L.toFixed(1)}s`, cx + 26, cy + 1); c.font = `bold 17px ${SANS}`; c.fillText('TO PLAY', cx + 26 + (L >= 10 ? 76 : L >= 1 ? 54 : 84), cy + 4);
     }
     // (v9) the mode switch, announced
     if (s.toast) {
       const semi = s.toast === 'semi';
-      c.fillStyle = semi ? 'rgba(20,110,70,0.95)' : 'rgba(170,110,10,0.96)'; c.fillRect(0, CH * 0.33, CW * 0.76, CH * 0.34);
+      c.fillStyle = 'rgba(24,120,78,0.96)'; c.fillRect(0, CH * 0.33, CW * 0.76, CH * 0.34);
       c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 56px ${SANS}`; c.fillText('已开启 托管', CW * 0.38, CH * 0.45);
-      c.font = `bold 26px ${SANS}`; c.fillText('AI 直接出牌 · 不再需要你', CW * 0.38, CH * 0.58);
+      c.font = `900 52px ${SANS}`; c.fillText('✓ AUTOPILOT ON', CW * 0.38, CH * 0.45, CW * 0.72);
+      c.font = `bold 27px ${SANS}`; c.fillText('Play faster.  Win more.  Relax.', CW * 0.38, CH * 0.58, CW * 0.72);
     }
     // 超时: too slow; the round is gone
     if (s.timeout) {
       c.fillStyle = 'rgba(150,12,8,0.94)'; c.fillRect(0, CH * 0.36, CW * 0.76, CH * 0.28);
-      c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 72px ${SANS}`; c.fillText('超时', CW * 0.38, CH * 0.47);
-      c.font = `bold 22px ${SANS}`; c.fillText('TIME OUT · 本轮作废', CW * 0.38, CH * 0.58);
+      c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 68px ${SANS}`; c.fillText('TIME OUT', CW * 0.38, CH * 0.47);
+      c.font = `bold 24px ${SANS}`; c.fillText('TOO SLOW · TURN LOST', CW * 0.38, CH * 0.59);
     }
     // 系统异常: the cancel did nothing
     if (s.error) {
@@ -165,7 +185,7 @@ export function makeScreens() {
       c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, CH * 0.3, CW * 0.76, CH * 0.4);
       c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW * 0.76 - 12, CH * 0.4 - 12);
       c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 ${s.attacker ? 40 : 46}px ${SANS}`; c.fillText(s.attacker ? `⚠ 您正遭受 ${s.attacker} 攻击` : '⚠ 您正遭受对方攻击', CW * 0.38, CH * 0.45, CW * 0.72); c.font = `bold 26px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW * 0.38, CH * 0.6, CW * 0.72);
+      c.font = `900 ${s.attacker ? 40 : 46}px ${SANS}`; c.fillText(s.attacker ? `⚠ UNDER ATTACK BY ${s.attacker}` : '⚠ UNDER ATTACK', CW * 0.38, CH * 0.45, CW * 0.72); c.font = `bold 26px ${SANS}`; c.fillText('CANNOT CANCEL AUTOPILOT', CW * 0.38, CH * 0.6, CW * 0.72);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);
@@ -174,7 +194,7 @@ export function makeScreens() {
       c.save(); c.globalAlpha = Math.min(1, s.out);
       c.fillStyle = 'rgba(58,56,54,0.96)'; c.fillRect(0, 0, CW, CH);
       c.fillStyle = '#d8d0c0'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 96px ${SANS}`; c.fillText('淘汰', CW / 2, CH * 0.44); c.font = `bold 28px ${SANS}`; c.fillText('OUT', CW / 2, CH * 0.66);
+      c.font = `900 84px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.44, CW * 0.9); c.font = `bold 34px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.66);
       c.restore();
     }
   }
@@ -201,7 +221,7 @@ export function makeScreens() {
       const s = st[k.id], sc = S[k.id];
       sc.g.visible = !!s && (s.on ?? 1) > 0;
       if (!sc.g.visible) continue;
-      const key = JSON.stringify(s) + (s.auto || (s.red ?? []).length ? Math.floor(t * 24) : '');
+      const key = JSON.stringify(s) + (s.auto || s.invite || s.limit || (s.red ?? []).length ? Math.floor(t * 24) : '');
       if (key !== sc.key) { paint(k.id, s, t); sc.tex.needsUpdate = true; sc.key = key; }
     }
   }

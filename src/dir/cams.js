@@ -34,6 +34,13 @@ function screenCam(cam, st, id, u = 0.5, v = 0.5, d = 0.36, fov = 40, side = 0.1
   st.look.exposure = 1.0;
   if (st.props?.plates) st.props.plates.show = 0;   // the name plate on the table edge would cover the buttons
 }
+// (v11) from his screen, looking up into his face: what the machine sees. Top-left of the glass, clear of his right hand
+function povCam(cam, st, w, t, id, o = {}) {
+  const f = screenFrame(id), c = screenPoint(id, 0.5, 0.5, 0), h = headOf(id, w, st, t), k = o.back ?? 0.36, sx = SIDE_SIGN[KING[id].side];
+  const p = [c[0] + f.up[0] * k, c[1] + f.up[1] * k + (o.dy ?? 0), c[2] + (o.dz ?? 0.1) * sx];   // just beyond the top edge of his screen, low
+  cam.position.set(...p); cam.up.set(-sx * 0.25, 1, 0); cam.lookAt(h[0], h[1] - 0.03 + (o.ly ?? 0), h[2]); cam.fov = o.fov ?? 44;
+  st.look.dof = { focus: Math.hypot(p[0] - h[0], p[1] - h[1], p[2] - h[2]), k: 0.3, max: 8 }; st.look.near = 0.01; st.look.exposure = o.exp ?? 1.35;
+}
 function twoShot(cam, st, y = 0.95, z = 2.65, fov = 44) { camLook(cam, [0, y, z], [0, 0.44, 0], fov); st.look.exposure = 1.4; }
 const shake = (t, t0, amp, f = 70, decay = 10) => (t > t0 ? Math.exp(-(t - t0) * decay) * amp * Math.sin((t - t0) * f) : 0);
 const antP = (t) => { const a = S.antAt(t); return a.pos ?? [S.ANT_CRUSH[0], 0, S.ANT_CRUSH[1]]; };
@@ -138,8 +145,10 @@ export const SHOTS = {
   '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01') : screenCam(w.camera, st, 'openai', 0.62, 0.45, 0.42, 46)),
   // three screens, three hands on 确认, the countdown shrinking on each
   '5-02': (t, st, w, shot) => { const id = ['anthropic', 'google', 'xai'][+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.6, 0.42, 0.44, 46); },
-  '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.85, dz: 0.3, dy: -0.18, ly: -0.04, fov: 34 }),
-  '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.66, 0.5, 0.44, 46),
+  '5-03': (t, st, w) => povCam(w.camera, st, w, t, 'anthropic', { fov: 44 - 3 * uRow(t, '5-03'), back: 0.46, dz: 0.24, dy: -0.04 }),
+  '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.6, 0.45, 0.46, 46),
+  '5-04b': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 4 * uRow(t, '5-04b'), back: 0.42, dy: -0.05, ly: 0.03 }),
+  '5-04c': (t, st, w) => { const u = uRow(t, '5-04c'); screenCam(w.camera, st, 'openai', 0.74, 0.48, 0.34 - 0.03 * u, 44); },
   '5-05': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
   '5-06': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.5, 0.44, 46); },
   '5-07': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-07') : screenCam(w.camera, st, 'meta', 0.55, 0.45, 0.46, 48)),
@@ -180,6 +189,19 @@ export const SHOTS = {
   // his grin, close; the edge of the shadow slides over it
   '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'anthropic', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
+  // the lamp comes back on an empty table: the chairs, the grey screens, the cards still flying
+  '8-07': (t, st, w, shot) => {
+    const u = uRow(t, '8-07');
+    if (+shot.id.split('.')[1] === 1) { screenCam(w.camera, st, 'openai', 0.5, 0.5, 0.56 - 0.06 * u, 48); st.look.exposure = 1.25; st.look.fade = 1 - ease(t, at('8-07', 0.1), at('8-07', 0.9)); return; }
+    camLook(w.camera, [2.15 - 0.2 * u, 1.5, 2.0 - 0.25 * u], [-0.6, 0.25, 0.15], 46); st.look.exposure = 1.9; st.look.p2 = { pos: [0.5, 2.6, 2.5], col: [0.34, 0.31, 0.28], range: 12 };
+  },
+  // the ant again (1-02): side on, at its height; the empty chairs and the grey screens soft behind it
+  '8-08': (t, st, w) => {
+    const a = antP(t), d = S.antAt(t).dir ?? [0.8, -0.6], u = uRow(t, '8-08');
+    const pos = [a[0] + d[1] * -0.06 + d[0] * (0.016 - 0.012 * u), 0.009, a[2] + d[0] * 0.06 + d[1] * (0.016 - 0.012 * u)];
+    macro(w.camera, st, pos, [a[0] + d[0] * 0.004, a[1] + 0.006, a[2] + d[1] * 0.004], 34, dist(pos, a), 0.8);
+    st.look.exposure = 1.5; st.look.fade = ease(t, at('9-01', -0.9), at('9-01', -0.05));
+  },
   '9-01': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
   '9-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
   '9-03': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },

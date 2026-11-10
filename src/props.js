@@ -346,24 +346,18 @@ function consoleShared() {
   // fascia (toward the table and a camera across it), the cancel key's cap
   const LBL = { hood: [0.102, 0.072], front: [0.13, 0.035], cancel: [0.09, 0.035], back: [0.122, 0.0325], backC: [0.084, 0.0325], cap: [0.03, 0.03] };
   const hoodT = labelCanvas(...LBL.hood, (g, W, H) => {
-    g.font = `900 ${Math.round(H * 0.5)}px ${FONT_HEI}`; spaced(g, '托管', W / 2, H * 0.4, W * 0.04);
-    g.font = `800 ${Math.round(H * 0.25)}px ${FONT_SANS}`; spaced(g, 'AUTO', W / 2, H * 0.78, W * 0.035);
+    g.font = `800 ${Math.round(H * 0.42)}px ${FONT_SANS}`; spaced(g, 'AUTO', W / 2, H * 0.36, W * 0.03);
+    g.font = `800 ${Math.round(H * 0.28)}px ${FONT_SANS}`; spaced(g, 'PILOT', W / 2, H * 0.75, W * 0.035);
   });
   const frontT = labelCanvas(...LBL.front, (g, W, H) => {
-    g.font = `900 ${Math.round(H * 0.66)}px ${FONT_HEI}`; const a = g.measureText('托管').width;
-    g.font = `800 ${Math.round(H * 0.56)}px ${FONT_SANS}`; const b = g.measureText('AUTO').width + 3 * H * 0.08;
-    const gap = H * 0.35, x0 = W / 2 - (a + gap + b) / 2;
-    g.font = `900 ${Math.round(H * 0.66)}px ${FONT_HEI}`; g.fillText('托管', x0 + a / 2, H * 0.53);
-    g.font = `800 ${Math.round(H * 0.56)}px ${FONT_SANS}`; spaced(g, 'AUTO', x0 + a + gap + b / 2, H * 0.55, H * 0.08);
+    g.font = `800 ${Math.round(H * 0.56)}px ${FONT_SANS}`; spaced(g, 'AUTOPILOT', W / 2, H * 0.55, H * 0.05);
   });
   const cancelT = labelCanvas(...LBL.cancel, (g, W, H) => {
-    g.font = `900 ${Math.round(H * 0.5)}px ${FONT_HEI}`; spaced(g, '取消', W / 2, H * 0.38, W * 0.03);
-    g.font = `800 ${Math.round(H * 0.25)}px ${FONT_SANS}`; spaced(g, 'CANCEL', W / 2, H * 0.77, W * 0.012);
+    g.font = `800 ${Math.round(H * 0.46)}px ${FONT_SANS}`; spaced(g, 'CANCEL', W / 2, H * 0.54, W * 0.02);
     xMark(g, W, H, 0.34);
   });
   const capT = labelCanvas(...LBL.cap, (g, W, H) => {
-    g.font = `900 ${Math.round(H * 0.42)}px ${FONT_HEI}`; g.fillText('取消', W / 2, H * 0.4);
-    g.font = `800 ${Math.round(H * 0.17)}px ${FONT_SANS}`; spaced(g, 'CANCEL', W / 2, H * 0.75, W * 0.01);
+    g.font = `800 ${Math.round(H * 0.24)}px ${FONT_SANS}`; spaced(g, 'CANCEL', W / 2, H * 0.52, W * 0.012);
     xMark(g, W, H, 0.3);
   });
   const lblGeo = (w, h) => new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2);   // faces +y, text top toward -z
@@ -727,16 +721,15 @@ function sealFaceCanvas(kind) {
       }
     }
     // centre: 禁运 heavy, a bar, EMBARGO small
-    g.font = `900 236px ${FONT_SONG}`; g.lineWidth = 10; g.lineJoin = 'round';
-    g.strokeText('禁运', cx, cy - 30); g.fillText('禁运', cx, cy - 30);
+    g.font = `900 250px ${FONT_SERIF}`; g.lineWidth = 10; g.lineJoin = 'round';
+    g.strokeText('NO', cx, cy - 30); g.fillText('NO', cx, cy - 30);
     g.fillRect(cx - 190, cy + 96, 380, 12);
-    g.font = `700 64px ${FONT_SERIF}`; g.fillText('E M B A R G O', cx, cy + 156);
+    g.font = `700 64px ${FONT_SERIF}`; g.fillText('E X P O R T', cx, cy + 156);
   } else {
     g.lineWidth = 46; g.strokeRect(40, 40, N - 80, N - 80);
     g.lineWidth = 10; g.strokeRect(96, 96, N - 192, N - 192);
-    g.font = `900 360px ${FONT_SONG}`; g.lineWidth = 16; g.lineJoin = 'round';
-    g.strokeText('拒', cx - 182, cy - 70); g.fillText('拒', cx - 182, cy - 70);
-    g.strokeText('收', cx + 182, cy - 70); g.fillText('收', cx + 182, cy - 70);
+    g.font = `900 400px ${FONT_SERIF}`; g.lineWidth = 16; g.lineJoin = 'round';
+    g.strokeText('NO', cx, cy - 70); g.fillText('NO', cx, cy - 70);
     g.fillRect(150, cy + 168, N - 300, 12);
     g.font = `700 104px ${FONT_SERIF}`; fit(g, 'R E J E C T E D', cx, cy + 290, N - 300, 104, FONT_SERIF, '700');
   }
@@ -797,7 +790,7 @@ function sealShared() {
   bg.fillRect(0, 6, 4096, 8); bg.fillRect(0, 146, 4096, 8);
   for (let k = 0; k < 3; k++) {
     const x0 = (k * 4096) / 3;
-    bg.font = `900 112px ${FONT_SONG}`; bg.fillText('禁运', x0 + 300, 84);
+    bg.font = `700 100px ${FONT_SERIF}`; bg.fillText('N O', x0 + 300, 84);
     bg.font = `700 100px ${FONT_SERIF}`; bg.fillText('E M B A R G O', x0 + 860, 84);
     bg.beginPath(); for (let q = 0; q < 10; q++) { const a = -Math.PI / 2 + (q / 10) * TAU, rr = q % 2 ? 14 : 34; bg.lineTo(x0 + 1290 + Math.cos(a) * rr, 80 + Math.sin(a) * rr); } bg.closePath(); bg.fill();
   }
@@ -967,8 +960,7 @@ function pressShared() {
   const rollerCap = new THREE.CylinderGeometry(0.0095, 0.0095, 0.006, 16).rotateZ(Math.PI / 2);
   const oilCup = lathe([[0, 0], [0.004, 0], [0.004, 0.006], [0.0065, 0.009], [0.0065, 0.013], [0.003, 0.0145], [0, 0.015]], 12);
   const plateT = plateCanvas(0.09, 0.024, (g, Wc, Hc) => {
-    g.font = `900 ${Math.round(Hc * 0.42)}px ${FONT_HEI}`; g.fillText('印 牌 机', Wc / 2, Hc * 0.38);
-    g.font = `700 ${Math.round(Hc * 0.26)}px ${FONT_SERIF}`; g.fillText('C A R D   P R E S S', Wc / 2, Hc * 0.72);
+    g.font = `700 ${Math.round(Hc * 0.36)}px ${FONT_SERIF}`; g.fillText('C A R D   P R E S S', Wc / 2, Hc * 0.54);
   });
   const nplate = softBox(0.09, 0.0016, 0.024, 0.0006);
   // rivets: round the plinth, round the slot (a loading-dock door), along the cheeks, on the crown, on the ramp
@@ -1721,16 +1713,15 @@ function dieArt() {
   frame(3.4, 3.2, 3.0);
   frame(7.5, 1.1, 1.2);
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.font = `900 ${Math.round(43 * mm)}px ${FONT_HEI}`;
-  g.lineWidth = 1.2 * mm;
-  const cw = g.measureText('批').width;
-  for (const [ch, dx] of [['批', -1], ['准', 1]]) { const x = PW / 2 + dx * (cw / 2 + 2.4 * mm); g.fillText(ch, x, 31 * mm); g.strokeText(ch, x, 31 * mm); }
+  g.lineWidth = 0.7 * mm;
+  { let sz = 30 * mm; g.font = `900 ${Math.round(sz)}px ${FONT_SERIF}`; const w0 = g.measureText('APPROVED').width, mw = PW - 30 * mm; if (w0 > mw) { sz *= mw / w0; g.font = `900 ${Math.round(sz)}px ${FONT_SERIF}`; }
+    g.save(); g.translate(PW / 2, 33 * mm); g.scale(1, Math.min(1.9, 30 * mm / sz)); g.fillText('APPROVED', 0, 0); g.strokeText('APPROVED', 0, 0); g.restore(); }   // cut tall: the word fills the die
   g.fillRect(17 * mm, 55 * mm, PW - 34 * mm, 0.9 * mm);
   g.font = `700 ${Math.round(11.4 * mm)}px ${FONT_SERIF}`;
   g.lineWidth = 0.25 * mm;
-  const aw = [...'APPROVED'].map((ch) => g.measureText(ch).width), sp = 2.3 * mm, tot = aw.reduce((a, b) => a + b, 0) + sp * 7;
+  const LOW = '★★★', aw = [...LOW].map((ch) => g.measureText(ch).width), sp = 7 * mm, tot = aw.reduce((a, b) => a + b, 0) + sp * (aw.length - 1);
   let ax = PW / 2 - tot / 2;
-  [...'APPROVED'].forEach((ch, i) => { g.fillText(ch, ax + aw[i] / 2, 64.8 * mm); g.strokeText(ch, ax + aw[i] / 2, 64.8 * mm); ax += aw[i] + sp; });
+  [...LOW].forEach((ch, i) => { g.fillText(ch, ax + aw[i] / 2, 64.8 * mm); g.strokeText(ch, ax + aw[i] / 2, 64.8 * mm); ax += aw[i] + sp; });
   // a worn die: nicks in the strokes, two cracks across the outer border
   const rng = new Rng(4242);
   g.fillStyle = '#000';
@@ -1871,11 +1862,7 @@ function stampShared() {
   lg.strokeStyle = '#a81e28'; lg.lineWidth = 7; lg.strokeRect(16, 16, LW - 32, LH - 32);
   lg.lineWidth = 2; lg.strokeRect(30, 30, LW - 60, LH - 60);
   lg.fillStyle = '#a81e28'; lg.textAlign = 'center'; lg.textBaseline = 'middle';
-  lg.font = `900 ${Math.round(LH * 0.62)}px ${FONT_HEI}`; const za = lg.measureText('批准').width;
-  lg.font = `700 ${Math.round(LH * 0.36)}px ${FONT_SERIF}`; const ea = lg.measureText('A P P R O V E D').width;
-  const gap = LH * 0.35, lx = LW / 2 - (za + gap + ea) / 2;
-  lg.font = `900 ${Math.round(LH * 0.62)}px ${FONT_HEI}`; lg.fillText('批准', lx + za / 2, LH * 0.53);
-  lg.font = `700 ${Math.round(LH * 0.36)}px ${FONT_SERIF}`; lg.fillText('A P P R O V E D', lx + za + gap + ea / 2, LH * 0.55);
+  lg.font = `700 ${Math.round(LH * 0.44)}px ${FONT_SERIF}`; lg.fillText('A P P R O V E D', LW / 2, LH * 0.54, LW - 90);
   const labelT = tex(lc);
   const woodMat = cel({
     color: '#ffffff', id: ID.WOOD, gloss: 0.9, rim: 0.9, uniforms: { uLabel: { value: labelT } },
@@ -2122,7 +2109,7 @@ function buildInk() {
 // 13 cm outside his proposal card's far edge, under the stamping arm's forearm (plate top 0.09 m). Plate frame: origin = the middle of its footprint on the tabletop, +y up, local +z = the
 // front face's heading, the name reads along local +x seen from the front.
 export const PLATE = { L: 0.25, S: 0.115, A: 1.15, T: 0.0028, X: 1.1, DZ: 0.08 };
-const PLATE_NAMES = { spade: ['♠ SPADES'], heart: ['♥ HEARTS'], diamond: ['♦ DIAMONDS'], club: ['♣ CLUBS'], openai: ['OpenAI'], anthropic: ['Claude'], mistral: ['Mistral'], google: ['Google'], xai: ['xAI'], meta: ['Meta'], deepseek: ['Hundun', '混沌'], qwen: ['WanWen', '万问'], kimi: ['Mooncake', '月饼'], glm: ['FatFish', '大肥鱼'], doubao: ['Dousha', '豆沙包'] };
+const PLATE_NAMES = { spade: ['♠ SPADES'], heart: ['♥ HEARTS'], diamond: ['♦ DIAMONDS'], club: ['♣ CLUBS'], openai: ['OpenAI'], anthropic: ['Claude'], mistral: ['Mistral'], google: ['Google'], xai: ['xAI'], meta: ['Meta'], deepseek: ['Hundun'], qwen: ['WanWen'], kimi: ['Mooncake'], glm: ['FatFish'], doubao: ['Dousha'] };
 export function platePos(id) { const k = KING[id]; return [SIDE_SIGN[k.side] * PLATE.X, 0, SEAT.Z[k.seat] + PLATE.DZ]; }
 export function plateYaw(id, turn = 0) { const s = SIDE_SIGN[KING[id].side]; return -s * Math.PI / 2 + s * turn; }
 // the world point at the middle of a plate's front face (for framing)

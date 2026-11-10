@@ -74,6 +74,13 @@ export function soundEvents() {
   for (const id of S.FINAL) { E(S.DEAL, 'screenDeal', { who: id }); E(CUES.smile + 0.5, 'smile', { who: id }); }
   E(S.GIANT_END.t0, 'pressure', { dur: S.BLACK - S.GIANT_END.t0 });
   E(S.SLAM, 'endSlam');
+  // (v11) the offer ("Too slow? Let AI play for you"): a sweet ding on each screen before he takes it
+  for (const id in S.INVITE) if (S.AUTO[id] < 1e9) E(S.INVITE[id], 'hintDing', { who: id, gain: id === 'openai' ? 1 : 0.35 });
+  // (v11) after: the empty table. Every screen goes grey at once; the machines play on, fast and even; the ant walks
+  E(S.AFTER + 0.25, 'eliminated', { who: 'openai' }); E(S.AFTER + 0.25, 'eliminated', { who: 'anthropic' });
+  { const ids = ['anthropic', 'google', 'meta', 'glm', 'openai', 'xai', 'mistral']; let i = 0;
+    for (let t = S.AFTER + 0.3; t < S.AFTER_END - 0.6; t += 0.13, i++) { const who = ids[(i * 3) % ids.length], g = 0.3 * Math.min(1, (S.AFTER_END - 0.6 - t) / 1.5); E(t, 'autoPlay', { who, red: false, gain: g }); E(t + 0.5, 'cardSlap', { who, size: 1, hard: 0.4, gain: g, pov: 'table' }); } }
+  for (let t = CUES.antEnd - 0.2; t < S.AFTER_END - 0.1; t += STEP) E(t, 'antStep', { surface: 'cloth', gain: Math.min(1, (t - CUES.antEnd + 0.4) / 1.2) * Math.min(1, (S.AFTER_END - t) / 0.8) });
   E(CUES.slap + 0.45, 'creditSlap');   // (v8) the swat: no fall, no whoosh; one instant hit
   ev.sort((a, b) => a.t - b.t);
   return ev;

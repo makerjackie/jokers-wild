@@ -1671,9 +1671,12 @@ export function makeKings(ctx = {}) {
       k.cur.size = size; k.cur.rise = rise;
       k.chair.scale.setScalar(cs); k.chair.position.set(0, SEAT_H * (cs - 1), 0);
       k.chair.rotation.set(0.04 * bump, 0, 0);
-      const f = s.face ?? {};
+      let f = s.face ?? {};
       const doze = (s.slump ?? 0) > 0.02 && (f.eyes === 'shut' || f.eyes === 'closed');
-      const breath = doze ? 0.006 * Math.sin((t2 * TAU) / 3.4) : 0;
+      // (v11) alive: he breathes, he blinks, his head is never dead still (each king on his own clock)
+      const ph = k.sp[2] * 3.7 + k.side * 1.3, live = enter > 0.99 && !((s.flat ?? 0) > 0) && !s.still;
+      if (live) { const bp = 2.9 + 1.7 * (0.5 + 0.5 * Math.sin(ph * 5.1)), bt = (((t + ph * 1.3) % bp) + bp) % bp; if (bt < 0.13 && ['open', 'narrow', 'side', 'down', 'glare'].includes(f.eyes ?? 'open')) f = { ...f, eyes: 'closed' }; }
+      const breath = doze ? 0.006 * Math.sin((t2 * TAU) / 3.4) : live ? 0.0035 * Math.sin((t2 * TAU) / 3.8 + ph) : 0;
       const blown = s.blown ?? 0;
       // body: + pitch = forward over the table (lean, half-standing, the lurch); blown throws him back
       k.body.position.set(0, (-(s.slump ?? 0) + 0.22 * rise + breath) / size, -0.06 * blown * k.s + (0.1 * rise) / size);
@@ -1689,9 +1692,11 @@ export function makeKings(ctx = {}) {
       let yaw = s.head?.yaw ?? 0, pitch = s.head?.pitch ?? 0;
       if (s.look) { const a = aim(id, s.look); yaw = a.yaw; pitch = a.pitch; }
       else pitch += 0.28 * rise;
+      const hroll = live ? 0.022 * Math.sin(t2 * 0.5 + ph) : 0;
+      if (live) { yaw += 0.03 * Math.sin(t2 * 0.83 + ph) + 0.012 * Math.sin(t2 * 2.1 + ph * 2); pitch += 0.018 * Math.sin(t2 * 0.6 + ph * 1.7); }
       // the press squares his head to the card plane as it lands (a full face on the card, not a foreshortened one)
       const sq = 1 - sstep(0.04, 0.36, s.flat ?? 0);
-      k.headPivot.rotation.set((-pitch - blown * 0.3 - 0.08 * bump) * sq, yaw * sq, (s.head?.roll ?? 0) * sq, 'YXZ');
+      k.headPivot.rotation.set((-pitch - blown * 0.3 - 0.08 * bump) * sq, yaw * sq, ((s.head?.roll ?? 0) + hroll) * sq, 'YXZ');
       // face (painted), the beard drops with the jaw, sweat
       const jaw = setFace(k.face, k.F, f, doze);
       if (k.beard) { k.beard.position.y = -jaw * k.s / 100; k.beardU.uJaw.value = jaw; }

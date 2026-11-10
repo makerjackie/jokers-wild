@@ -1430,14 +1430,15 @@ function stickerTexture() {
   rr(4, 4, 504, 326, 26); g.fillStyle = '#f5f1e6'; g.fill();
   rr(20, 20, 472, 294, 16); g.lineWidth = 9; g.strokeStyle = '#1d1d1b'; g.stroke();
   g.fillStyle = '#121211'; g.textBaseline = 'middle'; g.textAlign = 'left';
-  g.font = '900 150px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "SimHei", sans-serif';
-  g.fillText('安全', 40, 142);
+  g.font = '900 118px "Arial Black", "Arial", sans-serif';
+  g.fillText('SAFE', 40, 138, 300);
   // the tick: a heavy brush stroke
   g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 38; g.strokeStyle = '#121211';
   g.beginPath(); g.moveTo(352, 150); g.lineTo(394, 200); g.lineTo(468, 78); g.stroke();
   g.font = '900 58px "Arial Black", "Arial", sans-serif';
-  g.fillText('SAFE', 46, 262);
-  g.fillRect(232, 258, 236, 10);
+  g.font = '900 44px "Arial Black", "Arial", sans-serif';
+  g.fillText('CERTIFIED', 44, 262, 300);
+  g.fillRect(356, 258, 112, 10);
   // a little wear
   g.globalCompositeOperation = 'destination-out';
   for (let i = 0; i < 70; i++) { const x = hashI(i, 1, 31) * 512, y = hashI(i, 2, 31) * 334, r = 0.6 + hashI(i, 3, 31) * 2.2; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
@@ -2122,8 +2123,7 @@ function buildBoard() {
   pg.fillStyle = '#e4dac6'; pg.fillRect(0, 0, 1024, 108);
   pg.strokeStyle = '#7c1d16'; pg.lineWidth = 10; pg.strokeRect(9, 9, 1006, 90);
   pg.fillStyle = '#141210'; pg.textBaseline = 'middle'; pg.textAlign = 'center';
-  pg.font = '700 62px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif'; pg.fillText('服务器繁忙', 290, 56);
-  pg.font = '900 50px "Arial Black", Arial, sans-serif'; pg.fillText('SERVER BUSY', 742, 58);
+  pg.font = '900 60px "Arial Black", Arial, sans-serif'; pg.letterSpacing = '10px'; pg.fillText('SERVER BUSY', 517, 58); pg.letterSpacing = '0px';
   for (const x of [26, 998]) { pg.fillStyle = '#4a4440'; pg.beginPath(); pg.arc(x, 54, 7, 0, TAU); pg.fill(); }
   const ptex = new THREE.CanvasTexture(pcv); ptex.colorSpace = THREE.NoColorSpace; ptex.anisotropy = 8;
   const plateMat = cel({ color: '#ffffff', id: 9, gloss: 0.6, rim: 0.8, uniforms: { uPlate: { value: ptex } },
@@ -2397,7 +2397,7 @@ function buildDispenser() {
   mg.lineWidth = 7; mg.beginPath(); mg.arc(256, 256, 198, 0, TAU); mg.stroke();
   mg.textAlign = 'center'; mg.textBaseline = 'middle';
   // two lines with a clear band between them, where the crushed bridge runs through the mark
-  mg.font = '900 132px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", serif'; mg.fillText('禁运', 256, 162);
+  mg.font = '900 78px "Arial Black", Arial, sans-serif'; mg.fillText('EXPORT', 256, 170, 330);
   mg.font = '900 64px "Arial Black", Arial, sans-serif'; mg.fillText('EMBARGO', 256, 334);
   // worn ink: knock holes out of it
   mg.globalCompositeOperation = 'destination-out';

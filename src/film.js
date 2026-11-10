@@ -177,30 +177,52 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       c.globalAlpha = tt.alpha ?? 1;
       c.fillStyle = tt.color ?? '#efe6d2';
       c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `${Math.round(H * 0.13)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`;
-      if (tt.zh) { c.letterSpacing = `${Math.round(H * 0.03)}px`; c.fillText(tt.zh, W / 2 + Math.round(H * 0.015), H * (tt.y ?? 0.45)); }
-      c.font = `${Math.round(H * 0.036)}px Georgia, "Times New Roman", serif`;
-      if (tt.en) { c.letterSpacing = `${Math.round(H * 0.014)}px`; c.fillText(tt.en, W / 2, H * ((tt.y ?? 0.45) + 0.11)); }
+      const LATIN = 'Georgia, "Times New Roman", "Songti SC", "SimSun", serif';
+      const ty = H * (tt.y ?? 0.45);
+      // one line, shrunk to fit maxW (letter-spacing included), optically centred
+      const line = (str, size, sp, y, maxW, style = '') => {
+        let k = 1;
+        for (let n = 0; n < 2; n++) { c.font = `${style} ${Math.round(size * k)}px ${LATIN}`; c.letterSpacing = `${Math.round(sp * k)}px`; const w = c.measureText(str).width; if (w > maxW) k *= maxW / w; }
+        c.fillText(str, W / 2 + Math.round(sp * k) / 2, y);
+        return c.measureText(str).width;
+      };
+      if (tt.zh) {
+        c.font = `${Math.round(H * 0.13)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`;
+        c.letterSpacing = `${Math.round(H * 0.03)}px`; c.fillText(tt.zh, W / 2 + Math.round(H * 0.015), ty);
+        if (tt.en) line(tt.en, H * 0.036, H * 0.014, ty + H * 0.11, W * 0.9);
+      } else if (tt.en) {
+        // an English-only title: the big serif line, wide-spaced, a hairline and a diamond under it
+        const tw = line(tt.en, H * 0.105, H * 0.036, ty, W * 0.88), ry = ty + H * 0.105, rw = Math.min(tw * 0.5, W * 0.4), d = H * 0.009;
+        c.save(); c.fillStyle = '#c9a24a'; c.globalAlpha = (tt.alpha ?? 1) * 0.9;
+        c.fillRect(W / 2 - rw, ry - 0.5, rw - d * 2.4, 1.5); c.fillRect(W / 2 + d * 2.4, ry - 0.5, rw - d * 2.4, 1.5);
+        c.beginPath(); c.moveTo(W / 2, ry - d); c.lineTo(W / 2 + d, ry); c.lineTo(W / 2, ry + d); c.lineTo(W / 2 - d, ry); c.closePath(); c.fill();
+        c.restore();
+      }
       // a line under the title; an end-credit card: a small label, the name, a smaller line under it
-      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; c.letterSpacing = `${Math.round(H * 0.006)}px`; c.font = `${Math.round(H * 0.038)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`; c.fillText(tt.sub, W / 2, H * 0.72); c.globalAlpha = tt.alpha ?? 1; }
+      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; line(tt.sub, H * 0.036, H * 0.003, H * 0.72, W * 0.9, 'italic'); c.globalAlpha = tt.alpha ?? 1; }
       if (tt.card) {
-        const k = tt.card, zhF = '"Songti SC", "SimSun", "Noto Serif CJK SC", serif', enF = 'Georgia, "Times New Roman", serif';
-        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.012)}px`; c.font = `${Math.round(H * 0.032)}px ${zhF}`;
+        const k = tt.card;
+        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.012)}px`; c.font = `${Math.round(H * 0.032)}px ${LATIN}`;
         if (k.label) c.fillText(k.label, W / 2, H * 0.39);
-        c.fillStyle = '#efe6d2'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * (k.size ?? 0.062))}px ${k.zh ? zhF : enF}`;
+        c.fillStyle = '#efe6d2'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * (k.size ?? 0.062))}px ${LATIN}`;
         c.fillText(k.main, W / 2, H * 0.5);
-        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * 0.028)}px ${zhF}`;
+        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * 0.028)}px ${LATIN}`;
         if (k.small) c.fillText(k.small, W / 2, H * 0.61);
       }
       if (tt.roll) {
-        // the credits roll up from below: every role the same name, the human last
+        // the credits roll up from below: every role the same name, the human last. Roles right-aligned to the gutter
+        // (so any length fits: "Cinematography"), names left-aligned from it; long ones shrink to the half frame.
         const lh = H * (tt.roll.lh ?? 0.075), y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);
-        c.globalAlpha = tt.alpha ?? 1; c.letterSpacing = '0px';
+        const gut = H * 0.03, half = W / 2 - gut - W * 0.04;
+        c.globalAlpha = tt.alpha ?? 1;
         tt.roll.lines.forEach(([role, name], i) => {
           const y = y0 + i * lh; if (y < -lh || y > H + lh) return;
-          c.textAlign = 'right'; c.fillStyle = '#d8cfbd'; c.font = `${Math.round(H * 0.036)}px "Songti SC", "SimSun", serif`; c.fillText(role, W / 2 - H * 0.03, y);
-          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.04)}px Georgia, "Times New Roman", serif`; c.fillText(name, W / 2 + H * 0.03, y);
+          c.letterSpacing = `${Math.round(H * 0.002)}px`;
+          c.textAlign = 'right'; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.034)}px ${LATIN}`; c.fillText(role, W / 2 - gut, y, half);
+          c.letterSpacing = '0px';
+          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.04)}px ${LATIN}`; c.fillText(name, W / 2 + gut, y, half);
         });
+        c.textAlign = 'center';
       }
       if (tt.slap) {
         // (v7) the last card of the film: it falls out of the dark onto the last name and covers it
@@ -215,7 +237,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         c.restore();
       }
       if (tt.flash) { c.save(); c.globalAlpha = Math.min(1, tt.flash) * 0.85; c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.restore(); }
-      if (tt.credit) { c.globalAlpha = (tt.alpha ?? 1) * 0.8; c.font = `${Math.round(H * 0.026)}px Georgia, "Times New Roman", serif`; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.fillText(tt.credit, W / 2, H * 0.86); }
+      if (tt.credit) { c.globalAlpha = (tt.alpha ?? 1) * 0.8; c.textAlign = 'center'; c.font = `${Math.round(H * 0.026)}px Georgia, "Times New Roman", serif`; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.fillText(tt.credit, W / 2, H * 0.86); }
       c.restore();
     },
   };

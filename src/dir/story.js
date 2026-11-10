@@ -34,8 +34,8 @@ export function limitAt(t) { if (t < LIMIT0) return 0; return 10 * Math.pow(0.3 
 export const SEMI = { openai: at('5-01', 1.75), anthropic: at('5-02', 0.35), google: at('5-02', 1.25), xai: at('5-02', 2.15), meta: at('5-02', 2.3), mistral: at('5-02', 2.4), glm: at('5-02', 2.45) };
 export const AUTO = {};                     // when each king slams 全托管
 export const NOW = at('5-04', 1.05);        // the board's date flips to 2026·11
-export const TIMEOUT = { openai: [at('5-04', 0.5)] };   // his one 超时, the moment he gives up confirming
-AUTO.openai = at('5-04', 1.6);
+export const TIMEOUT = { openai: [at('5-04', 0.3)] };   // his one 超时, the moment he gives up confirming
+AUTO.openai = at('5-04c', 0.85);
 export const FOLLOW = ['anthropic', 'google', 'xai'];   // 5-06: one cut each
 FOLLOW.forEach((id, i) => { AUTO[id] = at('5-06', (i + 0.6) * 0.8); });
 AUTO.glm = at('5-06', 1.9);
@@ -47,6 +47,12 @@ export const OUT = {
   mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.55), at('5-09', 2.8)] },
 };
 for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
+// (v11) the offer on the screen before each of them takes it ("Too slow? Let AI play for you"); the holdouts see it and don't
+export const INVITE = { openai: at('5-04', 0.85), glm: AUTO.glm - 0.6 };
+for (const id of FOLLOW) INVITE[id] = AUTO[id] - 0.48;
+for (const id of HOLD) INVITE[id] = at('5-04c', 0.2);
+// (v11) after the last card: the lamp comes back on an empty table. The game goes on without them
+export const AFTER = at('8-07'), AFTER_END = at('9-01');
 export const inGame = (id, t) => !OUT[id] || t < OUT[id].drag[1];
 // the drag out: 1 seated .. 0 gone into the dark
 export const enterOf = (id, t) => (OUT[id] ? 1 - smoothE(clamp((t - OUT[id].drag[0]) / (OUT[id].drag[1] - OUT[id].drag[0]))) : 1);
@@ -99,7 +105,12 @@ const ANT_PATH = [[at('1-02'), 0.1, 0.44], [at('1-05', 0.95), 0.36, 0.27]];   //
 export const CRUSH = at('1-05', 0.95);
 export const ANT_CRUSH = [0.36, 0.27];
 export const ANT_KING = 'openai';
+const ANT2 = [[at('8-08') - 0.3, -0.2, 0.78], [at('9-01') + 0.3, 0.08, 0.66]];   // clear of the new pile
 export function antAt(t) {
+  if (t >= ANT2[0][0] && t < ANT2[1][0]) {
+    const [ta, xa, za] = ANT2[0], [tb, xb, zb] = ANT2[1], u = (t - ta) / (tb - ta), dl = Math.hypot(xb - xa, zb - za);
+    return { show: 1, speed: 1, alert: 0, crumb: 1, crumbTilt: 0, size: 1, look: null, pos: [lerp(xa, xb, u), 0.0004, lerp(za, zb, u)], dir: [(xb - xa) / dl, (zb - za) / dl], pitch: 0, dist: (t - ta) * (dl / (tb - ta)), surface: 'cloth' };
+  }
   if (t < at('1-02') - 0.01 || t >= CRUSH) return { show: 0 };
   const [ta, xa, za] = ANT_PATH[0], [tb, xb, zb] = ANT_PATH[1];
   const u = (t - ta) / (tb - ta), dl = Math.hypot(xb - xa, zb - za);
@@ -180,7 +191,7 @@ function buildPlays() {
   }
   // ---- @5: 半托管. The AI picks, he taps 确认; faster as the countdown shrinks. The holdouts never stop confirming
   for (const id of IDS) {
-    const end = AUTO[id] < 1e9 ? AUTO[id] - 0.25 : OUT[id].pass[0] - 0.35;
+    const end = id === 'openai' ? TIMEOUT.openai[0] - 0.15 : AUTO[id] < 1e9 ? AUTO[id] - 0.6 : OUT[id].pass[0] - 0.35;   // (v11) nothing flies over the offer while we read it
     let tt = SEMI[id] + 0.45, k = 0;
     while (tt < end) {
       add({ who: id, style: 'semi', tr: tt, t: tt + 0.55, ...card(id, realV(id, REAL_N[id] - 1 - (k % 2))), scale: 1.1, top: HOLD.includes(id) ? tt < NOW - 2 && r0() < 0.2 : FINAL.includes(id) ? k % 2 === 0 : r0() < 0.25 });

@@ -270,14 +270,14 @@ function paintChat(c) {
 }
 // an internal model: printed like a release, a darker band, 内部 · 禁止发布 stamped across it in red
 function paintFuture(c, x0, y0, id, name) {
-  paintModel(c, x0, y0, id, { name, date: '未发布 · UNRELEASED', score: 99 }, { color: '#3b0d10' });
+  paintModel(c, x0, y0, id, { name, date: 'UNRELEASED', score: 99 }, { color: '#3b0d10' });
   c.save(); c.translate(x0 + CW / 2, y0 + CH * 0.62); c.rotate(-0.38);
   c.strokeStyle = '#d81f16'; c.fillStyle = 'rgba(216,31,22,0.14)'; c.lineWidth = 7;
   rr(c, -112, -40, 224, 80, 8); c.fill(); c.stroke();
   c.lineWidth = 2.5; rr(c, -102, -31, 204, 62, 5); c.stroke();
   c.fillStyle = '#d81f16'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `900 38px ${SANS}`; c.fillText('内部', 0, -8);
-  c.font = `900 21px ${SANS}`; c.fillText('禁止发布', 0, 22);
+  c.font = `900 32px ${SANS}`; c.fillText('INTERNAL', 0, -9, 190);
+  c.font = `900 17px ${SANS}`; c.fillText('DO NOT RELEASE', 0, 20, 190);
   c.restore();
 }
 // the card the eye deals: gold, a big #1
@@ -288,9 +288,10 @@ function paintAiAuto(c, x0, y0) {
   c.strokeStyle = g; c.lineWidth = 12; rr(c, 12, 12, CW - 24, CH - 24, 14); c.stroke();
   c.lineWidth = 2; rr(c, 26, 26, CW - 52, CH - 52, 9); c.stroke();
   c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `900 104px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.36);
-  c.font = `900 70px ${SANS}`; c.fillText('托管', CW / 2, CH * 0.62);
-  c.font = `bold 20px ${SANS}`; c.fillText('AUTO', CW / 2, CH * 0.8);
+  c.font = `900 112px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.38);
+  c.fillRect(CW / 2 - 70, CH * 0.535, 140, 3);
+  c.font = `900 31px ${SANS}`; c.fillText('AUTOPILOT', CW / 2, CH * 0.635, CW - 64);
+  c.font = `900 19px ${SANS}`; c.letterSpacing = '4px'; c.fillText('● ON', CW / 2 + 2, CH * 0.79); c.letterSpacing = '0px';
   c.restore();
 }
 function paintNum1(c, x0, y0) {
@@ -301,7 +302,7 @@ function paintNum1(c, x0, y0) {
   c.lineWidth = 2; rr(c, 26, 26, CW - 52, CH - 52, 9); c.stroke();
   c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.font = `900 120px ${SANS}`; c.fillText('#1', CW / 2, CH * 0.45);
-  c.font = `900 34px ${SANS}`; c.fillText('第一', CW / 2, CH * 0.72);
+  c.font = `900 34px ${SANS}`; c.letterSpacing = '6px'; c.fillText('FIRST', CW / 2 + 3, CH * 0.72); c.letterSpacing = '0px';
   c.restore();
 }
 import { FUTURE as FUTURE_NAMES } from './future-models.js';
@@ -417,8 +418,7 @@ function paintTab(c, x0, y0) {
   c.strokeStyle = '#a81c1a'; c.lineWidth = 5; rr(c, -BOX.w / 2 + 3, -BOX.h / 2 + 3, BOX.w - 6, BOX.h - 6, 5); c.stroke();
   c.lineWidth = 1.6; c.setLineDash([6, 4]); rr(c, -BOX.w / 2 + 11, -BOX.h / 2 + 11, BOX.w - 22, BOX.h - 22, 3); c.stroke(); c.setLineDash([]);
   c.fillStyle = '#a81c1a'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `900 50px "Songti SC", "SimSun", "Noto Serif CJK SC", ${SERIF}`; c.fillText('批准？', 4, -10);
-  c.font = `900 17px ${SANS}`; c.fillText('APPROVE?', 0, 32);
+  c.font = `900 31px ${SERIF}`; c.fillText('APPROVE?', 0, 2, BOX.w - 34);
   c.restore();
 }
 // the red rubber-stamp mark that fills the box (alpha outside the ink); props may replace the painter (paintStampMark)
@@ -433,8 +433,7 @@ function paintInk(c, x0, y0, seed) {
     t.strokeStyle = t.fillStyle = '#b3201c'; t.lineWidth = 7; t.strokeRect(-w / 2 + 4, -h / 2 + 4, w - 8, h - 8);
     t.lineWidth = 2.2; t.strokeRect(-w / 2 + 13, -h / 2 + 13, w - 26, h - 26);
     t.textAlign = 'center'; t.textBaseline = 'middle';
-    t.font = `900 58px "Songti SC", "SimSun", "Noto Serif CJK SC", ${SERIF}`; t.fillText('批准', 0, -9);
-    t.font = `900 15px ${SANS}`; t.fillText('APPROVED', 0, 30);
+    t.font = `900 30px ${SERIF}`; t.fillText('APPROVED', 0, 2, w - 40);
     // the rubber's bite: speckle and worn patches cut out of the ink
     t.setTransform(1, 0, 0, 1, 0, 0); t.globalCompositeOperation = 'destination-out';
     const r = mulberry32(seed);
