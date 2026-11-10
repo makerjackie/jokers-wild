@@ -1,3 +1,26 @@
+# 《失控》 OUT OF CONTROL — v7 (2026-11-10, the release version)
+
+v7 = the v3 (榜首) story rebuilt as the finished film, on branch `v7` (v4–v6 were detours; v6 《喂》 is on `master`).
+Shot table: `docs/script/shots.txt` (2:36.6). Director: `src/dir/story.js` (data), `reel.js` (state), `cams.js` (shots).
+
+- **Companies.** Overseas firms keep real names, logos and model names (OpenAI, Anthropic/Claude, Google/Gemini, xAI,
+  Meta). The five Chinese firms are fictional joke brands, drawn in `src/logos.js` under the old ids: 大肥鱼 FatFish
+  (`deepseek`), 万问 (`qwen`), 月饼 Mooncake (`kimi`), 智普普 ZPP (`glm`), 豆沙包 Dousha (`doubao`). The CN finalist is 大肥鱼.
+- **Time.** The #1 board's top row is the year·month (never goes back). Real releases until 2026·10; at 2026·11 (5-01)
+  OpenAI slams 托管. After that every card is invented: `MODELS[id]` has two appended future cards per company
+  (`REAL_N` = the real count), the board flips through `nextName()` versions, then the red internal `FUTURE` names.
+- **The holdouts (5-04 .. 5-09).** Five more kings slam 托管 (one cut each). Meta, 月饼 and 豆沙包 won't: they play by
+  hand, 要不起, the screen goes grey 淘汰, they are dragged back with their chairs into the dark reaching for the table
+  (`OUT`, `enterOf`), filmed side-on so it reads as being pulled away. The rest look at the empty places, then laugh.
+- **The lie.** When 取消托管 fails, each screen says "⚠ 您正遭受 <the man across the table> 攻击" — the machine tells each
+  side the other is attacking. They stand and blame each other; then the same eye on every screen.
+- **The end.** Both screens deal a glowing #1 card; they grin; a giant #1 card comes down out of the eye, its shadow over
+  their grins (the ant got the same shadow before the slap, 1-05); black; the slam. Title, with "另一个世界的故事。如有雷同，
+  纯属巧合。"; the credits roll and stop on 编剧 MakerJackie（人类）; a #1 card falls on his name.
+- **Craft fixes.** Ant: crumb bigger and held up, side-on macro, act 1 = 11 s, the crush card lands clear of the old
+  pile. Presses stop where finger / fist / palm meets the glass (reel.js `handFor`). ChatGPT's blast blows cards along
+  the table, never into the kings. The 托管 heap is a mound between the screens. Hands go to the lap on 托管.
+
 # 《失控》 OUT OF CONTROL — production
 
 The film that replaced the 王炸 v3 test reel (archived: `archive/v3/`, `archive/v3-source.tgz`). Same engine, look,
