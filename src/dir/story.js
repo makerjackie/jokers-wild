@@ -13,7 +13,7 @@ import { CARD } from '../cards.js';
 import { buildHeap } from './heap.js';
 import { FUTURE } from '../future-models.js';
 
-export const FINAL = ['deepseek', 'openai'];
+export const FINAL = ['anthropic', 'openai'];
 export const CARD_Y = 0.0036;
 export const sxOf = (id) => SIDE_SIGN[KING[id].side];
 const backOf = (id) => (KING[id].side === 'CN' ? CELL.backCN : CELL.backUS);
@@ -24,20 +24,27 @@ const IDS = KINGS.map((k) => k.id);
 // the internal models nobody has released (invented names: the film's future, not anyone's real roadmap)
 export { FUTURE };
 
-// ---------------------------------------------------------------- phases
-export const AUTO = {};                     // when each king presses 托管 (2026·11 on the board first)
-export const NOW = at('5-01', 0.35);        // the board's date flips to 2026·11
-AUTO.openai = at('5-01', 2.05); AUTO.deepseek = at('5-03', 0.85);
-export const FOLLOW = ['anthropic', 'google', 'xai', 'qwen', 'glm'];   // 5-04: one cut each
-FOLLOW.forEach((id, i) => { AUTO[id] = at('5-04', (i + 0.62) * (2.6 / 5)); });
-// the three who won't: they play by hand, can't beat what the machines play (要不起), and are pushed off the table
-export const HOLD = ['meta', 'kimi', 'doubao'];
+// ---------------------------------------------------------------- phases (v9)
+// Every round has a countdown. The faster the other side's AI answers, the shorter it gets: 10 s down to 0.3 s.
+// 半托管 (SEMI): the AI picks the card, the king only taps 确认. When the countdown is shorter than a hand, 全托管 (AUTO):
+// no confirmation at all. Whoever still confirms by hand times out (超时) and is out (淘汰).
+export const LIMIT0 = at('5-01', 0.9), LIMIT1 = at('5-04', 0.3);
+export function limitAt(t) { if (t < LIMIT0) return 0; return 10 * Math.pow(0.3 / 10, clamp((t - LIMIT0) / (LIMIT1 - LIMIT0))); }
+export const SEMI = { openai: at('5-01', 1.75), anthropic: at('5-02', 0.35), google: at('5-02', 1.25), xai: at('5-02', 2.15), meta: at('5-02', 2.3), mistral: at('5-02', 2.4) };
+export const AUTO = {};                     // when each king slams 全托管
+export const NOW = at('5-04', 1.05);        // the board's date flips to 2026·11
+export const TIMEOUT = { openai: [at('5-04', 0.5)] };   // his one 超时, the moment he gives up confirming
+AUTO.openai = at('5-04', 1.6);
+export const FOLLOW = ['anthropic', 'google', 'xai'];   // 5-06: one cut each
+FOLLOW.forEach((id, i) => { AUTO[id] = at('5-06', (i + 0.6) * 0.8); });
+// the two who won't: they keep confirming by hand, time out, and are pushed off the table
+export const HOLD = ['meta', 'mistral'];
 for (const id of HOLD) AUTO[id] = Infinity;
 export const OUT = {
-  meta: { hover: [at('5-05', 0.2), at('5-05', 1.25)], tap: at('5-05', 1.75), pass: [at('5-06', 2.0), at('5-06', 2.55)], out: at('5-06', 3.1), drag: [at('5-07', 0.35), at('5-07', 2.4)] },
-  kimi: { pass: [at('5-08', 0.15)], out: at('5-08', 0.45), drag: [at('5-08', 0.6), at('5-08', 1.75)] },
-  doubao: { pass: [at('5-08', 1.95)], out: at('5-08', 2.25), drag: [at('5-08', 2.4), at('5-08', 3.55)] },
+  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.3), at('5-08', 2.5)] },
+  mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.55), at('5-09', 2.1)] },
 };
+for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
 export const inGame = (id, t) => !OUT[id] || t < OUT[id].drag[1];
 // the drag out: 1 seated .. 0 gone into the dark
 export const enterOf = (id, t) => (OUT[id] ? 1 - smoothE(clamp((t - OUT[id].drag[0]) / (OUT[id].drag[1] - OUT[id].drag[0]))) : 1);
@@ -45,7 +52,7 @@ const smoothE = (u) => u * u * (3 - 2 * u);
 export const RED_T = at('6-01', 0.5);       // the AI starts playing the internal, unreleased cards
 export const STOP = CUES.stop;
 export const CANCEL = {
-  deepseek: [0.45, 1.2, 1.6, 1.85, 2.05, 2.25].map((k) => at('6-04', k)).concat([0.3, 0.75, 1.2, 1.6].map((k) => at('6-05', k))),
+  anthropic: [0.45, 1.2, 1.6, 1.85, 2.05, 2.25].map((k) => at('6-04', k)).concat([0.3, 0.75, 1.2, 1.6].map((k) => at('6-05', k))),
   openai: [0.15, 0.45, 0.7, 0.95, 1.15, 1.35, 1.55].map((k) => at('6-06', k)),
 };
 export const ERR_T = at('6-05', 0.25);       // 系统异常 on every screen
@@ -59,7 +66,7 @@ export const HINTS = {};                     // [press time, slot] per king
 export const BLACK = CUES.black;             // the cut to black, just before the last card lands
 export const SLAM = at('8-06', 0.45);        // heard in the black
 export const DEAL = at('8-01', 0.6);
-export const REACH = { deepseek: at('8-03', 0.4), openai: at('8-03', 0.7) };
+export const REACH = { anthropic: at('8-03', 0.4), openai: at('8-03', 0.7) };
 
 // ---------------------------------------------------------------- the house of cards (the US cards, 3-01 .. 3-02)
 export const HOUSE = { x: 0.42, z: -0.62, lean: 1.22 };
@@ -125,56 +132,59 @@ function buildPlays() {
     return p;
   };
   // ---- @1: old cards, lazily. OpenAI's lands on the ant
-  for (const [who, k, face] of [['glm', at('1-02', 1.4), CELL.old3], ['kimi', at('1-03', 0.8), CELL.old0], ['xai', at('1-07', 1.2), CELL.old1], ['qwen', at('1-07', 2.6), CELL.old0]])
+  for (const [who, k, face] of [['meta', at('1-02', 1.4), CELL.old3], ['mistral', at('1-03', 0.8), CELL.old0], ['xai', at('1-07', 1.2), CELL.old1], ['google', at('1-07', 2.6), CELL.old0]])
     add({ who, t: k, face, name: 'old', flight: 0.7 });
   add({ who: ANT_KING, t: CRUSH, face: CELL.old3, name: 'GPT-2', at: ANT_CRUSH.slice(), yaw: -Math.PI / 2 + 0.3, flight: 0.75, crush: true });
   // ---- @2: Google's AlphaGo (2-01, 2-02); OpenAI's ChatGPT (2-04 .. 2-05)
   add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old2, name: 'AlphaGo', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
   add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 0, at: [0, 0.02], yaw: -Math.PI / 2 });
   // ---- @3: the race. Each landing that claims #1 flips the board. US cards build the house; CN cards go to the pile
-  const US = ['openai', 'anthropic', 'google', 'meta', 'xai'], CN = ['qwen', 'deepseek', 'glm', 'kimi', 'doubao'];
+  const US = ['openai', 'xai', 'mistral'], CN = ['anthropic', 'google', 'meta'];   // the right row builds the house
   const montage = [   // [who, v, tap time] — 3-01 cut 1 / 5 show the taps, cuts 2 / 6 the landings, cuts 3 / 7 the board
-    ['openai', 1, at('3-01', 0.55), at('3-01', 1.55)], ['anthropic', 0, at('3-01', 2.55)], ['qwen', 0, at('3-01', 2.8)],
-    ['deepseek', 0, at('3-01', 3.5), at('3-01', 4.15)], ['google', 1, at('3-01', 4.35)],
+    ['openai', 1, at('3-01', 0.55), at('3-01', 1.55)], ['xai', 0, at('3-01', 2.55)], ['google', 1, at('3-01', 2.8)],
+    ['anthropic', 1, at('3-01', 3.5), at('3-01', 4.15)], ['mistral', 1, at('3-01', 4.35)],
   ];
-  const usV = { openai: 2, anthropic: 1, google: 2, meta: 1, xai: 1 };
+  const usV = { openai: 2, xai: 1, mistral: 2 };
   for (const [who, v, tr, top] of montage) add({ who, tr, t: tr + 0.65, ...card(who, v), top: top ?? true, dest: KING[who].side === 'US' ? 'house' : 'heap' });
   // the rest of the house, one card at a time; a run of #1s for the US (3-02)
   const nHouse = HOUSE_SLOTS.length - montage.filter((m) => KING[m[0]].side === 'US').length;
   const houseT0 = at('3-01', 0.2), houseT1 = at('3-02', 2.2);
   const usTops = { [Math.round(nHouse * 0.62)]: 1, [Math.round(nHouse * 0.74)]: 1, [Math.round(nHouse * 0.86)]: 1, [nHouse - 1]: 1 };
   for (let s = 0; s < nHouse; s++) {
-    const who = US[s % 5], t_ = lerp(houseT0, houseT1, (s + 0.5) / nHouse);
+    const who = US[s % 3], t_ = lerp(houseT0, houseT1, (s + 0.5) / nHouse);
     const t = t_ + (montage.some((m) => Math.abs(m[2] + 0.65 - t_) < 0.2) ? 0.22 : 0);
     const v = usTops[s] ? usV[who]++ : 1 + Math.floor(s / 10);
     add({ who, t, ...card(who, v), dest: 'house', top: !!usTops[s] });
   }
-  for (let s = 0; s < 7; s++) { const who = CN[(s + 2) % 5]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
-  // FatFish-R1 out of 大肥鱼's screen, straight into the house
-  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
+  for (let s = 0; s < 7; s++) { const who = CN[s % 3]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
+  // Gemini 2.5 Pro out of Gemini's screen, straight into OpenAI's house
+  add({ who: 'google', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('google', 4), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
   // ---- @4: DeepSeek can't beat it (要不起); the hint (4-02, 4-03); OpenAI's hint (4-04); everyone's (4-05)
-  HINTS.deepseek = [[at('4-02', 0.7), 4]]; HINTS.openai = [[at('4-04', 1.0), 3]];
-  add({ who: 'deepseek', style: 'hint', tr: at('4-02', 1.45), t: at('4-03', 0.25), slot: 4, ...card('deepseek', 5), scale: 1.1, top: at('4-03', 0.45) });
+  HINTS.anthropic = [[at('4-02', 0.7), 4]]; HINTS.openai = [[at('4-04', 1.0), 3]];
+  add({ who: 'anthropic', style: 'hint', tr: at('4-02', 1.45), t: at('4-03', 0.25), slot: 4, ...card('anthropic', 3), scale: 1.1, top: at('4-03', 0.45) });
   add({ who: 'openai', style: 'hint', tr: at('4-04', 1.5), t: at('4-04', 2.0), slot: 3, ...card('openai', 4), scale: 1.1, top: true });
   const hintV = {};
   for (const id of IDS) {
     let tt = at('4-05', 0.2 + r0() * 0.6);
-    while (tt < NOW - 1.1) {
+    while (tt < SEMI[id] - 0.6) {
       const slot = 2 + Math.floor(r0() * 3); (HINTS[id] ??= []).push([tt - 0.42, slot]);
       hintV[id] = (hintV[id] ?? 0) + 1;
       add({ who: id, style: 'hint', tr: tt, t: tt + 0.55, slot, ...card(id, realV(id, 3 + (hintV[id] % (REAL_N[id] - 3)))), scale: 1.15, top: true });
       tt += lerp(1.3, 0.6, clamp((tt - at('4-05')) / 4)) + r0() * 0.3;
     }
   }
-  // ---- @5: the holdouts play on by hand (small cards, never on top); Meta's one in close-up (5-05)
-  for (const id of HOLD) {
-    let tt = NOW + 0.3 + r0() * 0.5;
-    while (tt < OUT[id].pass[0] - 1.2) { if (id !== 'meta' || tt < OUT.meta.hover[0] - 0.6) add({ who: id, tr: tt, t: tt + 0.6, ...card(id, REAL_N[id] - 1 - Math.floor(r0() * 2)) }); tt += 1.6 + r0() * 0.8; }
+  // ---- @5: 半托管. The AI picks, he taps 确认; faster as the countdown shrinks. The holdouts never stop confirming
+  for (const id of IDS) {
+    const end = AUTO[id] < 1e9 ? AUTO[id] - 0.25 : OUT[id].pass[0] - 0.35;
+    let tt = SEMI[id] + 0.45, k = 0;
+    while (tt < end) {
+      add({ who: id, style: 'semi', tr: tt, t: tt + 0.55, ...card(id, realV(id, REAL_N[id] - 1 - (k % 2))), scale: 1.1, top: HOLD.includes(id) ? tt < NOW - 2 && r0() < 0.2 : FINAL.includes(id) ? k % 2 === 0 : r0() < 0.25 });
+      tt += clamp(limitAt(tt) * 0.28 + 0.36, 0.42, 1.9) * (0.85 + 0.3 * r0()); k++;
+    }
   }
-  add({ who: 'meta', tr: OUT.meta.tap, t: OUT.meta.tap + 0.6, slot: 2, ...card('meta', REAL_N.meta - 1) });
   // ---- @5 →: auto. Each screen plays by itself, faster and faster; from RED_T the internal ones (red stamps)
   const nextK = {};
   for (const id of IDS) {
@@ -217,7 +227,7 @@ export function boardTops() {
     if (E[E.length - 1].name === p.name) continue;
     E.push({ t, name: p.name, who: p.who, date: t >= NOW ? dateText(monthsAfterNow(t)) : p.date }); last = t;
   }
-  E.push({ t: at('6-02', 0.05), name: FUTURE.openai[0], who: 'openai' }, { t: at('6-02', 0.85), name: FUTURE.deepseek[0], who: 'deepseek' });
+  E.push({ t: at('6-02', 0.05), name: FUTURE.openai[0], who: 'openai' }, { t: at('6-02', 0.85), name: FUTURE.anthropic[0], who: 'anthropic' });
   E.push({ t: NOW, name: null, date: dateText(0) });
   E.sort((a, b) => a.t - b.t);
   // the date never goes back (the cards' own dates are not in order); a date-only entry keeps the last #1

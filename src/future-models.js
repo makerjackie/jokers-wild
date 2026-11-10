@@ -3,5 +3,5 @@
 export const FUTURE = {
   openai: ['GPT-∞', 'o∞ Zero'], anthropic: ['Claude ∞', 'Claude Zero'], google: ['Gemini ∞', 'Gemini Zero'],
   xai: ['Grok ∞', 'Grok Zero'], meta: ['Muse ∞', 'Muse Zero'], deepseek: ['Hundun ∞', 'Hundun Zero'],
-  qwen: ['WanWen ∞', 'WanWen Zero'], kimi: ['Mooncake ∞', 'Mooncake Zero'], glm: ['FatFish ∞', 'FatFish Zero'], doubao: ['Dousha ∞', 'Dousha Zero'],
+  qwen: ['WanWen ∞', 'WanWen Zero'], kimi: ['Mooncake ∞', 'Mooncake Zero'], glm: ['FatFish ∞', 'FatFish Zero'], doubao: ['Dousha ∞', 'Dousha Zero'], mistral: ['Mistral ∞', 'Mistral Zero'],
 };

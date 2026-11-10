@@ -55,7 +55,7 @@ export const AUTO_BTN = (id) => { const k = KING[id]; return [SIDE_SIGN[k.side] 
 export function kingRest(id, side) {
   const k = KING[id], s = SIDE_SIGN[k.side], z = SEAT.Z[k.seat];
   const along = (side === 'L') === (k.side === 'US') ? 1 : -1;   // which way along z this hand lies
-  return [s * 1.1, 0.03, z + along * 0.33];
+  return [s * 1.1, 0.052, z + along * 0.33];
 }
 export const FACE = {
   calm: { eyes: 'open', brows: 'flat', mouth: 'flat' },

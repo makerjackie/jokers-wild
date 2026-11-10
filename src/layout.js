@@ -29,17 +29,14 @@ export const EU = { pos: [0, FLOOR_Y, 3.62] };                             // Mi
 // Ten kings, five a side, seat 0 at the head (next to the throne) .. seat 4 at the foot.
 export const SEAT = { X: 1.62, Z: [-2.5, -1.25, 0.0, 1.25, 2.5], Y: FLOOR_Y + 0.47 };
 export const KINGS = [
-  // 《失控》: the two finalists sit in the middle (seat 2), face to face across the pile under the lamp
-  { id: 'deepseek', name: '混沌', side: 'CN', seat: 2, size: 1.06 },
-  { id: 'qwen', name: '万问', side: 'CN', seat: 1, size: 1.0 },
-  { id: 'kimi', name: '月饼', side: 'CN', seat: 3, size: 0.97 },
-  { id: 'glm', name: '大肥鱼', side: 'CN', seat: 0, size: 0.98 },
-  { id: 'doubao', name: '豆沙包', side: 'CN', seat: 4, size: 0.99 },
+  // 《失控》 v9: no nations. The left row (warm light) and the right row (cool light); the two who last face each other
+  // across the pile in the middle (seat 2): Claude and OpenAI. Seats 0 and 4 stay empty.
+  { id: 'anthropic', name: 'Claude', side: 'CN', seat: 2, size: 1.06 },
+  { id: 'google', name: 'Gemini', side: 'CN', seat: 1, size: 1.02 },
+  { id: 'meta', name: 'Meta', side: 'CN', seat: 3, size: 1.0 },
   { id: 'openai', name: 'OpenAI', side: 'US', seat: 2, size: 1.08 },
-  { id: 'anthropic', name: 'Anthropic', side: 'US', seat: 1, size: 1.0 },
-  { id: 'google', name: 'Google', side: 'US', seat: 3, size: 1.02 },
-  { id: 'xai', name: 'xAI', side: 'US', seat: 0, size: 0.98 },
-  { id: 'meta', name: 'Meta', side: 'US', seat: 4, size: 1.0 },
+  { id: 'xai', name: 'xAI', side: 'US', seat: 1, size: 0.98 },
+  { id: 'mistral', name: 'Mistral', side: 'US', seat: 3, size: 1.0 },
 ];
 export const KING = Object.fromEntries(KINGS.map((k) => [k.id, k]));
 export const SIDE_SIGN = { CN: -1, US: 1 };

@@ -2,7 +2,8 @@
 // Kinds from v1/v2 (docs/SHIKONG.md) plus v3: blast {dur} (ChatGPT's shockwave), denied {who} (要不起: the tapped card
 // shakes, a dull refusal), errorAlarm {who} (系统异常), screenEye {who} (the screen turns into the eye: a low glassy
 // tone), pressure {dur} (the last card coming down: air pushed ahead of it, growing). boardFlip {dur, gain} is the #1 board.
-// v7: hesitate {who} (Meta's hand over 托管, pulled back), eliminated {who} (淘汰: his screen goes grey), dragOut {who, dur}
+// v9: semiOn {who} (半托管 switched on), countdown {dur, from, to} (the round timer: ticks that speed up from a 10 s round to a
+// 0.3 s round), timeout {who} (超时: the round is lost). v7: eliminated {who} (淘汰: his screen goes grey), dragOut {who, dur}
 // (he and his chair scrape back into the dark), creditSlap (the last card landing on the writer's name, in the black).
 import { ROW, CUES } from './shots.js';
 import * as S from './dir/story.js';
@@ -35,7 +36,7 @@ export function soundEvents() {
   // ---- the board: every new #1
   for (const b of S.boardTops()) if (b.t > 0) E(b.t, 'boardFlip', { dur: 0.35, gain: b.t > CUES.auto ? 0.55 : 0.9 });
   // ---- @2: yawns; ChatGPT's shockwave, the old cards raining off the table; silence; the chord is the score's
-  E(at('2-03', 0.4), 'yawn', { who: 'meta' }); E(at('2-03', 0.9), 'yawn', { who: 'kimi' });
+  E(at('2-03', 0.4), 'yawn', { who: 'meta' }); E(at('2-03', 0.9), 'yawn', { who: 'mistral' });
   E(S.CHAT_T, 'blast', { dur: 2.2 });
   E(S.CHAT_T + 0.05, 'lampSwing', { amp: 0.5, dur: 3 });
   E(S.CHAT_T + 0.5, 'cardsFall', { n: 12, dur: 1.4 });
@@ -43,22 +44,24 @@ export function soundEvents() {
   E(S.SMASH.go, 'cardSkim', { dur: S.SMASH.hit - S.SMASH.go });
   E(S.SMASH.hit, 'towerCrash', { n: S.HOUSE_SLOTS.length });
   // ---- @4: 要不起; the hints; @5 auto; @6 the dead cancels, 系统异常, the blame, the eye
-  for (const [t] of S.PASS.taps) E(t + 0.02, 'denied', { who: 'deepseek' });
+  for (const [t] of S.PASS.taps) E(t + 0.02, 'denied', { who: S.FINAL[0] });
   for (const id in S.HINTS) for (const [t] of S.HINTS[id]) E(t, 'hintDing', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.4 });
   for (const id in S.AUTO) if (S.AUTO[id] < 1e9) E(S.AUTO[id], 'autoOn', { who: id, gain: S.FINAL.includes(id) || S.FOLLOW.includes(id) ? 1 : 0.4 });
   // ---- @5: the three who won't hand it over
-  E(S.OUT.meta.hover[0] + 0.4, 'hesitate', { who: 'meta' });
+  // (v9) 半托管 on; the countdown (one long event, faster and faster); every 超时
+  for (const id in S.SEMI) E(S.SEMI[id], 'semiOn', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.5 });
+  E(S.LIMIT0, 'countdown', { dur: S.LIMIT1 - S.LIMIT0 + 0.4, from: 10, to: 0.3 });
+  for (const id in S.TIMEOUT) for (const t of S.TIMEOUT[id]) E(t, 'timeout', { who: id });
   for (const id of S.HOLD) {
     const o = S.OUT[id];
-    for (const t of o.pass) E(t + 0.02, 'denied', { who: id });
     E(o.out, 'eliminated', { who: id });
     E(o.drag[0], 'dragOut', { who: id, dur: o.drag[1] - o.drag[0] });
   }
-  for (const id of ['openai', 'deepseek', 'anthropic', 'google', 'xai', 'qwen', 'glm']) E(CUES.empty + 1.2 + (id.length % 4) * 0.12, 'chuckle', { who: id });
+  for (const id of ['openai', 'anthropic', 'google', 'xai']) E(CUES.empty + 1.2 + (id.length % 4) * 0.12, 'chuckle', { who: id });
   for (const id in S.CANCEL) S.CANCEL[id].forEach((t, i) => E(t, 'cancelPress', { who: id, hard: i < 2 ? 0.4 : 1 }));
   E(at('5-02', 0.6), 'chuckle', { who: 'openai' });
-  for (const id of S.FINAL) E(S.ERR_T, 'errorAlarm', { who: id, gain: id === 'deepseek' ? 1 : 0.6 });
-  E(S.ACCUSE + 0.1, 'rage', { who: 'deepseek' });
+  for (const id of S.FINAL) E(S.ERR_T, 'errorAlarm', { who: id, gain: id === S.FINAL[0] ? 1 : 0.6 });
+  E(S.ACCUSE + 0.1, 'rage', { who: S.FINAL[0] });
   E(S.ACCUSE + 0.55, 'rage', { who: 'openai' });
   E(S.ACCUSE + 1.0, 'scuffle', { dur: 1.6 });
   for (const id of S.FINAL) E(S.EYE_SCREEN, 'screenEye', { who: id });

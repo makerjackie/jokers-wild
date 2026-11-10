@@ -16,7 +16,7 @@ import { FUTURE } from './future-models.js';
 
 export const SCREEN = { W: 0.44, H: 0.28, TILT: 0.62, X: 0.97 };
 const CW = 640, CH = 408, ACW = 256, ACH = 372, ACOLS = 16, RES = 2;
-export const BTN = { hint: [0.86, 0.2], auto: [0.86, 0.48], cancel: [0.86, 0.76] };
+export const BTN = { hint: [0.86, 0.17], semi: [0.86, 0.39], auto: [0.86, 0.61], cancel: [0.86, 0.83], confirm: [0.58, 0.5] };   // (v9) four keys; 确认 between the rows
 export const slotUV = (row, i) => [0.075 + i * 0.118, row === 0 ? 0.28 : 0.68];
 // the screen's frame in world space: centre, normal (toward the king), up (its top edge, away from him), right
 export function screenFrame(id) {
@@ -115,19 +115,46 @@ export function makeScreens() {
     // a card dealt from above
     if (s.deal != null) { const x = CW * 0.56 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }
     // buttons
-    const btn = (key, zh, en, on) => {
-      const [u, v] = BTN[key], w = 150, h = 74, x = u * CW - w / 2, y = v * CH - h / 2;
+    const btn = (key, zh, en, on, onCol = '#3f6fd8') => {
+      const [u, v] = BTN[key], w = 150, h = 62, x = u * CW - w / 2, y = v * CH - h / 2;
       const pressed = s.press === key;
-      c.fillStyle = on ? (key === 'auto' ? '#d8a020' : '#3f6fd8') : pressed ? '#555' : key === 'cancel' ? '#5a2020' : '#2b3550';
-      if (on && key === 'auto') { c.shadowColor = '#ffcc40'; c.shadowBlur = 20; }
+      c.fillStyle = on ? onCol : pressed ? '#555' : key === 'cancel' ? '#5a2020' : '#2b3550';
+      if (on && key !== 'hint') { c.shadowColor = onCol; c.shadowBlur = 20; }
       c.beginPath(); c.roundRect(x + (pressed ? 3 : 0), y + (pressed ? 3 : 0), w, h, 12); c.fill(); c.shadowBlur = 0;
       c.fillStyle = '#f4efe2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `bold 30px ${SANS}`; c.fillText(zh, x + w / 2, y + h * 0.4);
-      c.font = `bold 15px ${SANS}`; c.fillText(en, x + w / 2, y + h * 0.78);
+      c.font = `bold 27px ${SANS}`; c.fillText(zh, x + w / 2, y + h * 0.4);
+      c.font = `bold 13px ${SANS}`; c.fillText(en, x + w / 2, y + h * 0.8);
     };
+    const full = s.full || s.auto;
     btn('hint', '提示', 'HINT', s.press === 'hint' || (s.hi ?? -1) >= 0);
-    btn('auto', s.auto ? '托管中' : '托管', 'AUTO', (!!s.auto && Math.sin(t * 7) > -0.3) || (!!s.hoverAuto && Math.sin(t * 5) > 0));
+    btn('semi', s.semi && !full ? '半托管中' : '半托管', 'AI PICKS · YOU OK', !!s.semi && !full, '#2f9e6a');
+    btn('auto', full ? '全托管中' : '全托管', 'FULL AUTO', !!full && Math.sin(t * 7) > -0.3, '#d8a020');
     btn('cancel', '取消托管', 'CANCEL', false);
+    // (v9) 半托管: the AI's pick rises and glows; one big key to say yes
+    if (s.semi && !full && s.aiPick != null) {
+      const [u, v] = slotUV(0, s.aiPick), x = u * CW - 33, y = v * CH - 48 - 16;
+      c.strokeStyle = '#59e3a0'; c.lineWidth = 4; c.shadowColor = '#59e3a0'; c.shadowBlur = 18; c.strokeRect(x - 4, y - 4, 74, 104); c.shadowBlur = 0;
+      c.fillStyle = '#59e3a0'; c.textAlign = 'center'; c.font = `900 14px ${SANS}`; c.fillText('AI 选择', u * CW, y - 12);
+      const [cu, cv] = BTN.confirm, w = 180, h = 54, bx = cu * CW - w / 2, by = cv * CH - h / 2, pr = s.press === 'confirm';
+      c.fillStyle = pr ? '#1f7a50' : '#2fbf7f'; c.shadowColor = '#59e3a0'; c.shadowBlur = 16;
+      c.beginPath(); c.roundRect(bx + (pr ? 3 : 0), by + (pr ? 3 : 0), w, h, 27); c.fill(); c.shadowBlur = 0;
+      c.fillStyle = '#ffffff'; c.font = `900 28px ${SANS}`; c.textBaseline = 'middle'; c.fillText('✓ 确认出牌', cu * CW, cv * CH + 1);
+    }
+    // the countdown: a ring that drains faster each round, and the seconds
+    if (s.limit > 0) {
+      const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = (t / per) % 1, cx = CW * 0.62, cy = 25;
+      const hot = L < 1.2;
+      c.lineWidth = 6; c.strokeStyle = 'rgba(255,255,255,0.15)'; c.beginPath(); c.arc(cx, cy, 15, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = hot ? '#ff4a3a' : '#ffd36a'; c.beginPath(); c.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - ph)); c.stroke();
+      c.fillStyle = hot ? '#ff6a5a' : '#ffe39a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`;
+      c.fillText(`限时 ${L >= 1 ? Math.round(L) : L.toFixed(1)} 秒`, cx + 24, cy + 1);
+    }
+    // 超时: too slow; the round is gone
+    if (s.timeout) {
+      c.fillStyle = 'rgba(150,12,8,0.94)'; c.fillRect(0, CH * 0.36, CW * 0.76, CH * 0.28);
+      c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 72px ${SANS}`; c.fillText('超时', CW * 0.38, CH * 0.47);
+      c.font = `bold 22px ${SANS}`; c.fillText('TIME OUT · 本轮作废', CW * 0.38, CH * 0.58);
+    }
     // 系统异常: the cancel did nothing
     if (s.error) {
       const k = Math.sin(t * 9) > -0.4 ? 1 : 0.55;

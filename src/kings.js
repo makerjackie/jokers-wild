@@ -1105,6 +1105,8 @@ const HAIR = {
   glm:       { tex: 5, gloss: 0.25, specTh: 0.98, front: [1.12, 1.2], bottom: [-3.0, -5.6, -12.6], thick: [1.4, 2.3], flare: 2.0 },
   doubao:    { tex: 0, gloss: 0.4, specTh: 0.97, front: [0.94, 1.14], bottom: [-0.4, 2.6, -8.4], thick: [0.85, 1.1], ears: 1 },
 };
+// v9: Mistral borrows the old Zhipu king (white hair) with an orange robe
+{ STYLE.mistral = { ...STYLE.glm, robe: '#7a3a14', trim: '#e8b46a', crown: 'classic', plate: '#f4ece2' }; FACE.mistral = { ...FACE.glm }; HAIR.mistral = { ...HAIR.glm }; }
 // v4: the four suit kings borrow a body, a face and hair from the old court kings; their own colours; a suit on the
 // crown plate (no company anywhere)
 {
@@ -1559,7 +1561,7 @@ export function makeKings(ctx = {}) {
     const k = kings[id]; k.seat.updateWorldMatrix(true, false);
     const sz = k.cur.size, r = k.cur.rise;
     const near = 0.42 * k.s * sz, fwd = near + r * Math.max(0, 1.02 - near);
-    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.31 * k.s * sz + 0.05 * r), -SEAT.Y + 0.03, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
+    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.31 * k.s * sz + 0.05 * r), -SEAT.Y + 0.052, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
     return [p.x, p.y, p.z];
   }
   const placeSeg = (mesh, a, b) => {           // orient a +y-up segment mesh from a to b (in the seat's frame)
@@ -1577,6 +1579,25 @@ export function makeKings(ctx = {}) {
     else { const r = restHand(k.K.id, a.side); TG.set(...r).applyMatrix4(seatInv); }
     if (o?.pole) PO.set(...o.pole).transformDirection(seatInv); else PO.set(a.sx * 0.8, -0.35, -0.5).normalize();
     const L1 = a.LU, L2 = a.LF;
+    // (v9) o.tip: o.target is where the FINGERTIP (point), the knuckles (fist) or the fingertips (open) must be.
+    // Solve the arm, see where that puts the tip, move the hand target by the difference; three passes converge.
+    if (o?.tip && o?.target) {
+      const TIP = new THREE.Vector3(...o.target).applyMatrix4(seatInv);
+      const tipLen = (o.pose === 'fist' ? 0.115 : o.pose === 'open' ? 0.17 : 0.195) * k.s;
+      TG.copy(TIP);
+      for (let it = 0; it < 3; it++) {
+        const dd = tmpV2.copy(TG).sub(SH); let dl = dd.length(); const mR = (L1 + L2) * 0.998;
+        if (dl > mR) { dd.setLength(mR); dl = mR; }
+        dl = Math.max(dl, 0.05);
+        const dr = dd.clone().normalize(), aL = (L1 * L1 - L2 * L2 + dl * dl) / (2 * dl), hh = Math.sqrt(Math.max(0, L1 * L1 - aL * aL));
+        const pp = PO.clone().addScaledVector(dr, -PO.dot(dr)).normalize();
+        const el = SH.clone().addScaledVector(dr, aL).addScaledVector(pp, hh), tg = SH.clone().addScaledVector(dr, dl);
+        const ar = tg.clone().sub(el).normalize(), fw = ar.clone();
+        if (o.fingers) { const fd = new THREE.Vector3(...o.fingers).transformDirection(seatInv), an = ar.angleTo(fd); if (an > 1e-4) { const ax = new THREE.Vector3().crossVectors(ar, fd); if (ax.lengthSq() > 1e-10) fw.applyAxisAngle(ax.normalize(), Math.min(an, WRIST_MAX)); } }
+        const tipNow = tg.clone().addScaledVector(ar, -0.05 * k.s).addScaledVector(fw, tipLen);
+        TG.add(TIP.clone().sub(tipNow));
+      }
+    }
     const d = tmpV2.copy(TG).sub(SH);
     let dist = d.length();
     const maxR = (L1 + L2) * 0.998;

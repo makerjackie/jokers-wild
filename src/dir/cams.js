@@ -101,15 +101,15 @@ export const SHOTS = {
   '2-06': (t, st, w) => { const u = uRow(t, '2-06'); camLook(w.camera, [0.04, 0.07, 0.5 + 0.1 * u], [0, 0.04, -1.6], 58); st.look.exposure = 1.1; st.look.near = 0.01; },
   '2-07': (t, st, w) => boardCam(w.camera, st, t, '2-07'),
   '2-08': (t, st, w) => { const u = uRow(t, '2-08'); camLook(w.camera, [0, 1.25 - 0.1 * u, 3.3 - 0.3 * u], [0, 0.42, 0], 50); st.look.exposure = 1.45; },
-  '2-09': (t, st, w) => faceCam(w.camera, st, w, t, 'deepseek', { d: 0.8, dz: 0.2 }),
+  '2-09': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.8, dz: 0.2 }),
   // ---------------------------------------------------------------- @3 争第一
   '3-01': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
     if (cut === 1) return screenCam(w.camera, st, 'openai', 0.35, 0.4, 0.4, 44);
     if (cut === 2) { camLook(w.camera, [0.2, 0.36, -0.2], [0.42, 0.06, -0.62], 42); st.look.exposure = 1.35; return; }
     if (cut === 3 || cut === 7) return boardCam(w.camera, st, t, '3-01');
-    if (cut === 4) return faceCam(w.camera, st, w, t, 'deepseek', { d: 0.8, dz: 0.22, fov: 30 });
-    if (cut === 5) return screenCam(w.camera, st, 'deepseek', 0.35, 0.4, 0.4, 44);
+    if (cut === 4) return faceCam(w.camera, st, w, t, 'anthropic', { d: 0.8, dz: 0.22, fov: 30 });
+    if (cut === 5) return screenCam(w.camera, st, 'anthropic', 0.35, 0.4, 0.4, 44);
     if (cut === 6) return camLook(w.camera, [0.03, 0.8, 0.06], [0, 0.03, 0], 30);
     return faceCam(w.camera, st, w, t, 'openai', { d: 0.8, dz: -0.22, fov: 30 });
   },
@@ -117,7 +117,7 @@ export const SHOTS = {
   // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
   '3-03': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
-    if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -1.55], [-1.05, 0.12, -2.45], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
+    if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -0.3], [-1.05, 0.12, -1.2], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside Gemini's screen: the card leaves it
     if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
     camLook(w.camera, [0.02 + shake(t, S.SMASH.hit, 0.01), 0.22 + shake(t, S.SMASH.hit, 0.008, 60), 0.6], [0.36, 0.14, -0.62], 50); st.look.exposure = 1.4;
   },
@@ -126,39 +126,38 @@ export const SHOTS = {
   '3-06': (t, st, w) => { const g = S.plays().find((p) => p.style === 'giant'); camLook(w.camera, [-0.75 + shake(t, g.t, 0.02), 0.6 + shake(t, g.t, 0.02, 50), 1.35], [0.65, 0.55, -0.1], 56); },
   '3-07': (t, st, w) => boardCam(w.camera, st, t, '3-07'),
   // ---------------------------------------------------------------- @4 提示
-  '4-01': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.4, 0.38, 0.34, 48, 0.04),
-  '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'deepseek', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.36, 44, -0.1); },
+  '4-01': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.4, 0.38, 0.34, 48, 0.04),
+  '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'anthropic', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.36, 44, -0.1); },
   '4-03': (t, st, w) => boardCam(w.camera, st, t, '4-03'),
   '4-04': (t, st, w) => faceCam(w.camera, st, w, t, 'openai', { d: 1.0, dz: -0.38, dy: -0.06, ly: -0.15, fov: 36 }),
   '4-05': (t, st, w) => wide(w.camera, st, 0.4 + 0.1 * uRow(t, '4-05')),
   // ---------------------------------------------------------------- @5 托管
-  '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01', { fov: 44 }) : screenCam(w.camera, st, 'openai', 0.7, 0.48, 0.38, 44)),
-  '5-02': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
-  '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'deepseek', { d: 1.0, dz: 0.4, dy: -0.06, ly: -0.15, fov: 36 }),
-  // one hand after another slaps 托管 (one cut each)
-  '5-04': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.46, 0.44, 46, -0.12); },
-  // Meta: his hand hangs over 托管, and comes back; he plays a card himself
-  // from beside his screen, along the table: his hand hangs over the blinking 托管, his face behind it
-  '5-05': (t, st, w) => { camLook(w.camera, [0.95, 0.55, 3.25], [1.25, 0.22, 2.42], 44); st.look.exposure = 1.6; st.look.dof = { focus: 0.9, k: 0.12, max: 4 }; },
-  '5-06': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-06', { fov: 44 }) : screenCam(w.camera, st, 'meta', 0.45, 0.42, 0.46, 48, -0.14)),
-  // from across the table: he goes back into the dark with his chair, reaching for it
-  // from the side, along the table's edge: he goes back, away from the table, with his chair, into the dark
-  '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [2.5, 1.15, 4.75], [lerp(2.0, 2.9, smooth(u)), 0.3, 2.45], 46); st.look.exposure = 1.8; },
-  '5-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1], z = cut === 1 ? 1.25 : 2.5, u = clamp((t - (cut === 1 ? at('5-08') : at('5-08', 1.8))) / 1.8); camLook(w.camera, [-0.75, 1.95, z + 0.95], [lerp(-1.9, -3.0, smooth(u)), 0.05, z], 50); st.look.exposure = 1.8; },
-  '5-09': (t, st, w) => { const u = uRow(t, '5-09'); camLook(w.camera, [0.0, 1.35 - 0.05 * u, 5.0 - 0.25 * u], [0, 0.35, 0.8], 50); st.look.exposure = 1.95; st.look.lampPow = 1.2; },
-  '5-10': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-10')),
-  '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.4; },
+  // ---------------------------------------------------------------- @5 半托管 → 全托管 (v9)
+  '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01') : screenCam(w.camera, st, 'openai', 0.62, 0.45, 0.42, 46)),
+  // three screens, three hands on 确认, the countdown shrinking on each
+  '5-02': (t, st, w, shot) => { const id = ['anthropic', 'google', 'xai'][+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.6, 0.42, 0.44, 46); },
+  '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.95, dz: 0.35, dy: -0.04, ly: -0.12, fov: 36 }),
+  '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.66, 0.5, 0.44, 46),
+  '5-05': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
+  '5-06': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.5, 0.44, 46); },
+  '5-07': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-07') : screenCam(w.camera, st, 'meta', 0.55, 0.45, 0.46, 48)),
+  // Meta (left row, seat 3) and Mistral (right row, seat 3) dragged off: a high angle in front, the floor reads the slide
+  '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [-0.7, 1.95, z + 0.7], [lerp(-1.9, -3.0, smooth(u)), 0.1, z - 0.3], 54); st.look.exposure = 1.75; },
+  '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [0.7, 1.95, z + 0.95], [lerp(1.9, 3.0, smooth(u)), 0.05, z], 50); st.look.exposure = 1.75; },
+  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.0, 1.35 - 0.05 * u, 5.0 - 0.25 * u], [0, 0.35, 0.8], 50); st.look.exposure = 1.75; st.look.lampPow = 1.1; },
+  '5-11': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-11')),
+  '5-12': (t, st, w) => { const u = uRow(t, '5-12'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.3; },
   // ---------------------------------------------------------------- @6 底牌
-  '6-01': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.4, 0.6, 0.44, 44),
+  '6-01': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.4, 0.6, 0.44, 44),
   '6-02': (t, st, w) => boardCam(w.camera, st, t, '6-02'),
-  '6-03': (t, st, w) => faceCam(w.camera, st, w, t, 'deepseek', { d: 0.55, dz: 0.12, dy: -0.22, ly: -0.02, fov: 32 }),
-  '6-04': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.76, 0.66, 0.3, 46, -0.06),
+  '6-03': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.55, dz: 0.12, dy: -0.22, ly: -0.02, fov: 32 }),
+  '6-04': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.76, 0.66, 0.3, 46, -0.06),
   // from along the table, beside his screen: the red warning fills it; his face beyond
-  '6-05': (t, st, w) => { const f = screenFrame('deepseek'), p = screenPoint('deepseek', 0.42, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.36 - f.right[0] * 0.3, p[1] + f.n[1] * 0.36 + 0.2, p[2] + f.n[2] * 0.36 - f.right[2] * 0.3], p, 44); st.look.exposure = 1.15; if (st.props?.plates) st.props.plates.show = 0; },
+  '6-05': (t, st, w) => { const f = screenFrame('anthropic'), p = screenPoint('anthropic', 0.42, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.36 - f.right[0] * 0.3, p[1] + f.n[1] * 0.36 + 0.2, p[2] + f.n[2] * 0.36 - f.right[2] * 0.3], p, 44); st.look.exposure = 1.15; if (st.props?.plates) st.props.plates.show = 0; },
   '6-06': (t, st, w) => screenCam(w.camera, st, 'openai', 0.6, 0.55, 0.5, 46, 0.0),
   // the two of them, up, pointing, shouting across the pile; their teams behind them doing the same
   '6-07': (t, st, w) => { const u = uRow(t, '6-07'); camLook(w.camera, [shake(t, S.ACCUSE + 0.2, 0.01, 30, 4), 1.0, 2.9 - 0.3 * u], [0, 0.78, 0], 52); st.look.exposure = 1.45; },
-  '6-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1]; screenCam(w.camera, st, cut === 1 ? 'deepseek' : 'openai', 0.5, 0.5, 0.46, 46, cut === 1 ? 0.06 : -0.06); },
+  '6-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1]; screenCam(w.camera, st, cut === 1 ? 'anthropic' : 'openai', 0.5, 0.5, 0.46, 46, cut === 1 ? 0.06 : -0.06); },
   '6-09': (t, st, w) => { camPath(w.camera, t, [[at('6-09'), [0, 0.9, 3.4], [0, 0.6, 0], 50], [at('7-01', 1.2), [0, 2.7, 4.9], [0, 0.8, 0], 48]]); st.look.exposure = 1.6; },
   // ---------------------------------------------------------------- @7 眼睛
   '7-01': (t, st, w) => { camLook(w.camera, [0, 2.7, 4.9], [0, 0.8, 0], 48); st.look.exposure = 1.6; },
@@ -169,14 +168,14 @@ export const SHOTS = {
   '7-04': (t, st, w) => { const u = uRow(t, '7-04'); faceCam(w.camera, st, w, t, S.ANT_KING, { d: 0.85, dz: 0.5, dy: 0.18 + 0.03 * u, ly: 0.1, fov: 34 }); st.look.exposure = 1.45; },
   '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [4.6, 7.2 - 0.3 * u, 4.1], [0, -0.1, 0.15], 21); st.look.far = 300; st.look.exposure = 1.6; },
   // ---------------------------------------------------------------- @8 结尾
-  '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'deepseek'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },
+  '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'anthropic'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },
   '8-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.75], [0, 0.55, -0.1], 52); st.look.exposure = 1.3; },
   // over his head, looking down at the glowing #1 and the finger coming to it
-  '8-03': (t, st, w) => { const f = screenFrame('deepseek'), p = screenPoint('deepseek', 0.5, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.42 - f.right[0] * 0.12, p[1] + f.n[1] * 0.42 + 0.32, p[2] + f.n[2] * 0.42 - f.right[2] * 0.12], p, 42); st.look.exposure = 1.2; if (st.props?.plates) st.props.plates.show = 0; },
+  '8-03': (t, st, w) => { const f = screenFrame('anthropic'), p = screenPoint('anthropic', 0.5, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.42 - f.right[0] * 0.12, p[1] + f.n[1] * 0.42 + 0.32, p[2] + f.n[2] * 0.42 - f.right[2] * 0.12], p, 42); st.look.exposure = 1.2; if (st.props?.plates) st.props.plates.show = 0; },
   // low, looking up past their heads: the last card coming down out of the eye
   '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [0.95, 0.32, 1.75 - 0.15 * u], [-0.3, lerp(4.4, 3.6, u), -0.4], 70); st.look.far = 300; st.look.exposure = 1.85; },
   // his grin, close; the edge of the shadow slides over it
-  '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'deepseek', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
+  '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'anthropic', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
   '9-01': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
   '9-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },

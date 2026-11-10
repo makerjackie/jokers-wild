@@ -12,10 +12,10 @@ import { screenFrame, screenPoint, slotUV, BTN } from '../screens.js';
 import { ANT } from '../ant.js';
 import * as S from './story.js';
 
-const { HOLD, OUT, FOLLOW, NOW, FINAL, CARD_Y, AUTO, RED_T, STOP, CANCEL, HINTS, SLAM, DEAL, REACH, HOUSE_SLOTS, RISE, EYE, GIANT_END, ERR_T, ACCUSE, EYE_SCREEN, PASS, BLACK, SMASH, HOUSE_HIT, CHAT_T } = S;
+const { SEMI, TIMEOUT, limitAt, LIMIT0, HOLD, OUT, FOLLOW, NOW, FINAL, CARD_Y, AUTO, RED_T, STOP, CANCEL, HINTS, SLAM, DEAL, REACH, HOUSE_SLOTS, RISE, EYE, GIANT_END, ERR_T, ACCUSE, EYE_SCREEN, PASS, BLACK, SMASH, HOUSE_HIT, CHAT_T } = S;
 const IDS = KINGS.map((k) => k.id);
 const sxOf = (id) => SIDE_SIGN[KING[id].side];
-const other = (id) => (id === 'deepseek' ? 'openai' : 'deepseek');
+const other = (id) => (id === FINAL[0] ? FINAL[1] : FINAL[0]);
 export const headAt = (id) => [sxOf(id) * 1.52, 0.66, SEAT.Z[KING[id].seat]];
 
 // ---------------------------------------------------------------- presses on the screen
@@ -27,13 +27,13 @@ function presses() {
   const add = (id, t, uv, pose = 'point', kind = 'tap', hold = 0.08) => (PRESS[id] ??= []).push({ t, uv, pose, kind, hold });
   for (const p of S.plays()) {
     if (p.style === 'auto' || p.style === 'red') continue;
-    add(p.who, p.tr - 0.04, slotUV(0, p.slot), 'point', p.style === 'giant' || p.style === 'smash' ? 'hard' : 'tap');
+    add(p.who, p.tr - 0.04, p.style === 'semi' ? BTN.confirm : slotUV(0, p.slot), 'point', p.style === 'giant' || p.style === 'smash' ? 'hard' : p.style === 'semi' ? 'confirm' : 'tap');
   }
-  for (const [t, slot] of PASS.taps) add('deepseek', t, slotUV(0, slot), 'point', 'tap');
+  for (const [t, slot] of PASS.taps) add(FINAL[0], t, slotUV(0, slot), 'point', 'tap');
+  for (const id in SEMI) add(id, SEMI[id], BTN.semi, 'point', 'semi', 0.12);
   for (const id in HINTS) for (const [t] of HINTS[id]) add(id, t, BTN.hint, 'point', 'hint');
-  for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, id === 'openai' || id === 'deepseek' ? 'fist' : 'point', 'auto', 0.18);
-  for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 3 + i), 'point', 'tap'));
-  add('meta', OUT.meta.hover[0] + 0.5, BTN.auto, 'point', 'hover', OUT.meta.hover[1] - OUT.meta.hover[0] - 0.5);
+  for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, FINAL.includes(id) ? 'fist' : 'point', 'auto', 0.18);
+  for (const id of HOLD) OUT[id].pass.forEach((t) => add(id, t, BTN.confirm, 'point', 'confirm'));   // too late: 超时
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
   for (const id of FINAL) add(id, REACH[id] + 0.9, [0.56, 0.5], 'point', 'reach', 9);
   for (const id in PRESS) PRESS[id].sort((a, b) => a.t - b.t);
@@ -49,30 +49,28 @@ function handFor(id, t) {
   if (!best) {
     // between presses close together: hover
     const nx = L.find((p) => p.t >= t), pv = [...L].reverse().find((p) => p.t < t);
-    if (nx && pv && nx.t - pv.t < 1.4) return { target: screenPoint(id, (nx.uv[0] + pv.uv[0]) / 2, (nx.uv[1] + pv.uv[1]) / 2, 0.16), pose: 'point', fingers };
+    if (nx && pv && nx.t - pv.t < 1.4) return { target: screenPoint(id, (nx.uv[0] + pv.uv[0]) / 2, (nx.uv[1] + pv.uv[1]) / 2, 0.07), pose: 'point', fingers, tip: 1 };
     return null;
   }
   // (v7) where the hand target stops so the finger / fist / palm just meets the glass: a pointing fingertip is ~13 cm
   // past the hand target (kings.js hand frame), a fist's knuckles ~8 cm, a flat palm ~3 cm
-  const sz = KING[id].size ?? 1;
-  const touch = (best.pose === 'point' ? 0.14 : best.pose === 'fist' ? 0.095 : 0.04) * sz;
-  const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.14 : best.kind === 'cancel' ? 0.08 : 0.06);
-  const vAim = best.pose === 'point' ? Math.min(0.95, best.uv[1] + 0.1) : best.uv[1];
-  const hov = screenPoint(id, best.uv[0], vAim, up), on = screenPoint(id, best.uv[0], vAim, best.kind === 'hover' ? touch + 0.05 + 0.012 * Math.sin(t * 9) : touch);
+  // (v9) the target is the fingertip (or the knuckles of a fist) itself: kings.js solves the arm so it lands exactly here
+  const touch = best.pose === 'fist' ? 0.012 : 0.004;
+  const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.13 : best.kind === 'cancel' ? 0.08 : 0.06);
+  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], touch);
   let target;
   if (t < best.t - 0.12) { const e = smooth((t - (best.t - 0.5)) / 0.38); target = lerp3(pathRest(id), hov, e); target[1] += 0.1 * Math.sin(Math.PI * e); }   // up and over the screen's edge
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
   else if (t < best.t + best.hold) target = on;
   else target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
   // a flat palm slaps with its fingers along the glass (away from him), not into it
-  if (best.pose === 'open') return { target, pose: 'open', fingers: f.up, palm: [-f.n[0], -f.n[1], -f.n[2]], kind: best.kind };
-  return { target, pose: best.pose, fingers, kind: best.kind };
+  return { target, pose: best.pose, fingers, kind: best.kind, tip: 1 };
 }
 const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.1, 0.24, f.c[2] + 0.2 * (KING[id].side === 'CN' ? 1 : -1)]; };
-const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.25, -0.3, -sxOf(id) * 0.9], ...extra });   // (v8) elbow out to his right side: the forearm crosses from the side, over the glass, clear of the lens
+const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.35, -0.45, -sxOf(id) * 0.75], ...extra });   // (v8) elbow out to his right side: the forearm crosses from the side, over the glass, clear of the lens
 
 // ---------------------------------------------------------------- kings
-const oppOf = (id) => KINGS.find((k) => k.side !== KING[id].side && k.seat === KING[id].seat).id;
+const oppOf = (id) => KINGS.find((k) => k.side !== KING[id].side && k.seat === KING[id].seat)?.id ?? other(id);
 function pointAt(id, target) {
   // the right arm out at the one he blames
   const h = headAt(id), d = [target[0] - h[0], 0, target[2] - h[2]], l = Math.hypot(d[0], d[2]) || 1;
@@ -103,7 +101,7 @@ function kingsState(t, st) {
       K.face = t < at('2-08', 0.3) ? face('shock') : { eyes: 'wide', brows: 'raised', mouth: 'slack' };
       if (t >= CUES.awe) { K.rise = 0.3; K.lean = 0.2; }
       if (id === 'openai') K.face = t < CUES.awe + 0.6 ? face('shock') : face('proud', { eyes: 'narrow' });
-      if (id === 'deepseek' && t >= CUES.behind) { K.face = t < CUES.behind + 0.5 ? face('smug', { eyes: 'wide' }) : { eyes: 'wide', brows: 'worried', mouth: 'flat' }; K.look = [0, 0.04, 0.02]; }
+      if (id === FINAL[0] && t >= CUES.behind) { K.face = t < CUES.behind + 0.5 ? face('smug', { eyes: 'wide' }) : { eyes: 'wide', brows: 'worried', mouth: 'flat' }; K.look = [0, 0.04, 0.02]; }
     }
     // ---- the race: whoever just took #1 smirks across the table; the other side looks at him, sour
     if (t >= CUES.race && t < CUES.auto + (id === 'openai' ? 0 : 1.5)) {
@@ -117,11 +115,11 @@ function kingsState(t, st) {
       // the house of cards: the US gloat; R1 hits it; mouths open
       if (sx > 0 && t > at('3-02') && t < SMASH.hit) { K.look = HOUSE_HIT; K.face = face('proud', { mouth: 'smirk', eyes: 'narrow' }); }
       if (sx > 0 && t >= SMASH.hit && t < CUES.big) { K.look = HOUSE_HIT; K.face = face('shock'); K.lean = -0.08; }
-      if (id === 'glm' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
+      if (id === 'google' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
       // stuck under GPT-4.5: 要不起, the sweat, the hint, the grin
-      if (id === 'deepseek' && t >= CUES.stuck && t < CUES.win + 0.3) { K.face = { eyes: 'down', brows: 'worried', mouth: 'flat' }; K.sweat = 1; K.look = f.c; K.rise = 0.1; K.lean = 0.02; }
-      if (id === 'deepseek' && t >= CUES.win + 0.3 && t < CUES.hintUS + 0.4) { K.face = face('proud', { mouth: 'grin' }); K.look = headAt('openai'); }
-      if (id === 'openai' && t >= CUES.hintUS && t < at('4-04', 1.0)) { K.look = headAt('deepseek'); K.face = face('sour', { eyes: 'side' }); }
+      if (id === FINAL[0] && t >= CUES.stuck && t < CUES.win + 0.3) { K.face = { eyes: 'down', brows: 'worried', mouth: 'flat' }; K.sweat = 1; K.look = f.c; K.rise = 0.1; K.lean = 0.02; }
+      if (id === FINAL[0] && t >= CUES.win + 0.3 && t < CUES.hintUS + 0.4) { K.face = face('proud', { mouth: 'grin' }); K.look = headAt('openai'); }
+      if (id === 'openai' && t >= CUES.hintUS && t < at('4-04', 1.0)) { K.look = headAt(FINAL[0]); K.face = face('sour', { eyes: 'side' }); }
       if (id === 'openai' && t >= CUES.auto) { K.face = face('angry', { mouth: 'grit' }); K.look = f.c; K.rise = 0.5; K.sweat = 1; }
     }
     // ---- the holdouts: won't hand it over; play by hand; 要不起; 淘汰; dragged back into the dark, reaching for the table
@@ -139,6 +137,21 @@ function kingsState(t, st) {
         const reach = [sx * (1.25 + 0.5 * u), 0.08 + 0.1 * u, z + 0.15 * Math.sin(t * 7)];
         K.armR = arm(id, reach); K.hand.R = 'open'; K.armL = { target: [sx * (1.3 + 0.55 * u), 0.1, z - 0.2], pole: [sx * 0.4, -0.8, 0] }; K.hand.L = 'open';
         continue;
+      }
+    }
+    // ---- 半托管: eyes on the other side while the finger confirms (a rubber stamp); then the hurry as the countdown shrinks
+    if (SEMI[id] != null && t >= SEMI[id] && t < AUTO[id] && !(OUT[id] && t > OUT[id].pass[0] - 0.2)) {
+      const hurry = clamp((t - LIMIT0) / (S.LIMIT1 - LIMIT0));
+      K.rise = 0.25 + 0.3 * hurry; K.lean = 0.12 + 0.12 * hurry; K.sweat = hurry;
+      K.face = hurry < 0.45 ? face('smug', { eyes: 'side' }) : face('angry', { mouth: 'grit', eyes: 'down' });
+      K.look = hurry < 0.45 && t > CUES['5-02'] ? headAt(oppOf(id) ?? other(id)) : f.c;
+    }
+    // ---- a man dragged away beside you: you look, go white, and look back at your own screen
+    for (const hid of HOLD) {
+      const o = OUT[hid];
+      if (hid !== id && !OUT[id] && t > o.drag[0] && t < o.drag[0] + 1.5 && KING[hid].side === k.side && Math.abs(KING[hid].seat - k.seat) === 1) {
+        K.look = headAt(hid); K.face = { eyes: 'side', brows: 'worried', mouth: 'flat' }; K.sweat = 1;
+        if (t > o.drag[0] + 1.0) { K.look = f.c; K.face = face('fear', { eyes: 'down' }); }
       }
     }
     // ---- the rest see the empty places (5-09), and lean back again
@@ -186,7 +199,7 @@ function kingsState(t, st) {
     // ---- the arm
     const h = handFor(id, t);
     if (pointTo) { K.armR = arm(id, pointTo); K.hand.R = 'point'; }
-    else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.palm ? { palm: h.palm } : {}) }); K.hand.R = h.pose; }
+    else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.tip ? { tip: 1, pose: h.pose } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';
     // hands off: leaning back on 托管, both hands in the lap (until the red cards make them grab for the screen again)
     if (auto && t > AUTO[id] + 0.5 && t < RED_T && !pointTo && !(h && h.kind)) {
@@ -207,17 +220,23 @@ function screensState(t) {
     const v0 = Math.max(0, Math.min(REAL_N[id] - 5, Math.floor((t - 20) / 14)));
     const hand = t >= AUTO[id] ? [0, 1, 2, 3, 4].map((i) => CELL[`${id}${REAL_N[id] + (i % 2)}`]) : [0, 1, 2, 3, 4].map((i) => CELL[`${id}${Math.min(i + v0, REAL_N[id] - 1)}`] ?? CELL.blank);
     const s = { on: 1, hand, hidden: 6, red: [1, 4], flipped: 0, hi: -1, tap: -1, press: null, auto: t >= AUTO[id] ? 1 : 0, deal: null };
-    if (id === 'deepseek' || id === 'openai') s.red = [1, 3, 4];
-    if (t >= RED_T) s.flipped = Math.min(6, Math.floor((t - RED_T) * (id === 'deepseek' ? 2.2 : 1.6)) + 1);
-    if (id === 'deepseek' && t >= PASS.t0 && t < HINTS.deepseek[0][0]) s.pass = 1;
+    if (FINAL.includes(id)) s.red = [1, 3, 4];
+    if (t >= RED_T) s.flipped = Math.min(6, Math.floor((t - RED_T) * (id === FINAL[0] ? 2.2 : 1.6)) + 1);
+    if (id === FINAL[0] && t >= PASS.t0 && t < HINTS[FINAL[0]][0][0]) s.pass = 1;
+    if (t >= LIMIT0 && t < AUTO[id] && !(OUT[id] && t >= OUT[id].out)) s.limit = limitAt(t);
+    if (t >= SEMI[id] && t < AUTO[id]) {
+      s.semi = 1;
+      const nx = P.find((p) => p.who === id && p.style === 'semi' && p.tr > t - 0.05);
+      if (nx) s.aiPick = nx.slot;
+    }
+    if (t >= AUTO[id]) s.full = 1;
+    for (const tt of TIMEOUT[id] ?? []) if (t > tt && t < tt + 0.45) s.timeout = 1;
     if (OUT[id]) {
       const o = OUT[id];
-      if (t >= o.pass[0] - 0.1 && t < o.out) s.pass = 1;
       o.pass.forEach((pt, i) => { if (t > pt && t < pt + 0.3) s.shake = 3 + i; });
       if (t >= o.out) { s.out = Math.round(clamp((t - o.out) / 0.25) * 4) / 4; s.auto = 0; s.red = []; s.hand = []; s.hidden = 0; }
-      if (o.hover && t > o.hover[0] + 0.5 && t < o.hover[1]) s.hoverAuto = 1;
     }
-    for (const [pt, slot] of id === 'deepseek' ? PASS.taps : []) if (t > pt && t < pt + 0.3) s.shake = slot;
+    for (const [pt, slot] of id === FINAL[0] ? PASS.taps : []) if (t > pt && t < pt + 0.3) s.shake = slot;
     const rk = FINAL.includes(id) ? 0 : mulberry32(KING[id].seat * 11 + (sxOf(id) > 0 ? 5 : 0))();
     if (!OUT[id] && t >= ERR_T + rk && t < EYE_SCREEN + rk * 0.6) { s.error = 1; s.attacker = KING[FINAL.includes(id) ? other(id) : oppOf(id)].name; }
     if (!OUT[id] && t >= EYE_SCREEN + rk * 0.6) s.eye = Math.round(clamp((t - EYE_SCREEN - rk * 0.6) / 0.4) * 10) / 10;
@@ -365,7 +384,7 @@ function cardsState(t, st) {
     if (p.style === 'chat') { out.push({ ...base, ...chatFlight(p, t, d.rest) }); continue; }
     if (p.style === 'smash') { out.push({ ...base, ...smashFlight(p, t, d.rest) }); continue; }
     if (t > STOP) continue;
-    if (p.who === 'deepseek' && t > CUES.error && t < CUES.cancelUS) continue;   // (v8) nothing flies across his warning while we read it
+    if (p.who === FINAL[0] && t > CUES.error && t < CUES.cancelUS) continue;   // (v8) nothing flies across his warning while we read it
     out.push({ ...base, ...screenFlight(p, t, d.rest) });
   }
   // the house standing

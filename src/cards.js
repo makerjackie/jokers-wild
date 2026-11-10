@@ -281,6 +281,18 @@ function paintFuture(c, x0, y0, id, name) {
   c.restore();
 }
 // the card the eye deals: gold, a big #1
+function paintAiAuto(c, x0, y0) {
+  c.save(); c.translate(x0, y0);
+  const g = c.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, '#f7dc8a'); g.addColorStop(0.5, '#c49433'); g.addColorStop(1, '#f3d477');
+  c.fillStyle = '#16120c'; c.fillRect(0, 0, CW, CH);
+  c.strokeStyle = g; c.lineWidth = 12; rr(c, 12, 12, CW - 24, CH - 24, 14); c.stroke();
+  c.lineWidth = 2; rr(c, 26, 26, CW - 52, CH - 52, 9); c.stroke();
+  c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = `900 104px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.36);
+  c.font = `900 70px ${SANS}`; c.fillText('托管', CW / 2, CH * 0.62);
+  c.font = `bold 20px ${SANS}`; c.fillText('AUTO', CW / 2, CH * 0.8);
+  c.restore();
+}
 function paintNum1(c, x0, y0) {
   c.save(); c.translate(x0, y0);
   const g = c.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, '#f7dc8a'); g.addColorStop(0.5, '#c49433'); g.addColorStop(1, '#f3d477');
@@ -296,6 +308,7 @@ import { FUTURE as FUTURE_NAMES } from './future-models.js';
 function paintShikong(c) {
   for (const id in FUTURE_NAMES) FUTURE_NAMES[id].forEach((n, f) => paintFuture(c, ...cellXY(CELL[`future_${id}_${f}`]), id, n));
   paintNum1(c, ...cellXY(CELL.num1));
+  paintAiAuto(c, ...cellXY(CELL.aiAuto));
   OLD.forEach((o, g) => paintOld(c, ...cellXY(CELL[`old${g}`]), o));
   paintChat(c);
   {
