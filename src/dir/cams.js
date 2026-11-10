@@ -111,12 +111,12 @@ export const SHOTS = {
     faceCam(w.camera, st, w, t, RED, { d: 0.7, dz: 0.24, fov: 30, exp: 1.9 });
   },
   '3-03': (t, st, w) => { const u = uRow(t, '3-03'); camLook(w.camera, [-0.55 + 0.05 * u, 0.42, 0.05], [1.0, 0.06, -0.97], 26); st.look.exposure = 1.7; st.look.dof = { focus: 1.85, k: 0.3, max: 8 }; },
-  '3-04': (t, st, w) => acrossCam(w.camera, st, RED, { x: 0.5, y: 0.6, z: 1.0, lx: 1.05, ly: 0.3, lz: 0, fov: 46 }),
+  '3-04': (t, st, w) => acrossCam(w.camera, st, RED, { x: 0.5, y: 0.6, z: 1.0, lx: 1.05, ly: 0.3, lz: 0, fov: 46, exp: 2.4 }),
   '3-05': (t, st, w) => {
     const m = S.machineAt(RED, t), a = machinePoint(m, BTN_AUTO), c = machinePoint(m, BTN_CANCEL), b = [(a[0] + c[0]) / 2, a[1], (a[2] + c[2]) / 2], u = uRow(t, '3-05');
-    macro(w.camera, st, [b[0] - 0.27 + 0.02 * u, b[1] + 0.3, b[2] + 0.1], [b[0] + 0.03, b[1], b[2]], 34, 0.42, 0.3); st.look.near = 0.01; st.look.exposure = 1.7;
+    macro(w.camera, st, [b[0] - 0.24 + 0.02 * u, b[1] + 0.36, b[2] + 0.12], [b[0] + 0.03, b[1], b[2]], 34, 0.45, 0.3); st.look.near = 0.01; st.look.exposure = 2.0;
   },
-  '3-06': (t, st, w) => { const u = uRow(t, '3-06'); camLook(w.camera, [-0.12, 0.26 + 0.02 * u, 0.86], [-0.3, 0.07, -0.02], 48); st.look.exposure = 1.4; st.look.near = 0.01; },
+  '3-06': (t, st, w) => { const u = uRow(t, '3-06'); camLook(w.camera, [-0.12, 0.26 + 0.02 * u, 0.86], [-0.3, 0.07, -0.02], 48); st.look.exposure = lerp(2.2, 1.5, ease(t, S.TOY_FIRST + 0.4, S.TOY_FIRST + 1.3)); st.look.near = 0.01; },
   '3-07': (t, st, w) => faceCam(w.camera, st, w, t, BLK, { d: 0.7, dz: -0.2, fov: 30, exp: 1.6 }),
   // ---------------------------------------------------------------- @4 不用机器的人
   '4-01': (t, st, w) => acrossCam(w.camera, st, BLK, { x: 0.55, y: 0.62 + shake(t, S.PLACE.spade.down, 0.012, 50, 7), z: 1.0, lx: 1.0, ly: 0.34, lz: 0, fov: 46 }),

@@ -133,6 +133,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       if (set.lampDir) set.lampDir(G.uLampDir.value);
       else G.uLampDir.value.copy(G.uLampPos.value).sub(_pivot.set(...LAMP_PIVOT)).normalize();
       G.uLampCone.value = Math.cos(((st.look.lampCone ?? 64) * Math.PI) / 180);
+      G.uLampSoft.value = st.look.lampSoft ?? 0.08;
       G.uLampPow.value = LAMP_POW * (st.set.lamp?.on ?? 1) * (1 - 0.85 * (st.set.lamp?.flicker ?? 0)) * (st.look.lampPow ?? 1);
       const p2 = st.look.p2;
       if (p2) { G.uP2Pos.value.set(...p2.pos); G.uP2Col.value.setRGB(...p2.col); G.uP2Range.value = p2.range ?? 6; } else G.uP2Col.value.setRGB(0, 0, 0);

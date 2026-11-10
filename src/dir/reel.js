@@ -224,7 +224,7 @@ function kingsState(t, st) {
         const PL = S.PLACE.heart, land = S.TOY_FIRST + 0.43;
         K.sweat = 1 - ease(t, land, land + 1.5);
         if (t < PL.up + 0.3) { K.look = [sx * 1.2, 0.0, 0.1]; K.face = F('down', 'knit', 'grit'); K.lean = 0.2; }
-        else if (t < land) { K.look = t > S.AUTO_PRESS.heart - 0.6 && t < S.AUTO_PRESS.heart + 0.3 ? machinePoint(m, BTN_AUTO) : mine; K.face = F('wide', 'raised', 'flat'); K.lean = t < PL.down ? 0.24 : 0.14; K.rise = t < PL.down ? 0.25 : 0.05; }
+        else if (t < land) { K.look = t > S.AUTO_PRESS.heart - 0.6 && t < S.AUTO_PRESS.heart + 0.3 ? machinePoint(m, BTN_AUTO) : mine; K.face = F('wide', 'raised', 'flat'); K.lean = t < PL.down ? 0.24 : t > S.AUTO_PRESS.heart - 0.9 && t < S.AUTO_PRESS.heart + 0.5 ? 0.0 : 0.14; K.rise = t < PL.down ? 0.25 : 0.05; }
         else if (t < CUES['4-01']) { K.look = t < S.PAT[1] + 0.3 ? mine : headAt(BLK); K.face = t < S.PAT[1] + 0.3 ? face('proud', { mouth: 'grin' }) : face('smug'); K.lean = t < S.PAT[1] + 0.4 ? 0.14 : -0.08; }
         else if (t < S.BLK_FIRST + 0.6) { K.look = theirs; K.face = F('wide', 'worried', 'flat'); }
         else if (t >= CUES['4-05']) { K.look = Math.sin(t * 0.9) > 0 ? PILE : headAt(BLK); K.face = Math.sin(t * 2.3 + 1) > 0.1 ? face('laugh') : face('proud', { mouth: 'grin' }); K.lean = -0.14; }
@@ -554,6 +554,10 @@ export function base(t, world) {
   if (world?.lite) return st;
   cardsState(t, st);
   // ---- light and dark
+  // while the lamp is the game its light is a pool, not a room: whoever it leans away from sits in the dark
+  { const game = ease(t, CUES['1-07'], CUES['2-01']) * (1 - ease(t, S.PLUG.spade.bite, S.PLUG.spade.bite + 1));
+    st.look.lampCone = lerp(64, 47, game); st.look.lampSoft = lerp(0.08, 0.3, game);
+    if (t < S.PLUG.heart.bite) st.look.p3 = { pos: [0, 1.5, 0.6], col: [0.2 * game, 0.18 * game, 0.17 * game], range: 6 }; }
   if (t > S.HALL_GONE && t < S.HALL_GONE + 0.2) st.look.flash = 0.3 * (1 - (t - S.HALL_GONE) / 0.2);
   if (t > SLAM && t < SLAM + 0.1) st.look.flash = 0.25 * (1 - (t - SLAM) / 0.1);
   // the light has left him: the dark over a king's place (it goes with his chair when he is dragged off)

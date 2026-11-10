@@ -247,7 +247,7 @@ export function leaderEvents() {
 }
 export function leaderAt(t) { let w = null; for (const e of leaderEvents()) { if (e.t > t) break; w = e.who; } return w; }
 // the swing [about x, about z] that hangs the bulb toward a king (the chains are 4.8 m)
-const lampTarget = (who) => (who ? [(-zOf(who) * 0.7) / 4.8, (sxOf(who) * 0.95) / 4.8] : [0, 0]);
+const lampTarget = (who) => (who ? [(-zOf(who) * 0.8) / 4.8, (sxOf(who) * 1.2) / 4.8] : [0, 0]);
 export function lampSwingAt(t) {
   let T = [0, 0], v0 = [0, 0], t0 = -10;
   const val = (tt) => { const d = tt - t0, r = d <= 0 ? 1 : Math.exp(-3.0 * d) * Math.cos(5.2 * d); return [T[0] + (v0[0] - T[0]) * r, T[1] + (v0[1] - T[1]) * r]; };
