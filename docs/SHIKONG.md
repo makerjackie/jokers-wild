@@ -1,3 +1,16 @@
+# v9 (2026-11-10) — no nations; a reason for 托管
+
+- **Cast:** six kings, no countries: left row Claude (`anthropic`, seat 2), Gemini, Meta; right row OpenAI (seat 2),
+  xAI, Mistral. No Chinese company in any form. The house of cards is OpenAI's row; Gemini 2.5 Pro smashes it.
+- **The turn (act 5):** every round has a countdown that shrinks 10 s → 0.3 s (`LIMIT0/LIMIT1/limitAt`). 半托管 first
+  (`SEMI`): the AI picks (green "AI 选择"), the king only taps "✓ 确认出牌" (rubber stamp, eyes on the other side).
+  When the countdown beats a human hand: OpenAI's one 超时 (`TIMEOUT`), then 全托管 (`AUTO`), the others follow.
+  Meta and Mistral keep confirming by hand: 超时, 超时, 淘汰, dragged off (`OUT`); the neighbour glances, goes white.
+  Screens announce each switch ("已开启 半托管 / 全托管"). The leaderboard shows the holdouts stuck under 100.
+- **Hands:** fingertip IK (`o.tip` in kings.js solveArm): the target is the fingertip/knuckles, the arm is solved so it
+  lands there. Tablet close-ups from above the king's left, screen upright (`screenCam`).
+- **Credits:** the swat card reads "AI 托管" (`CELL.aiAuto`) and comes 0.45 s after the roll stops.
+
 # v8 (2026-11-10) — after the director's notes on v7
 
 - **Cast.** The CN lead (id `deepseek`) is now 混沌 HUNDUN: wholly invented, a faceless red pebble mark, stands for no real
