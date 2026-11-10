@@ -23,7 +23,7 @@ const T = (id, k = 0) => ROW[id].t0 + k;
 
 // Story beats in film seconds. 《喂》 v5: docs/script/shots.txt. Every row is a cue under its own id (CUES['4-07']).
 export const CUES = Object.fromEntries(Object.keys(ROW).map((id) => [id, ROW[id].t0]));
-Object.assign(CUES, { title: T('7-01'), credits: T('7-02'), egg: T('8-01'), end: T('8-05'), hello: T('5-03'), fin: DURATION });
+Object.assign(CUES, { title: T('9-01'), credits: T('9-02'), egg: T('10-01'), end: T('10-05'), hello: T('7-03'), fin: DURATION });
 
 // the reel is the whole film for now
 export const REEL = { t0: 0, t1: DURATION };

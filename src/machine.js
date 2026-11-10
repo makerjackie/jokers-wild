@@ -20,6 +20,10 @@ const K = 1 / 0.9;                         // the model is built 0.9 tall; K mak
 export const SLOT = [0, 0.36 * K, 0.34 * K];     // where a card leaves (unit machine, x S)
 export const HOPPER = [0, 0.9 * K, -0.08 * K];   // the funnel's mouth
 export const TOP = [0, 0.675 * K, 0.12 * K];     // the flat top in front of the funnel (a hand pats it here)
+// its back (the side its king sits on): the key, and under it a plate with two buttons, 托管 and 取消
+export const KEY = [0, 0.38 * K, -0.46 * K];
+export const BTN_AUTO = [0.092 * K, 0.2 * K, -0.335 * K], BTN_CANCEL = [-0.092 * K, 0.2 * K, -0.335 * K];
+export const CORD = [0.2 * K, 0.6 * K, -0.33 * K];     // where its power cord comes out
 const rotY = (v, yaw) => [v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw), v[1], -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw)];
 // world point of a unit-machine point for a machine state { pos, yaw, S }
 export const machinePoint = (m, p) => { const r = rotY(p, m.yaw ?? 0); return [m.pos[0] + r[0] * m.S, m.pos[1] + r[1] * m.S, m.pos[2] + r[2] * m.S]; };
@@ -60,8 +64,20 @@ function buildMachine(id) {
   const key = new THREE.Group(); key.position.set(0, 0.38, -0.46); g.add(key);
   for (const sx of [-1, 1]) add(new THREE.TorusGeometry(0.06, 0.02, 10, 22), brass, sx * 0.075, 0, 0, key);
   add(new THREE.SphereGeometry(0.03, 12, 10), brass, 0, 0, 0, key);
+  // the plate on its back: 托管 (lit while it plays by itself) and 取消 (which does nothing)
+  const plate = (on) => {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 192; const c = cv.getContext('2d');
+    c.fillStyle = '#17120d'; c.fillRect(0, 0, 512, 192); c.strokeStyle = '#b48d4c'; c.lineWidth = 8; c.strokeRect(6, 6, 500, 180);
+    const btn = (x, zh, lit, col) => { c.beginPath(); c.arc(x, 76, 52, 0, Math.PI * 2); c.fillStyle = lit ? col : '#2b2620'; c.fill(); c.lineWidth = 6; c.strokeStyle = lit ? '#fff3c9' : '#6b5a3a'; c.stroke();
+      c.fillStyle = lit ? '#fff7dc' : '#a8997c'; c.font = 'bold 40px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(zh, x, 158); };
+    btn(138, '托管', on, '#2fbf55'); btn(374, '取消', false, '#c23a2a');
+    const tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4; return tx;
+  };
+  const plates = [plate(false), plate(true)];
+  const panelMat = glowMaterial({ color: '#ffffff', id: 142, map: plates[0], gain: 0.9 });
+  add(new THREE.PlaneGeometry(0.4, 0.15).rotateY(Math.PI), panelMat, 0, 0.2, -0.3215);
   const base = { enamel: C(st.body).clone(), brass: C('#c9a25e').clone() };
-  return { root, arm, key, slit, enamel, brass, glow, base };
+  return { root, arm, key, slit, enamel, brass, glow, base, panelMat, plates };
 }
 
 export function makeMachines() {
@@ -94,12 +110,20 @@ export function makeMachines() {
   const plain = new THREE.Mesh(new THREE.PlaneGeometry(900, 900).rotateX(-Math.PI / 2), celMaterial({ color: '#4d463f', id: 0, gloss: 0 }));
   plain.position.y = FLOOR_Y - 0.004; plain.visible = false; root.add(plain);
 
+  // each machine's power cord: a dark cable from its back to wherever its plug is (thrown up at the lamp)
+  const cordMat = celMaterial({ color: '#1a1714', id: 14, gloss: 0.3, emissive: '#2a1a0c' });
+  const plugMat = celMaterial({ color: '#c9a25e', id: 5, gloss: 0.9, litBias: 0.3, shadeMul: 2.4 });
+  const cords = {};
+  for (const id in M) { const mesh = new THREE.Mesh(new THREE.BufferGeometry(), cordMat); mesh.frustumCulled = false; mesh.visible = false; const plug = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 0.05), plugMat); plug.visible = false; root.add(mesh, plug); cords[id] = { mesh, plug }; }
+  const _a = new THREE.Vector3();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), s3 = new THREE.Vector3();
   function update(st = {}, t = 0) {
     void t;
     for (const id in M) {
       const m = M[id], s = st[id];
       m.root.visible = !!s && (s.show ?? 1) > 0;
+      const cd = cords[id];
+      cd.mesh.visible = cd.plug.visible = false;
       if (!m.root.visible) continue;
       const S = s.S ?? 0.3, gl = s.gulp ?? 0;
       m.root.position.set(...s.pos);
@@ -111,6 +135,16 @@ export function makeMachines() {
       m.enamel.uniforms.uEmissive.value.copy(m.base.enamel).multiplyScalar(0.55 * lit);
       m.brass.uniforms.uEmissive.value.copy(m.base.brass).multiplyScalar(0.5 * lit);
       m.glow.uniforms.uGain.value = 0.25 + 2.2 * (s.glow ?? 0.4);
+      m.panelMat.uniforms.uMap.value = m.plates[s.auto ? 1 : 0];
+      if (s.cord) {
+        m.root.updateMatrixWorld(true);
+        _a.set(...CORD).applyMatrix4(m.root.matrixWorld);
+        const b = s.cord.to, sag = s.cord.sag ?? 0.3, pts = [];
+        for (let i = 0; i <= 10; i++) { const u = i / 10; pts.push(new THREE.Vector3(_a.x + (b[0] - _a.x) * u, _a.y + (b[1] - _a.y) * u - sag * 4 * u * (1 - u), _a.z + (b[2] - _a.z) * u)); }
+        cd.mesh.geometry.dispose();
+        cd.mesh.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, s.cord.r ?? 0.014, 6);
+        cd.mesh.visible = cd.plug.visible = true; cd.plug.position.set(b[0], b[1], b[2]);
+      }
     }
     const n = { CN: 0, US: 0 };
     for (const c of st.chips ?? []) {

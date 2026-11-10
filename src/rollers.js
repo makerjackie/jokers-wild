@@ -31,11 +31,17 @@ export function makeRollers() {
     c.visible = false; root.add(c); crowns.push(c);
   }
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0095, 0.0022, 10, 28), gold); ring.visible = false; root.add(ring);
+  // a pair of round wire spectacles (the red king's), lying flat: lenses in the xz plane
+  const wire = celMaterial({ color: '#c9a25e', id: 5, gloss: 0.9, litBias: 0.4, shadeMul: 3 });
+  const glasses = new THREE.Group(); glasses.visible = false; root.add(glasses);
+  for (const sx of [-1, 1]) { const l = new THREE.Mesh(new THREE.TorusGeometry(0.021, 0.0022, 8, 28).rotateX(Math.PI / 2), wire); l.position.set(sx * 0.026, 0, 0); glasses.add(l);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.09, 6).rotateX(Math.PI / 2), wire); arm.position.set(sx * 0.047, 0, -0.045); glasses.add(arm); }
+  { const br = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.012, 6).rotateZ(Math.PI / 2), wire); glasses.add(br); }
   const crumb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0022, 1), crumbMat); crumb.visible = false; root.add(crumb);
   function update(list = []) {
-    let ci = 0; crumb.visible = false; ring.visible = false; for (const c of crowns) c.visible = false;
+    let ci = 0; crumb.visible = false; ring.visible = false; glasses.visible = false; for (const c of crowns) c.visible = false;
     for (const r of list) {
-      const o = r.kind === 'crumb' ? crumb : r.kind === 'ring' ? ring : crowns[ci++];
+      const o = r.kind === 'crumb' ? crumb : r.kind === 'ring' ? ring : r.kind === 'glasses' ? glasses : crowns[ci++];
       if (!o || !r.pos) continue;
       o.visible = true; o.position.set(...r.pos);
       if (r.q) o.quaternion.set(...r.q);
