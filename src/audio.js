@@ -1,31 +1,32 @@
-// Sound department — the soundtrack of 《喂》 FEED (v6) (docs/SOUND.md).
+// Sound department — the soundtrack of 《失控》 OUT OF CONTROL (docs/SOUND.md).
 // renderScore(SR) synthesizes the whole film's mix in pure JS (no samples, no Web Audio nodes), deterministic (seeded
-// noise only: no Math.random, no clock) and identical in Node and the browser. renderScoreAsync renders the same
-// samples without blocking the page. Every time hangs off CUES / ROW or off the picture's sound events (soundEvents(),
-// owned by the director); when that list is empty the film runs on testEvents().
+// noise only: no Math.random, no clock) and identical in Node and the browser. renderScoreAsync(SR, opts, onProgress)
+// renders the same samples without blocking the page (slices of ~12 ms; bit-identical: both drive renderGen).
+// Every time hangs off CUES / ROW / SHOT or off the picture's sound events (soundEvents(), owned by the director);
+// when that list is empty the film runs on testEvents() (a stand-in from the shot table).
 //
-// The film is rendered in CHUNKS (one per cue, R4 and R6 split where the sound drops out). Each chunk has four groups:
-//   music (audio-music.js: SCORE[chunk]) -> music room;  effects -> effects room;  big (the hall, the ant's-eye
-//   impacts, the mountains) -> big room;  solo (the vacuums' hits and what brings them) -> big room, never carved
-// carved after the rooms (the vacuums, the beat of silence before the cheer), faded where the picture drops to
-// silence (1-06, 5-05, 7-03, 8-03), summed.
-//   + the lamp's hum (50 Hz; with the picture, dimmed by each plug, gone when the hall breaks) and the machines' mains
-//     buzz (100 Hz and up: from the first plug to the burst)
-//   sum -> 26 Hz high-pass, mono lows, tone EQ -> staging (7-01 = REF_LUFS) -> glue -> the walls driven
-//       -> true-peak limiter (-1.2 dBTP) -> L, R  (no digital-zero gates in this cut: no row plans loudness 0)
+// The film is rendered in CHUNKS, one per music cue (R1 .. R9, then END: the last card alone). Each chunk has four groups:
+//   music  (audio-music.js: SCORE[cue])                        -> music room (FDN; R6 / R7: the dark above, longer)
+//   effects (audio-sfx.js / audio-kinds.js: the events)         -> effects room (RT60 1.3 s)
+//   big    (the ant's-eye impacts, the lamp, the AI's vast sounds) -> big room (the hall far away)
+//   solo   (the vacuums' hits and their whooshes)                -> big room, never carved
+// carved after the rooms (the vacuums, the scorers' gaps), cut dead where the picture cuts (R5 at the stop), summed.
+//   + the lamp's hum (50 Hz; with the picture, gone in the vacuums and the cut, back from 7-02, gone at the black 8-06)
+//   sum -> 26 Hz high-pass, mono lows, tone EQ -> staging (the race's frenzy = REF_LUFS) -> glue -> the walls driven
+//       -> true-peak limiter (-1.2 dBTP) -> the hard gates (7-01; 9-01's first second; 9-03 around the last card) -> L, R
 import { CUES, ROW, SHOT, DURATION } from './shots.js';
 import { soundEvents } from './sound-events.js';
 import { setSR, SR, Biquad, groupSpan, addBus, rmsOf, dbToGain, gainToDb, encodeWav, drive } from './audio-dsp.js';
 import { fdnReverbG, glueG, limitTPG, truePeakG, monoLowsG, carve, eqG, highpassG, windowLUFS } from './audio-master.js';
-import { scoreCueG, cueTable, SCORE } from './audio-music.js';
-import { buildSfxG, humIntoG, prepareEvents, scoreEvents, testEvents, groupOf, chokes } from './audio-sfx.js';
+import { scoreCueG, cueTable, SCORE, TITLE_HOLD } from './audio-music.js';
+import { buildSfxG, humIntoG, prepareEvents, scoreEvents, testEvents, groupOf } from './audio-sfx.js';
 import { preOf } from './audio-kinds.js';
 
 // the true-peak ceiling: -1 dBTP with 0.2 dB to spare (ffmpeg's ebur128 oversampler reads ~0.1 dB hotter than ours)
 export const PEAK_DB = -1.2;
-// staging: the race's frenzy (3-07 + 3-08) lands here before the glue; everything else is placed relative to it
-export const REF_LUFS = -8.5;
-export const HUM_LEVEL = 0.0065, MAINS_LEVEL = 0.006, WALL_DRIVE_DB = 1.6;
+// staging: the giant card and its board (3-06 + 3-07) land here before the glue; everything else is placed relative to it
+export const REF_LUFS = -11.0;
+export const HUM_LEVEL = 0.0065, WALL_DRIVE_DB = 1.6;
 const clock = typeof performance !== 'undefined' && typeof performance.now === 'function' ? () => performance.now() : null;
 const now = () => (clock ? clock() : 0);
 const smooth01 = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
@@ -37,26 +38,36 @@ function seedOf(e) {
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
   return h % 999983;
 }
-// the hard gates (true digital silence): none in this cut
-export function gates() { return []; }
+const stopOf = (events, C = CUES) => (events.find((e) => e.kind === 'stop') ?? { t: C.stop }).t;
+// the last card on the writer's name (9-03): its time and its pre-roll (the card's breath of air)
+export const creditSlapOf = (events, C = CUES) => (events.find((e) => e.kind === 'creditSlap') ?? { t: C.slap + 0.75 }).t;
+export const CREDIT_PRE = 0.05, CREDIT_LEN = 0.55;
+// the hard gates: true digital silence (every bus, the hum too): the cut (7-01); the title's first breath in the black
+// (9-01, until the music box comes in); 9-03 before the last card and after it, to the end
+export function gates(C = CUES, events = []) {
+  const tS = creditSlapOf(events, C);
+  return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.title, C.title + TITLE_HOLD, '9-01 (the title, before the box)'],
+    [C.slap, tS - CREDIT_PRE - 0.002, '9-03 (the black before the last card)'], [tS + CREDIT_LEN, DURATION, '9-03 (after the last card: nothing)']];
+}
 // the walls driven into saturation in the master: [t0, t1, drive dB, ramp in, ramp out]
 export function wallDrives(C, events) {
-  const end = events.find((e) => e.kind === 'endSlam'), tE = end ? end.t : C['8-02'] + 1.6, th = events.find((e) => e.kind === 'thud' && e.t >= C['6-07']), tT = th ? th.t : C['6-07'] + 1.6;
-  return [[tT, C['7-02'], WALL_DRIVE_DB, 0.01, 0.3], [tE, C['8-03'], WALL_DRIVE_DB, 0.002, 0.2]];
+  const big = events.find((e) => e.kind === 'bigSlam'), tB = big ? big.t : C.big + 2.0, end = events.find((e) => e.kind === 'endSlam'), tE = end ? end.t : C.black + 0.45;
+  return [[tB, C.boardBig, WALL_DRIVE_DB, 0.002, 0.25], [C.blizzard, stopOf(events, C), WALL_DRIVE_DB, 0.05, 0.001], [tE, C.title - 1, WALL_DRIVE_DB, 0.002, 0.5]];
 }
 // the chunks: [id, t0, t1, cut] (cut = { at }: everything of the chunk, music, effects and rooms, cut dead there)
-const chunks = (C) => [['R1a', 0, C['1-06'], { at: C['1-06'], ramp: 0.25 }], ['R1b', C['1-06'], C['2-01']], ['R2', C['2-01'], C['3-01']], ['R3', C['3-01'], C['4-01']], ['R4', C['4-01'], C['5-01']], ['R5a', C['5-01'], C['5-05'], { at: C['5-05'], ramp: 0.15 }], ['R5b', C['5-05'], C['5-06']], ['R5c', C['5-06'], C['6-01']], ['R6', C['6-01'], C['7-01']], ['R7a', C['7-01'], C['7-03'], { at: C['7-03'], ramp: 0.12 }], ['R7b', C['7-03'], C['7-04']], ['R7c', C['7-04'], C['8-01']], ['R8a', C['8-01'], C['8-03'], { at: C['8-03'] + 0.05, ramp: 0.3 }], ['R8b', C['8-03'], C['8-06'], { at: C['8-06'], ramp: 0.3 }], ['R8c', C['8-06'], C.title], ['R9', C.title, C.egg, { at: C.egg, ramp: 0.3 }], ['R10', C.egg, DURATION]];
+// (R9: the title and the credits, faded out before 9-03; END: the last card alone)
+const chunks = (C, ev) => [['R1', 0, C.screen], ['R2', C.screen, C.race], ['R3', C.race, C.stuck], ['R4', C.stuck, C.auto], ['R5', C.auto, C.red], ['R6', C.red, C.stop, { at: stopOf(ev, C) }], ['R7', C.stop, C.deal, { at: C.deal + 0.05, ramp: 0.6 }], ['R8', C.deal, C.title, { at: C.title - 0.02, ramp: 1.0 }], ['R9', C.title, C.slap, { at: C.slap - 0.02, ramp: 1.2 }], ['END', C.slap, DURATION]];
 const ROOMS = {
   m: { rt60: 2.4, damp: 4500, size: 1.35, pre: 0.022, lo: 90, wet: 0.85 },
   s: { rt60: 1.3, damp: 5200, size: 1.0, pre: 0.012, lo: 160, wet: 0.8 },
   b: { rt60: 3.2, damp: 3600, size: 1.6, pre: 0.03, lo: 70, wet: 0.9 },
 };
 // per cue: the ant's hall is far away (R1); the dark above is vast once the ceiling is gone (R6, R7)
-const VAST = { rt60: 5.0, damp: 2600, size: 1.8, pre: 0.06, lo: 55, wet: 1.0 };
 const ROOMS_AT = {
-  R1a: { b: { rt60: 3.6, damp: 3000, size: 1.7, pre: 0.05, lo: 60, wet: 0.95 } },
-  R7a: { m: { rt60: 4.2, damp: 3200, size: 1.7, pre: 0.04, lo: 70, wet: 0.95 }, b: VAST },
-  R7b: { b: VAST }, R7c: { b: VAST }, R8a: { b: VAST }, R8b: { b: VAST }, R8c: { b: VAST }, R10: { b: VAST },
+  R1: { b: { rt60: 3.6, damp: 3000, size: 1.7, pre: 0.05, lo: 60, wet: 0.95 } },
+  R7: { m: { rt60: 4.2, damp: 3200, size: 1.7, pre: 0.04, lo: 70, wet: 0.95 }, b: { rt60: 5.0, damp: 2600, size: 1.8, pre: 0.06, lo: 55, wet: 1.0 } },
+  R8: { m: { rt60: 3.6, damp: 3600, size: 1.6, pre: 0.035, lo: 80, wet: 0.9 }, b: { rt60: 4.5, damp: 2800, size: 1.8, pre: 0.05, lo: 60, wet: 1.0 } },
+  R9: { m: { rt60: 3.0, damp: 4200, size: 1.5, pre: 0.03, lo: 120, wet: 0.85 } },
 };
 
 // The whole render as a generator: every yield is a point where the page may get the event loop back; it yields
@@ -78,7 +89,7 @@ function* renderGen(sampleRate, opts) {
   if (stemRange) { const a = Math.round(stemRange[0] * SR), n = Math.round(stemRange[1] * SR) - a, mk = () => ({ L: new Float32Array(n), R: new Float32Array(n), off: a }); stems = { music: mk(), sfx: mk(), amb: mk() }; }
 
   // ---- the plan (for progress): weights by length
-  const CH = chunks(C), spans = CH.map(([id, t0, t1]) => {
+  const CH = chunks(C, events), spans = CH.map(([id, t0, t1]) => {
     const evs = events.filter((e) => e.t >= t0 && e.t < t1), tail = Math.max(6, ...evs.map((e) => e.t + (e.dur || 0) + 3.5 - t1));
     return { evs, a: Math.max(0, t0 - 0.7), b: Math.min(DURATION, t1 + tail) };
   });
@@ -95,7 +106,6 @@ function* renderGen(sampleRate, opts) {
   }
   function* job(name, w, fn) { const t = now(), v = fn(), d = now() - t; done += w; units.push([name, d, d]); yield done / total; return v; }
   yield done / total;
-  const CHOKES = chokes(C, events);
 
   // ---- the chunks
   for (let ci = 0; ci < CH.length; ci++) {
@@ -104,12 +114,11 @@ function* renderGen(sampleRate, opts) {
     if (evs.some((e) => groupOf(e) === 'x')) G.x = groupSpan(a, b, N);
     let gaps = [];
     if (SCORE[id]) { const r = yield* unit(`music ${id}`, W.music * len, scoreCueG(id, G.m, events, 1000 * (ci + 1), X)); gaps = r.gaps; report.push(...r.report); }
-    yield* unit(`sfx ${id}`, W.sfx * len, buildSfxG(C, ROW, G, evs, { counts, unknown, chokes: CHOKES }));
+    yield* unit(`sfx ${id}`, W.sfx * len, buildSfxG(C, ROW, G, evs, { counts, unknown }));
     for (const [k, g] of Object.entries(G)) yield* unit(`rooms ${id}`, W.room * len * 0.75, fdnReverbG(g.send.L, g.send.R, g.dry.L, g.dry.R, ROOMS_AT[id]?.[k === 'x' ? 'b' : k] ?? ROOMS[k === 'x' ? 'b' : k]));
     yield* job(`mix ${id}`, W.mix * len, () => {
       // silence is carved after the rooms so it is real
       carve(G.m.dry.L, G.m.dry.R, gaps.map(([g0, g1, db, ri, ro]) => [g0, g1, db, ri, ro]), G.m.off);
-      for (const [g0, g1, db, ri, ro, , all] of gaps) if (all === 'all') for (const gk of ['s', 'b', 'x']) if (G[gk]) carve(G[gk].dry.L, G[gk].dry.R, [[g0, g1, db, ri, ro]], G[gk].off);
       for (const [g0, g1, , , , l] of gaps) report.push([+g0.toFixed(3), 'GAP', `music ${g0.toFixed(2)}..${Math.min(g1, DURATION).toFixed(2)} (${l})`]);
       for (const [tv, e] of vac) if (tv >= t0 && tv < t1) {
         const pre = preOf(e);
@@ -125,26 +134,19 @@ function* renderGen(sampleRate, opts) {
     });
   }
 
-  // ---- the hum: the lamp, with the picture (1-02); gone in the vacuums; low after the slap that kills the ant;
-  // each plug that bites it dims it; gone for good when the hall breaks (the burst). And the machines' mains buzz:
-  // up from each plug, to the burst.
-  const tGone = (events.find((e) => e.kind === 'burst') ?? { t: C['7-01'] + 1.4 }).t, bites = events.filter((e) => e.kind === 'plugBite').map((e) => e.t);
+  // ---- the hum: the lamp, with the picture (1-02); gone in the vacuums; zero in the cut, creeping back from 7-02; gone
+  // at the black (8-06)
+  const [z0, z1] = gates(C, events)[0], t8 = C.deal;
   const humLvl = (t) => {
-    if (t > tGone + 0.5) return 0;
-    let k = smooth01((t - ROW['1-02'].t0) / 1.5) * (1 - smooth01((t - tGone) / 0.4));
+    let k = smooth01((t - ROW['1-02'].t0) / 1.5);
     for (const [tv, e] of vac) { const a = tv - preOf(e); if (t > a - 0.04 && t < tv + 0.15) k *= t < a ? 1 - (t - a + 0.04) / 0.04 : t < tv ? 0 : (t - tv) / 0.15; }
-    if (t > C['1-06'] && t < C['2-01']) k *= 0.2 + 2.0 * smooth01((t - C['1-07']) / 1.5) - 1.2 * smooth01((t - C['2-01'] + 1) / 1);   // the empty hall, as the camera rises
-    for (const b of bites) k *= 1 - 0.45 * smooth01((t - b) / 0.8);
+    if (t >= z0) k *= t < z1 ? 0 : 0.85 * smooth01((t - z1) / 1.6);
+    if (t > C.crush) k *= t < C.crumb + 0.6 ? 0.15 : 0.15 + 0.85 * smooth01((t - C.crumb - 0.6) / 1.5);
+    if (t > C.black) k *= 0;
     return Math.max(0, k);
   };
-  const mainsLvl = (t) => { let k = 0; for (const b of bites) k += 0.5 * smooth01((t - b - 0.4) / 1.4); return k * (1 - smooth01((t - tGone) / 0.4)); };
-  if (bites.length) {
-    const MH = [[1, 0.5, 0], [2, 1, 0.3], [3, 0.6, 1.1], [4, 0.45, 2.0], [5, 0.3, 0.2], [6, 0.26, 2.7], [7, 0.15, 0.9], [8, 0.12, 1.7]];
-    for (const [dst, off] of stems ? [[out, 0], [stems.amb, stems.amb.off]] : [[out, 0]]) yield* unit('hum', 1, humIntoG(dst.L, dst.R, off, bites[0], Math.min(DURATION, tGone + 0.6), { level: MAINS_LEVEL, lvlAt: mainsLvl, H: MH }));
-    report.push([bites[0], 'AMB', `the machines' mains buzz from the first plug (${bites.map((b) => b.toFixed(2)).join(', ')}) to the burst (${tGone.toFixed(2)})`]);
-  }
   for (const [dst, off] of stems ? [[out, 0], [stems.amb, stems.amb.off]] : [[out, 0]]) yield* unit('hum', W.hum * DURATION, humIntoG(dst.L, dst.R, off, 0.02, DURATION, { level: HUM_LEVEL, lvlAt: humLvl }));
-  report.push([ROW['1-02'].t0, 'AMB', 'hum: the lamp (50 Hz) with the picture; gone in the vacuums, dimmed by each plug, gone when the hall breaks']);
+  report.push([ROW['1-02'].t0, 'AMB', 'hum: the lamp (50 Hz) with the picture, under everything; gone in the vacuums and the cut, back from 7-02, gone at the black']);
   report.push([0, 'SFX', `events: ${events.length} (${Object.entries(counts).map(([k, n]) => `${k} ${n}`).join(', ')})`]);
   const unk = Object.entries(unknown); if (unk.length) report.push([0, 'SFX', `UNKNOWN kinds skipped (silent): ${unk.map(([k, n]) => `${k} x${n}`).join(', ')}`]);
 
@@ -154,7 +156,7 @@ function* renderGen(sampleRate, opts) {
   yield* unit('master mono', M * 0.5, monoLowsG(L, R, 110));
   yield* unit('master eq', M, eqG(L, R, () => [Biquad.peak(300, 0.9, -1.0), Biquad.peak(2800, 1.0, 0.8), Biquad.hishelf(11000, -1.0)]));
   let linGain = 1;
-  const ref = windowLUFS(L, R, C['7-01'] + 1.5, C['7-02'], SR);
+  const ref = windowLUFS(L, R, C.big, ROW['3-07'].t1, SR);
   yield* job('master stage', M * 0.3, () => { const k = dbToGain(REF_LUFS - ref); for (let i = 0; i < N; i++) { L[i] *= k; R[i] *= k; } linGain *= k; });
   const glueGr = yield* unit('master glue', M * 1.5, glueG(L, R, { thr: -13, ratio: 1.5, knee: 10, att: 0.02, rel: 0.25, look: 0.005 }));
   const WALLS = wallDrives(C, events);
@@ -182,7 +184,6 @@ function* renderGen(sampleRate, opts) {
       for (let i = b; i < Math.min(N, b + rmp); i++) { const k = (i - b) / rmp; L[i] *= k; R[i] *= k; }
     }
     const fi = Math.round(0.02 * SR); for (let i = 0; i < fi; i++) { const k = i / fi; L[i] *= k; R[i] *= k; }
-    const fo = Math.round(0.25 * SR); for (let i = 0; i < fo; i++) { const k = i / fo; L[N - 1 - i] *= k; R[N - 1 - i] *= k; }   // the last tak rings out to the end of the file
     if (stems) for (const s of Object.values(stems)) for (let i = 0; i < s.L.length; i++) { s.L[i] *= linGain; s.R[i] *= linGain; }
   });
 
