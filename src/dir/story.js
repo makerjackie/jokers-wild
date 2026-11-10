@@ -65,7 +65,7 @@ export const PAT = [at('3-06', 2.3), at('3-06', 2.6)];
 export const BLK_FIRST = at('4-02', 0.6);
 export const RED_STOP = at('5-01', 0.9);             // the red toy has run down
 export const RED_GO = at('5-02', 2.1);               // fed, it runs again
-export const PALM = { grab: at('5-05', 0.9), hide: at('5-05', 2.0) };       // the last chip goes up his sleeve
+export const PALM = { grab: at('5-05', 1.6), hide: at('5-05', 2.45) };       // the last chip goes up his sleeve
 export const PLUG = { heart: { throw: at('5-07', 1.5), bite: at('5-07', 2.1) }, spade: { throw: at('5-08', 0.6), bite: at('5-08', 1.2) } };
 export const SUCK_CHIP = { out: at('6-02', 1.0), gone: at('6-02', 1.75) };  // it takes the hidden chip by itself
 export const CANCEL = { heart: [0.5, 1.05, 1.5, 1.85, 2.15, 2.4, 2.65].map((k) => at('6-03', k)), spade: [0.15, 0.45, 0.7, 0.95].map((k) => at('6-06', k)) };
@@ -149,6 +149,8 @@ export function machineAt(id, t) {
   return { show: 1, pos: [sx * floorX(S), FLOOR_Y, 0], yaw, S, floor: 1 };
 }
 export const autoOn = (id, t) => t >= AUTO_PRESS[id];
+// a machine grown too deep for the table's edge pushes its king back from the table (metres)
+export function pushOf(id, t) { const m = machineAt(id, t); return !m || m.floor || m.carried ? 0 : clamp(0.74 + 0.51 * m.S - 1.3, 0, 0.7); }
 export const running = (id, t) => (id === RED ? (t >= TOY_FIRST - 0.01 && t < RED_STOP) || t >= RED_GO : t >= BLK_FIRST - 0.01 && t < BLK_STOP);
 const CS = [[0.3, 1], [0.46, 1.35], [1.05, 3.2], [1.4, 4.2], [1.7, 5], [3.0, 10], [30, 45]];
 export function csOf(S) {

@@ -18,11 +18,11 @@ import { FLOOR_Y } from './layout.js';
 
 const K = 1 / 0.9;                         // the model is built 0.9 tall; K makes its height exactly 1
 export const SLOT = [0, 0.36 * K, 0.34 * K];     // where a card leaves (unit machine, x S)
-export const HOPPER = [0, 0.9 * K, -0.08 * K];   // the funnel's mouth
-export const TOP = [0, 0.675 * K, 0.12 * K];     // the flat top in front of the funnel (a hand pats it here)
-// its back (the side its king sits on): the key, and under it a plate with two buttons, 托管 and 取消
-export const KEY = [0, 0.38 * K, -0.46 * K];
-export const BTN_AUTO = [0.092 * K, 0.2 * K, -0.335 * K], BTN_CANCEL = [-0.092 * K, 0.2 * K, -0.335 * K];
+export const HOPPER = [0, 0.9 * K, 0.07 * K];    // the funnel's mouth
+export const TOP = [0, 0.905 * K, 0.27 * K];     // the funnel's front rim (a hand pats it here)
+// its back (the side its king sits on): the key. On its top, along the back edge: a plate with two buttons, 托管 and 取消
+export const KEY = [0, 0.38 * K, -0.44 * K];
+export const BTN_AUTO = [0.092 * K, 0.682 * K, -0.225 * K], BTN_CANCEL = [-0.092 * K, 0.682 * K, -0.225 * K];
 export const CORD = [0.2 * K, 0.6 * K, -0.33 * K];     // where its power cord comes out
 const rotY = (v, yaw) => [v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw), v[1], -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw)];
 // world point of a unit-machine point for a machine state { pos, yaw, S }
@@ -46,8 +46,8 @@ function buildMachine(id) {
   add(roundBox(0.56, 0.028, 0.66, 0.01), brass, 0, 0.57, 0);
   add(roundBox(0.5, 0.04, 0.6, 0.015), brass, 0, 0.655, 0);
   // the funnel it is fed through
-  add(lathe([[0.065, 0], [0.085, 0], [0.19, 0.2], [0.215, 0.2], [0.215, 0.225], [0.185, 0.225], [0.075, 0.035], [0, 0.035]], 36), brass, 0, 0.675, -0.08);
-  add(new THREE.CircleGeometry(0.07, 24).rotateX(-Math.PI / 2), dark, 0, 0.712, -0.08);
+  add(lathe([[0.065, 0], [0.085, 0], [0.19, 0.2], [0.215, 0.2], [0.215, 0.225], [0.185, 0.225], [0.075, 0.035], [0, 0.035]], 36), brass, 0, 0.675, 0.07);
+  add(new THREE.CircleGeometry(0.07, 24).rotateX(-Math.PI / 2), dark, 0, 0.712, 0.07);
   // the slot: a brass lip, a dark slit, a warm light inside
   add(roundBox(0.44, 0.11, 0.05, 0.02), brass, 0, 0.36, 0.31);
   add(new THREE.BoxGeometry(0.37, 0.04, 0.02), dark, 0, 0.36, 0.33);
@@ -61,8 +61,8 @@ function buildMachine(id) {
   add(lathe([[0.0, 0], [0.05, 0.0], [0.06, 0.012], [0.05, 0.04], [0.02, 0.055], [0, 0.058]], 20), brass, sd * 0.325, 0.385, 0.24);
   // the key in its back
   add(new THREE.CylinderGeometry(0.02, 0.02, 0.13, 12).rotateX(Math.PI / 2), brass, 0, 0.38, -0.385);
-  const key = new THREE.Group(); key.position.set(0, 0.38, -0.46); g.add(key);
-  for (const sx of [-1, 1]) add(new THREE.TorusGeometry(0.06, 0.02, 10, 22), brass, sx * 0.075, 0, 0, key);
+  const key = new THREE.Group(); key.position.set(0, 0.38, -0.44); g.add(key);
+  for (const sx of [-1, 1]) add(new THREE.TorusGeometry(0.044, 0.014, 10, 22), brass, sx * 0.055, 0, 0, key);
   add(new THREE.SphereGeometry(0.03, 12, 10), brass, 0, 0, 0, key);
   // the plate on its back: 托管 (lit while it plays by itself) and 取消 (which does nothing)
   const plate = (on) => {
@@ -75,7 +75,7 @@ function buildMachine(id) {
   };
   const plates = [plate(false), plate(true)];
   const panelMat = glowMaterial({ color: '#ffffff', id: 142, map: plates[0], gain: 0.9 });
-  add(new THREE.PlaneGeometry(0.4, 0.15).rotateY(Math.PI), panelMat, 0, 0.2, -0.3215);
+  add(new THREE.PlaneGeometry(0.4, 0.15).rotateX(-Math.PI / 2).rotateY(Math.PI), panelMat, 0, 0.6765, -0.225);
   const base = { enamel: C(st.body).clone(), brass: C('#c9a25e').clone() };
   return { root, arm, key, slit, enamel, brass, glow, base, panelMat, plates };
 }

@@ -45,11 +45,12 @@ function machineCard(p, t) {
 const hopPt = (id, dy = 0.1) => (t) => { const p = machinePoint(mAt(id, t), HOPPER); return [p[0] + sxOf(id) * 0.03, p[1] + dy, p[2]]; };
 // a point on the machine's back, `out` metres off it toward its king
 const backPt = (id, P, out = 0.02) => (t) => { const p = machinePoint(mAt(id, t), P); return [p[0] + sxOf(id) * out, p[1], p[2]]; };
-const SLEEVE = [sxOf(RED) * 1.2, 0.09, -S.rzOf(RED) * 0.17];       // the red king's left cuff
-const CROWN_BASE = (id) => [sxOf(id) * 1.5, 0.79, 0];
+const sleeveAt = (t) => [sxOf(RED) * (1.4 + S.pushOf(RED, t)), 0.36, S.rzOf(RED) * 0.07];       // inside the breast of the red king's robe
+const SLEEVE = sleeveAt(0);
+const CROWN_BASE = (id, t = 0) => [sxOf(id) * (1.5 + S.pushOf(id, t)), 0.79, 0];
 // his crown as the machine pulls it off him: up a little, a tug of war, gone
 export function crownSuck(id, t) {
-  const C = S.CROWN_SUCK[id], b = CROWN_BASE(id);
+  const C = S.CROWN_SUCK[id], b = CROWN_BASE(id, t);
   if (t < C.lift) return null;
   if (t < C.lose) {
     const up = 0.07 * ease(t, C.lift, C.grab) + (t > C.grab ? 0.05 + 0.04 * Math.sin((t - C.grab) * 19) + 0.03 * ((t - C.grab) / (C.lose - C.grab)) : 0);
@@ -78,7 +79,8 @@ function moves() {
     const hold = (dz) => (t) => { const m = mAt(id, Math.max(t, P.up)); return [m.pos[0] + sx * 0.05, m.pos[1] + m.S * 0.6, m.pos[2] + dz * (0.3 * m.S + 0.03)]; };
     for (const [side, dz] of [['R', rz], ['L', -rz]]) add(id, side, 'open', [[P.up - 0.45, REST], [P.up, hold(dz)], [P.down + 0.1, hold(dz)], [P.down + 0.42, REST]]);
     // 托管: a finger for the red king, a fist for the black
-    const tp = S.AUTO_PRESS[id], btn = backPt(id, BTN_AUTO, 0.015), over = backPt(id, BTN_AUTO, 0.12);
+    const upPt = (P, dy) => (t) => { const p = machinePoint(mAt(id, t), P); return [p[0], p[1] + dy, p[2]]; };
+    const tp = S.AUTO_PRESS[id], btn = upPt(BTN_AUTO, 0.015), over = upPt(BTN_AUTO, 0.13);
     add(id, 'R', id === RED ? 'point' : 'fist', [[tp - 0.36, REST], [tp - 0.1, over], [tp, btn], [tp + 0.14, btn], [tp + 0.5, REST]]);
     // the chips are gone: he pats the bare cloth where they were
     const s2 = S.stackAt(id), pat = (t) => [s2[0], 0.03 + 0.06 * Math.abs(Math.sin(t * 9)), s2[1]];
@@ -91,14 +93,14 @@ function moves() {
     const w0 = at('7-02', 1.9), w1 = id === BLK ? S.BLK_STOP + 0.2 : at('7-05', 0.8);
     for (const [side, dz, ph] of [['R', rz, 0], ['L', -rz, 2]]) add(id, side, 'open', [[w0, REST], [w0 + 0.4, wave(dz, ph)], [w1, wave(dz, ph)], [w1 + 0.5, REST]]);
     // 取消: nothing happens. A finger, then the fist, harder and harder
-    const C = S.CANCEL[id], pressAt = (t) => { let d = 9; for (const c of C) d = Math.min(d, Math.abs(t - c)); const p = machinePoint(mAt(id, t), BTN_CANCEL); return [p[0] + sx * (0.015 + Math.min(0.11, d * 0.7)), p[1], p[2]]; };
+    const C = S.CANCEL[id], pressAt = (t) => { let d = 9; for (const c of C) d = Math.min(d, Math.abs(t - c)); const p = machinePoint(mAt(id, t), BTN_CANCEL); return [p[0], p[1] + 0.015 + Math.min(0.13, d * 0.8), p[2]]; };
     const last = C[C.length - 1];
     if (id === RED) { add(id, 'R', 'point', [[C[0] - 0.4, REST], [C[0] - 0.1, pressAt], [C[1] + 0.2, pressAt]]); add(id, 'R', 'fist', [[C[1] + 0.2, pressAt], [last + 0.1, pressAt], [last + 0.45, REST]]); }
     else add(id, 'R', 'fist', [[C[0] - 0.36, REST], [C[0] - 0.08, pressAt], [last + 0.1, pressAt], [last + 0.45, REST]]);
     // his crown is going: both hands on it; then on his bare head
-    const U = S.CROWN_SUCK[id], b = CROWN_BASE(id);
+    const U = S.CROWN_SUCK[id], b = CROWN_BASE(id, U.grab);
     for (const [side, dz] of [['R', rz], ['L', -rz]]) {
-      const onIt = (t) => { const c = crownSuck(id, Math.min(t, U.lose - 0.01)); return [c.pos[0], c.pos[1] + 0.03, c.pos[2] + dz * 0.1]; };
+      const onIt = (t) => { const c = crownSuck(id, clamp(t, U.lift + 0.001, U.lose - 0.01)); return [c.pos[0], c.pos[1] + 0.03, c.pos[2] + dz * 0.1]; };
       add(id, side, 'hold', [[U.grab - 0.3, REST], [U.grab, onIt], [U.lose, onIt], [U.lose + 0.2, [b[0], b[1] + 0.2, dz * 0.12]], [U.lose + 0.6, [b[0], b[1] - 0.02, dz * 0.1]], [U.gone + 0.7, [b[0], b[1] - 0.02, dz * 0.1]], [U.gone + 1.2, REST]]);
     }
   }
@@ -119,7 +121,7 @@ function moves() {
   }
   // the red king keeps the last chip: off the cloth, up his left sleeve
   { const s = S.stackAt(RED), sp = [s[0], 0.06, s[1]], P = S.PALM;
-    add(RED, 'R', 'hold', [[P.grab - 0.4, REST], [P.grab, sp], [P.grab + 0.25, [s[0], 0.2, s[1]]], [P.hide, [SLEEVE[0], SLEEVE[1] + 0.05, SLEEVE[2]]], [P.hide + 0.25, [SLEEVE[0], SLEEVE[1] + 0.05, SLEEVE[2]]], [P.hide + 0.7, REST]]); }
+    add(RED, 'R', 'hold', [[P.grab - 0.4, REST], [P.grab, sp], [P.grab + 0.25, [s[0], 0.2, s[1]]], [P.hide, [SLEEVE[0] + 0.07, SLEEVE[1], SLEEVE[2]]], [P.hide + 0.25, [SLEEVE[0] + 0.07, SLEEVE[1], SLEEVE[2]]], [P.hide + 0.7, REST]]); }
   // he tries to hold the key: it goes on turning, lifts him, throws him off
   { const G = S.KEYGRAB;
     for (const [side, ph] of [['R', 0], ['L', Math.PI]]) {
@@ -209,6 +211,7 @@ function kingsState(t, st) {
     if (id === BLK && t >= S.BACK[0]) K.enter = lerp(1, 0.3, ease(t, S.BACK[0], S.BACK[1]));
     if (id === BLK && t >= CUES.egg) { K.empty = 1; continue; }
     if (fin && t >= S.CROWN_SUCK[id].lift) K.crown = 0;
+    if (fin) { const push = S.pushOf(id, t); if (push > 0.0005) K.enter = 1 - Math.cbrt(push / ENTER_DX); }
     const m = fin ? mAt(id, t) : null, mo = fin ? mAt(o, t) : null;
     const mine = m ? machinePoint(m, TOP) : [sx * 0.74, 0.2, 0], theirs = mo ? machinePoint(mo, TOP) : [-sx * 0.74, 0.2, 0];
     const up = (k = 0.5) => (m ? [m.pos[0] * 0.9, m.pos[1] + m.S * k, 0] : mine);
@@ -250,7 +253,7 @@ function kingsState(t, st) {
       K.sweat = 0.8; K.lean = 0.12;
       const s2 = S.stackAt(id);
       if (t < CUES['5-06']) {
-        if (red) { K.look = t < S.PALM.grab - 0.5 ? [s2[0], 0, s2[1]] : t < S.PALM.grab + 0.5 ? headAt(BLK) : SLEEVE; K.face = t < S.PALM.grab - 0.5 ? F('down', 'worried', 'flat') : F('side', 'arch', 'smirk'); }
+        if (red) { K.look = t < at('5-05', 0.35) ? [s2[0], 0, s2[1]] : t < at('5-05', 1.3) ? headAt(BLK) : SLEEVE; K.face = t < at('5-05', 0.35) ? F('down', 'worried', 'flat') : F('side', 'arch', 'smirk'); }
         else { K.look = mine; K.face = F('down', 'knit', 'flat'); }
       } else { K.look = t < at('5-06', 1.9) ? [s2[0], 0, s2[1]] : LAMP_PT; K.face = face('worry', { eyes: t < at('5-06', 1.9) ? 'down' : 'up' }); K.sweat = 1; }
     } else if (t < CUES['5-09']) {
@@ -275,7 +278,7 @@ function kingsState(t, st) {
       if (t < CUES['6-02']) { K.look = u6 < 1.3 ? PILE : headAt(o); K.face = u6 < 1.3 ? F('narrow', 'knit', 'flat') : u6 < 1.9 ? F('side', 'raised', 'flat') : face('proud', { mouth: 'grin' }); K.lean = u6 < 1.3 ? 0.24 : 0.04; }
       else if (red) {
         const SC = S.SUCK_CHIP, U = S.CROWN_SUCK.heart, G = S.KEYGRAB;
-        if (t < CUES['6-03']) { K.look = t < SC.out - 0.25 ? PILE : t < SC.out + 0.1 ? SLEEVE : t < SC.gone + 0.2 ? machinePoint(m, HOPPER) : SLEEVE; K.face = t < SC.out - 0.25 ? face('proud', { mouth: 'grin' }) : t < SC.gone + 0.3 ? face('shock') : F('down', 'worried', 'slack'); }
+        if (t < CUES['6-03']) { K.look = t < SC.out - 0.25 ? PILE : t < SC.out + 0.1 ? sleeveAt(t) : t < SC.gone + 0.2 ? machinePoint(m, HOPPER) : sleeveAt(t); K.face = t < SC.out - 0.25 ? face('proud', { mouth: 'grin' }) : t < SC.gone + 0.3 ? face('shock') : F('down', 'worried', 'slack'); }
         else if (t < CUES['6-04']) { K.look = machinePoint(m, BTN_CANCEL); K.face = t < S.CANCEL.heart[2] ? F('down', 'worried', 'flat') : face('fear', { eyes: 'down' }); K.lean = 0.2; K.rise = 0.15; }
         else if (t < CUES['6-05']) { const lift = ease(t, G.on, G.on + 0.5) * (1 - ease(t, G.off, G.off + 0.12)); K.look = machinePoint(m, KEY); K.face = F('glare', 'angry', 'grit'); K.rise = 0.2 + 0.7 * lift; K.lean = 0.2; if (t > G.off) { K.blown = Math.exp(-(t - G.off) * 3); K.face = face('shock'); K.rise = 0; } }
         else if (t < U.gone + 0.5) { const c = crownSuck(RED, t); K.look = c?.pos ?? machinePoint(m, HOPPER); K.face = t < U.grab ? F('up', 'raised', 'slack') : t < U.lose ? F('up', 'worried', 'grit') : face('shock'); K.rise = t > U.grab && t < U.lose ? 0.35 : 0; K.lean = -0.05; }
@@ -379,7 +382,7 @@ function machinesState(t, st) {
       if (d > 0 && d < 0.6 * ts) flash = Math.max(flash, Math.exp((-d * 6) / ts));
     }
     const pw = ease(t, S.PLUG[id].bite, S.PLUG[id].bite + 0.4);
-    let lit = Math.max(0.3 * pw, t >= FLOOR_T ? 0.35 + 0.65 * ease(t, MOUNT.t0, MOUNT.t1) : 0);
+    let lit = Math.max(0.16 * pw, t >= FLOOR_T ? 0.22 + 0.33 * ease(t, MOUNT.t0, MOUNT.t1) : 0);
     if (id === BLK) lit *= lerp(1, 0.22, ease(t, S.BLK_STOP, S.BLK_STOP + 1.6));
     const glow = (run ? 0.4 + 0.5 * pw : 0.03) + 0.6 * flash;
     out[id] = { show: 1, pos: m.pos, yaw: m.yaw, S: m.S, gulp: S.gulpAt(id, t), strike, key: keyAt(id, t), glow, lit, auto: S.autoOn(id, t) ? 1 : 0 };
@@ -388,13 +391,13 @@ function machinesState(t, st) {
     // the light out of its slot: once the lamp is its food, this is what the kings are lit by
     if (pw > 0) {
       const sp = machinePoint(m, SLOT), sx = sxOf(id), k = pw * (0.45 + 0.9 * glow) * (id === BLK ? lerp(1, 0, ease(t, S.BLK_STOP, S.BLK_STOP + 1.6)) : 1);
-      st.look[id === RED ? 'p2' : 'p3'] = { pos: [sp[0] - sx * 0.25 * m.S, sp[1] + 0.12 * m.S, 0], col: id === RED ? [1.9 * k, 1.1 * k, 0.5 * k] : [1.3 * k, 1.15 * k, 1.0 * k], range: Math.min(70, 2.4 + 1.9 * m.S) };
+      st.look[id === RED ? 'p2' : 'p3'] = { pos: [sp[0] - sx * (0.25 + 0.4 * m.S), sp[1] + 0.25 * m.S, 0], col: id === RED ? [0.8 * k, 0.46 * k, 0.2 * k] : [0.55 * k, 0.5 * k, 0.44 * k], range: Math.min(70, 2.6 + 2.0 * m.S) };
     }
   }
   // ---- chips: each king's stack; the ones in a hand; the ones falling into a funnel
   const CS = 1.8, CH = 0.0046 * CS;
   for (const id of FINAL) {
-    const [x, z] = S.stackAt(id), n = S.chipsLeft(id, t), kind = id === RED ? 'CN' : 'US', r = mulberry32(id === RED ? 5 : 9);
+    const [x, z] = S.stackAt(id), n = S.chipsLeft(id, t), kind = 'US', r = mulberry32(id === RED ? 5 : 9);
     for (let i = 0; i < S.STACK_N; i++) {
       const c = Math.floor(i / 10), j = i % 10, jx = (r() - 0.5) * 0.004, jz = (r() - 0.5) * 0.004, ry = r() * 6.28;
       if (i >= n) continue;
@@ -403,7 +406,7 @@ function machinesState(t, st) {
   }
   for (const f of S.FEEDS) {
     if (!f.n) continue;
-    const g = S.feedGrab(f), rel = S.feedRelease(f), id = f.who, kind = id === RED ? 'CN' : 'US';
+    const g = S.feedGrab(f), rel = S.feedRelease(f), id = f.who, kind = 'US';
     if (t < g || t > f.t + 0.25) continue;
     const m = mAt(id, t), mouth = machinePoint(m, HOPPER);
     for (let j = 0; j < f.n; j++) {
@@ -414,8 +417,8 @@ function machinesState(t, st) {
   }
   // the chip the red king keeps: in his fingers, up his sleeve; later it comes out by itself
   { const P = S.PALM, C = S.SUCK_CHIP;
-    if (t >= P.grab && t < P.hide + 0.2) out.chips.push({ hand: { id: RED, side: 'R', off: [0, -0.04, 0], mix: ease(t, P.hide, P.hide + 0.2), to: SLEEVE }, rot: [1.2, 0.4, 0], kind: 'CN', s: CS });
-    if (t >= C.out && t < C.gone) { const u = (t - C.out) / (C.gone - C.out), m = mAt(RED, t), mouth = machinePoint(m, HOPPER), p = lerp3(SLEEVE, mouth, u * u * (3 - 2 * u)); p[1] += 0.3 * Math.sin(Math.PI * u); out.chips.push({ pos: p, rot: [u * 9, u * 5, 1.2], kind: 'CN', s: CS }); } }
+    if (t >= P.grab && t < P.hide + 0.2) out.chips.push({ hand: { id: RED, side: 'R', off: [0, -0.04, 0], mix: ease(t, P.hide, P.hide + 0.2), to: SLEEVE }, rot: [1.2, 0.4, 0], kind: 'US', s: CS });
+    if (t >= C.out && t < C.gone) { const u = (t - C.out) / (C.gone - C.out), m = mAt(RED, t), mouth = machinePoint(m, HOPPER), p = lerp3(sleeveAt(t), mouth, u * u * (3 - 2 * u)); p[1] += 0.3 * Math.sin(Math.PI * u); out.chips.push({ pos: p, rot: [u * 9, u * 5, 1.2], kind: 'US', s: CS }); } }
   // the hall, eaten: stone and cloth streaming up into the two funnels
   if (t > S.HALL_GONE - 0.9 && t < MOUNT.t1 + 0.3) {
     const r = mulberry32(4242);
@@ -424,7 +427,7 @@ function machinesState(t, st) {
       const u = (t - t0) / 1.25;
       if (u <= 0 || u >= 1) continue;
       const m = mAt(id, t), mouth = machinePoint(m, HOPPER), e = u * u, p = lerp3(from, mouth, e), sw = (1 - e) * 1.6;
-      out.chips.push({ pos: [p[0] + Math.cos(ph + u * 7) * sw, p[1] + m.S * 0.5 * Math.sin(Math.PI * u), p[2] + Math.sin(ph + u * 7) * sw], rot: [u * 8 + ph, ph, u * 6], kind: i % 3 ? 'US' : 'CN', s: sc * (1 - 0.5 * e) });
+      out.chips.push({ pos: [p[0] + Math.cos(ph + u * 7) * sw, p[1] + m.S * 0.5 * Math.sin(Math.PI * u), p[2] + Math.sin(ph + u * 7) * sw], rot: [u * 8 + ph, ph, u * 6], kind: 'CN', s: sc * (1 - 0.5 * e) });
     }
   }
 }
@@ -555,7 +558,7 @@ export function base(t, world) {
   if (t > SLAM && t < SLAM + 0.1) st.look.flash = 0.25 * (1 - (t - SLAM) / 0.1);
   // the light has left him: the dark over a king's place (it goes with his chair when he is dragged off)
   const dk = S.darkAt(t);
-  if (dk) { const id = dk.who, out = ENTER_DX * Math.pow(1 - S.seated(id, t), 3); st.look.shade = { at: [sxOf(id) * (1.6 + out), zOf(id)], r: [0.95, 0.85], k: 0.9 * dk.k }; }
+  if (dk) { const id = dk.who, out = ENTER_DX * Math.pow(1 - S.seated(id, t), 3); st.look.shade = { at: [sxOf(id) * (1.6 + out), zOf(id)], r: [0.95, 0.85], k: 0.66 * dk.k }; }
   // the last card's shadow comes over the red king
   if (t > SLAM - 1.0 && t < SLAM) { const u = (t - (SLAM - 1.0)) / 1.0; st.look.shade = { at: [-1.5, 0.1], r: [lerp(0.5, 3.4, u * u), lerp(0.7, 4.5, u * u)], k: 0.93 * clamp(u * 2.2) }; }
   if (t >= CUES.egg) {
