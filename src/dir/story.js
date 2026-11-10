@@ -51,7 +51,7 @@ export const CANCEL = {
 export const ERR_T = at('6-05', 0.25);       // 系统异常 on every screen
 export const ACCUSE = at('6-07', 0.15);      // they stand and point at each other
 export const EYE_SCREEN = at('6-07', 1.6);   // while they shout, every screen turns into the same eye
-export const PASS = { t0: at('4-01', 0.25), taps: [[at('4-01', 0.9), 1], [at('4-01', 1.6), 3]] };   // 要不起
+export const PASS = { t0: at('4-01', 0.25), taps: [[at('4-01', 0.9), 3], [at('4-01', 1.6), 4]] };   // 要不起
 // the dates on the board: real ones from the cards; from 2026·11 the machines' calendar runs away
 export function monthsAfterNow(t) { return t < NOW ? 0 : Math.floor(30 * Math.pow(clamp((t - NOW) / (CUES.red - NOW)), 1.5)); }
 export function dateText(m0) { const m = 2026 * 12 + 10 + m0; return `${Math.floor(m / 12)}·${String((m % 12) + 1).padStart(2, '0')}`; }
@@ -116,7 +116,8 @@ function buildPlays() {
   const add = (o) => {
     const sx = sxOf(o.who), style = o.style ?? 'tap';
     const flight = o.flight ?? (style === 'auto' || style === 'red' ? 0.5 : style === 'giant' ? 0.75 : 0.6);
-    const p = { slot: Math.floor(r0() * 5), scale: 1, glyph: 0, writhe: 0, back: backOf(o.who), dest: 'heap', ...o, style, flight };
+    // (v8) cards he taps sit on the right half of his screen: his right hand never reaches across it (and the lens)
+    const p = { slot: 2 + Math.floor(r0() * 3), scale: 1, glyph: 0, writhe: 0, back: backOf(o.who), dest: 'heap', ...o, style, flight };
     if (p.tr == null) p.tr = p.t - flight;
     if (p.dest === 'heap' && !p.at) p.at = spot(p.t, sx, mulberry32(Math.floor(p.t * 977) + 13));
     if (p.yaw == null) p.yaw = p.t < AUTO.openai ? -Math.PI / 2 + (mulberry32(Math.floor(p.t * 331))() - 0.5) * 0.5 : mulberry32(Math.floor(p.t * 331))() * Math.PI * 2;
@@ -128,7 +129,7 @@ function buildPlays() {
     add({ who, t: k, face, name: 'old', flight: 0.7 });
   add({ who: ANT_KING, t: CRUSH, face: CELL.old3, name: 'GPT-2', at: ANT_CRUSH.slice(), yaw: -Math.PI / 2 + 0.3, flight: 0.75, crush: true });
   // ---- @2: Google's AlphaGo (2-01, 2-02); OpenAI's ChatGPT (2-04 .. 2-05)
-  add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old2, name: 'AlphaGo', slot: 1, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
+  add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old2, name: 'AlphaGo', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
   add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 0, at: [0, 0.02], yaw: -Math.PI / 2 });
   // ---- @3: the race. Each landing that claims #1 flips the board. US cards build the house; CN cards go to the pile
   const US = ['openai', 'anthropic', 'google', 'meta', 'xai'], CN = ['qwen', 'deepseek', 'glm', 'kimi', 'doubao'];
@@ -155,14 +156,14 @@ function buildPlays() {
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
   // ---- @4: DeepSeek can't beat it (要不起); the hint (4-02, 4-03); OpenAI's hint (4-04); everyone's (4-05)
-  HINTS.deepseek = [[at('4-02', 0.7), 2]]; HINTS.openai = [[at('4-04', 1.0), 3]];
-  add({ who: 'deepseek', style: 'hint', tr: at('4-02', 1.45), t: at('4-03', 0.25), slot: 2, ...card('deepseek', 5), scale: 1.1, top: at('4-03', 0.45) });
+  HINTS.deepseek = [[at('4-02', 0.7), 4]]; HINTS.openai = [[at('4-04', 1.0), 3]];
+  add({ who: 'deepseek', style: 'hint', tr: at('4-02', 1.45), t: at('4-03', 0.25), slot: 4, ...card('deepseek', 5), scale: 1.1, top: at('4-03', 0.45) });
   add({ who: 'openai', style: 'hint', tr: at('4-04', 1.5), t: at('4-04', 2.0), slot: 3, ...card('openai', 4), scale: 1.1, top: true });
   const hintV = {};
   for (const id of IDS) {
     let tt = at('4-05', 0.2 + r0() * 0.6);
     while (tt < NOW - 1.1) {
-      const slot = Math.floor(r0() * 5); (HINTS[id] ??= []).push([tt - 0.42, slot]);
+      const slot = 2 + Math.floor(r0() * 3); (HINTS[id] ??= []).push([tt - 0.42, slot]);
       hintV[id] = (hintV[id] ?? 0) + 1;
       add({ who: id, style: 'hint', tr: tt, t: tt + 0.55, slot, ...card(id, realV(id, 3 + (hintV[id] % (REAL_N[id] - 3)))), scale: 1.15, top: true });
       tt += lerp(1.3, 0.6, clamp((tt - at('4-05')) / 4)) + r0() * 0.3;
@@ -292,7 +293,7 @@ export function eyeSlots() {
 }
 
 // ---------------------------------------------------------------- the end: the last card comes down out of the eye
-export const GIANT_END = { scale: 30, from: 8.2, t0: at('8-04', 0.1), to: 1.05 };
+export const GIANT_END = { scale: 30, from: 8.2, t0: at('8-04', 0.1), to: 3.0 };   // (v8) we cut to black while it is still above the lamp
 export function giantEndY(t) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)); return lerp(GIANT_END.from, GIANT_END.to, 1 - (1 - u) * (1 - u) * (1 - 0.35 * u)); }
 // the #1 at time t: { t, name, who } (who is undefined before the kings play)
 export function topAt(t) { const E = boardTops(); let e = E[0]; for (const x of E) { if (x.t > t) break; e = x; } return e; }
@@ -357,7 +358,8 @@ export function leaderAt(t) {
   const rows = cur.order.map((id, i) => {
     const pi = prev.order.indexOf(id), d = cur.data[id], pd = prev.data[id];
     const score = pd && Number.isFinite(d.score) && Number.isFinite(pd.score) ? lerp(pd.score, d.score, clamp(u * 1.6)) : d.score;
-    return { who: id, model: d.model, score, y: pi < 0 ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: t >= RED_T ? clamp((t - RED_T) / 3) : 0 };
+    const mover = pi > i && cur.order[i] === cur.order.find((x, j) => prev.order.indexOf(x) - j === Math.max(...cur.order.map((y, jj) => prev.order.indexOf(y) - jj)));
+    return { who: id, model: d.model, score, y: pi < 0 || !mover ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: t >= RED_T ? clamp((t - RED_T) / 3) : 0 };
   });
   const top = cur.order[0], prevTop = prev.order[0];
   return { rows, date: topAt(t).date, flash: top !== prevTop ? (1 - u) : 0, red: t >= RED_T ? 1 : 0 };

@@ -35,7 +35,7 @@ function presses() {
   for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 3 + i), 'point', 'tap'));
   add('meta', OUT.meta.hover[0] + 0.5, BTN.auto, 'point', 'hover', OUT.meta.hover[1] - OUT.meta.hover[0] - 0.5);
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
-  for (const id of FINAL) add(id, REACH[id] + 0.9, [0.36, 0.5], 'point', 'reach', 9);
+  for (const id of FINAL) add(id, REACH[id] + 0.9, [0.56, 0.5], 'point', 'reach', 9);
   for (const id in PRESS) PRESS[id].sort((a, b) => a.t - b.t);
   return PRESS;
 }
@@ -57,7 +57,8 @@ function handFor(id, t) {
   const sz = KING[id].size ?? 1;
   const touch = (best.pose === 'point' ? 0.14 : best.pose === 'fist' ? 0.095 : 0.04) * sz;
   const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.14 : best.kind === 'cancel' ? 0.08 : 0.06);
-  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], best.kind === 'hover' ? touch + 0.05 + 0.012 * Math.sin(t * 9) : touch);
+  const vAim = best.pose === 'point' ? Math.min(0.95, best.uv[1] + 0.1) : best.uv[1];
+  const hov = screenPoint(id, best.uv[0], vAim, up), on = screenPoint(id, best.uv[0], vAim, best.kind === 'hover' ? touch + 0.05 + 0.012 * Math.sin(t * 9) : touch);
   let target;
   if (t < best.t - 0.12) { const e = smooth((t - (best.t - 0.5)) / 0.38); target = lerp3(pathRest(id), hov, e); target[1] += 0.1 * Math.sin(Math.PI * e); }   // up and over the screen's edge
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
@@ -212,7 +213,7 @@ function screensState(t) {
     if (OUT[id]) {
       const o = OUT[id];
       if (t >= o.pass[0] - 0.1 && t < o.out) s.pass = 1;
-      for (const pt of o.pass) if (t > pt && t < pt + 0.3) s.shake = 1;
+      o.pass.forEach((pt, i) => { if (t > pt && t < pt + 0.3) s.shake = 3 + i; });
       if (t >= o.out) { s.out = Math.round(clamp((t - o.out) / 0.25) * 4) / 4; s.auto = 0; s.red = []; s.hand = []; s.hidden = 0; }
       if (o.hover && t > o.hover[0] + 0.5 && t < o.hover[1]) s.hoverAuto = 1;
     }
@@ -364,6 +365,7 @@ function cardsState(t, st) {
     if (p.style === 'chat') { out.push({ ...base, ...chatFlight(p, t, d.rest) }); continue; }
     if (p.style === 'smash') { out.push({ ...base, ...smashFlight(p, t, d.rest) }); continue; }
     if (t > STOP) continue;
+    if (p.who === 'deepseek' && t > CUES.error && t < CUES.cancelUS) continue;   // (v8) nothing flies across his warning while we read it
     out.push({ ...base, ...screenFlight(p, t, d.rest) });
   }
   // the house standing
@@ -436,7 +438,7 @@ export function base(t, world) {
   if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
     sub: '另一个世界的故事。如有雷同，纯属巧合。', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
-    const lines = ['导演', '分镜', '动画', '角色', '美术', '灯光', '建模', '配乐', '音效', '剪辑'].map((r) => [r, 'AI']).concat([['', ''], ['编剧', 'MakerJackie（人类）']]);
+    const lines = ['导演', '分镜', '动画', '角色', '美术', '灯光', '建模', '配乐', '音效', '剪辑'].map((r) => [r, 'AI']).concat([['', ''], ['', ''], ['编剧', 'MakerJackie（人类）']]);
     const LH = 0.062, stop = 0.8 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
     const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
     // the swat: nothing moves, then in two frames a card slams onto his name, a white flash, a hard jolt; then black

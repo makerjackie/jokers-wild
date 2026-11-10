@@ -179,7 +179,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       c.textAlign = 'center'; c.textBaseline = 'middle';
       c.font = `${Math.round(H * 0.13)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`;
       if (tt.zh) { c.letterSpacing = `${Math.round(H * 0.03)}px`; c.fillText(tt.zh, W / 2 + Math.round(H * 0.015), H * (tt.y ?? 0.45)); }
-      c.font = `${Math.round(H * 0.03)}px Georgia, "Times New Roman", serif`;
+      c.font = `${Math.round(H * 0.036)}px Georgia, "Times New Roman", serif`;
       if (tt.en) { c.letterSpacing = `${Math.round(H * 0.014)}px`; c.fillText(tt.en, W / 2, H * ((tt.y ?? 0.45) + 0.11)); }
       // a line under the title; an end-credit card: a small label, the name, a smaller line under it
       if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; c.letterSpacing = `${Math.round(H * 0.006)}px`; c.font = `${Math.round(H * 0.038)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`; c.fillText(tt.sub, W / 2, H * 0.72); c.globalAlpha = tt.alpha ?? 1; }

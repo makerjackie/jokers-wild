@@ -113,7 +113,7 @@ export function makeScreens() {
       c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `bold 32px ${SANS}`; c.fillText('要不起', CW * 0.38, CH * 0.06 + 26);
     }
     // a card dealt from above
-    if (s.deal != null) { const x = CW * 0.36 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }
+    if (s.deal != null) { const x = CW * 0.56 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }
     // buttons
     const btn = (key, zh, en, on) => {
       const [u, v] = BTN[key], w = 150, h = 74, x = u * CW - w / 2, y = v * CH - h / 2;
