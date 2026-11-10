@@ -9,12 +9,12 @@
 
 export const BRAND = {
   openai: '#101010', google: '#3186ff', anthropic: '#d97757', xai: '#0b0b0d', meta: '#0866ff',
-  deepseek: '#2a72e0', qwen: '#5a44d6', kimi: '#a8611f', glm: '#3a4766', doubao: '#cf3036', mistral: '#fa500f',
+  deepseek: '#8a2232', qwen: '#5a44d6', kimi: '#a8611f', glm: '#2a72e0', doubao: '#cf3036', mistral: '#fa500f',
   nvidia: '#76b900', joker: '#b8232f',
 };
 export const WORDS = {
   openai: 'OpenAI', google: 'Gemini', anthropic: 'Claude', xai: 'xAI', meta: 'Meta',
-  deepseek: '大肥鱼', qwen: '万问', kimi: '月饼', glm: '智普普', doubao: '豆沙包', mistral: 'Mistral', nvidia: 'NVIDIA',
+  deepseek: '混沌', qwen: '万问', kimi: '月饼', glm: '大肥鱼', doubao: '豆沙包', mistral: 'Mistral', nvidia: 'NVIDIA',
   spacexai: 'SpaceXAI', spade: 'SPADES', heart: 'HEARTS', diamond: 'DIAMONDS', club: 'CLUBS',
 };
 const FONT = '"Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif';
@@ -170,6 +170,17 @@ function fatFish(c, col) {
   c.restore();
 }
 
+// 混沌 HUNDUN (wholly fictional): the faceless one of the old fable, a smooth dark-red pebble with one spiral groove
+function hundun(c, col) {
+  c.save();
+  c.beginPath(); c.ellipse(0, 0.02, 0.42, 0.37, -0.12, 0, Math.PI * 2);
+  c.fillStyle = col ?? lin(c, -0.3, -0.35, 0.3, 0.4, ['#c2434f', '#8a2232', '#4a0f19']); c.fill();
+  const groove = () => { c.lineWidth = 0.075; c.lineCap = 'round'; c.beginPath(); for (let k = 0; k <= 60; k++) { const a = k / 60 * Math.PI * 3.1, r = 0.03 + 0.085 * a / Math.PI; const x = Math.cos(a + 0.6) * r, y = 0.03 + Math.sin(a + 0.6) * r * 0.9; k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); };
+  if (col) knock(c, groove); else { c.strokeStyle = 'rgba(255,225,215,0.85)'; groove(); }
+  if (!col) { c.fillStyle = 'rgba(255,255,255,0.18)'; c.beginPath(); c.ellipse(-0.17, -0.18, 0.12, 0.06, -0.5, 0, Math.PI * 2); c.fill(); }
+  c.restore();
+}
+
 // 万问: a fat question mark built from four blocks and a square dot, indigo -> violet
 function wanWen(c, col) {
   c.save(); c.translate(0, -0.015);
@@ -315,10 +326,10 @@ export function drawLogo(ctx, id, x, y, size, opts = {}) {
     case 'anthropic': pathMark(c, CLAUDE_D, 100, opts.color ?? '#d97757'); break;
     case 'xai': xaiMark(c, col); break;
     case 'meta': meta(c); break;
-    case 'deepseek': fatFish(c, opts.color); break;
+    case 'deepseek': hundun(c, opts.color); break;
     case 'qwen': wanWen(c, opts.color); break;
     case 'kimi': mooncake(c, opts.color); break;
-    case 'glm': zzz(c, opts.color); break;
+    case 'glm': fatFish(c, opts.color); break;
     case 'doubao': bun(c, opts.color); break;
     case 'mistral': mistralM(c); break;
     case 'nvidia': nvidiaEye(c); break;

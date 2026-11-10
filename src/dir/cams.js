@@ -37,7 +37,7 @@ const AC = [S.ANT_CRUSH[0], 0.002, S.ANT_CRUSH[1]];
 // the #1 board, high at the head of the table: a slow push in on its bottom rows
 function boardCam(cam, st, t, row, o = {}) {
   const u = uRow(t, row);
-  camLook(cam, [o.x ?? 0.06, 4.95, lerp(-1.55, -1.85, smooth(u))], [0, 5.12, -4.9], o.fov ?? 44);
+  camLook(cam, [o.x ?? 0.06, 4.95, lerp(-1.55, -1.85, smooth(u))], [0, 5.12, -4.9], o.fov ?? 37);
   st.look.exposure = 1.5; st.look.far = 60;
 }
 const HOUSE_C = [S.HOUSE.x, 0.13, S.HOUSE.z];
@@ -128,7 +128,7 @@ export const SHOTS = {
   '5-04': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.46, 0.44, 46, -0.12); },
   // Meta: his hand hangs over 托管, and comes back; he plays a card himself
   '5-05': (t, st, w) => screenCam(w.camera, st, 'meta', 0.62, 0.45, 0.55, 50, 0.12),
-  '5-06': (t, st, w) => screenCam(w.camera, st, 'meta', 0.45, 0.42, 0.46, 48, -0.14),
+  '5-06': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-06', { fov: 44 }) : screenCam(w.camera, st, 'meta', 0.45, 0.42, 0.46, 48, -0.14)),
   // from across the table: he goes back into the dark with his chair, reaching for it
   // from the side, along the table's edge: he goes back, away from the table, with his chair, into the dark
   '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [2.5, 1.15, 4.75], [lerp(2.0, 2.9, smooth(u)), 0.3, 2.45], 46); st.look.exposure = 1.8; },

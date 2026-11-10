@@ -116,7 +116,7 @@ function kingsState(t, st) {
       // the house of cards: the US gloat; R1 hits it; mouths open
       if (sx > 0 && t > at('3-02') && t < SMASH.hit) { K.look = HOUSE_HIT; K.face = face('proud', { mouth: 'smirk', eyes: 'narrow' }); }
       if (sx > 0 && t >= SMASH.hit && t < CUES.big) { K.look = HOUSE_HIT; K.face = face('shock'); K.lean = -0.08; }
-      if (id === 'deepseek' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
+      if (id === 'glm' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
       // stuck under GPT-4.5: 要不起, the sweat, the hint, the grin
       if (id === 'deepseek' && t >= CUES.stuck && t < CUES.win + 0.3) { K.face = { eyes: 'down', brows: 'worried', mouth: 'flat' }; K.sweat = 1; K.look = f.c; K.rise = 0.1; K.lean = 0.02; }
       if (id === 'deepseek' && t >= CUES.win + 0.3 && t < CUES.hintUS + 0.4) { K.face = face('proud', { mouth: 'grin' }); K.look = headAt('openai'); }
@@ -409,12 +409,13 @@ export function base(t, world) {
     ceiling: t > S.CEIL_GONE ? 0 : 1,
     wobble: kick(t, giant.t, 2.2, 5) * -0.004 + kick(t, CHAT_T, 2, 5) * -0.003,
     boxes: { CN: { show: 0 }, US: { show: 0 } }, giants: { CN: { show: 0 }, US: { show: 0 } },
-    cloth: { cities: 0, gold: 0, flood: null }, board: { show: 1, rows: S.boardRows(), lit: t < STOP ? 1 : lerp(1, 0.12, ease(t, STOP, STOP + 1.2)) },
+    cloth: { cities: 0, gold: 0, flood: null }, board: { show: 0 },
   };
   st.props = { plates: { show: t < BLACK ? 1 : 0 } };
   kingsState(t, st);
   st.ant = antState(t);
   st.screens = screensState(t);
+  st.lb = { ...S.leaderAt(t), show: t < BLACK ? 1 : 0, lit: t < STOP ? 1 : lerp(1, 0.1, ease(t, STOP, STOP + 1.2)) };
   st.rollers = rollersState(t);
   if (world?.lite) return st;
   cardsState(t, st);

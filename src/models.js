@@ -63,16 +63,16 @@ export const MODELS = {
     { name: 'Muse Spark', date: '2026·04' },
     { name: 'Muse Glimmer', date: '2026·08' },
   ],
-  // the five Chinese companies are fictional joke brands (no real company is named): 大肥鱼, 万问, 月饼, 智普普, 豆沙包
-  deepseek: [
-    { name: 'FatFish', date: '2023·11', score: 74 },
-    { name: 'FatFish 2', date: '2024·05', score: 89 },
-    { name: 'FatFish Lite', date: '2024·11', score: 95 },
-    { name: 'FatFish 3', date: '2024·12', score: 95.5 },
-    { name: 'FatFish Think', date: '2025·01', score: 97, rank: 1 },
-    { name: 'FatFish 3.2', date: '2025·12' },
-    { name: 'FatFish 4', date: '2026·04' },
-    { name: 'FatFish 4.1', date: '2026·09' },
+  // the Chinese side: 混沌 (wholly invented, the lead) and four joke brands: 大肥鱼, 万问, 月饼, 豆沙包
+  deepseek: [   // 混沌 HUNDUN: invented, stands for no real company
+    { name: 'Hundun', date: '2023·06', score: 72 },
+    { name: 'Hundun 2', date: '2024·03', score: 85 },
+    { name: 'Hundun 2.5', date: '2024·09', score: 92 },
+    { name: 'Hundun 3', date: '2024·12', score: 95.2 },
+    { name: 'Hundun Max', date: '2025·03' },
+    { name: 'Hundun 4', date: '2025·09' },
+    { name: 'Hundun 4.5', date: '2026·03' },
+    { name: 'Hundun 5', date: '2026·08' },
   ],
   qwen: [
     { name: '万问', date: '2023·04', score: 72 },
@@ -93,14 +93,14 @@ export const MODELS = {
     { name: 'Mooncake 2.6', date: '2026·04' },
     { name: 'Mooncake 3', date: '2026·07' },
   ],
-  glm: [
-    { name: '智普普', date: '2023·03', score: 73 },
-    { name: 'ZPP-4', date: '2024·01', score: 78 },
-    { name: 'ZPP-4.5', date: '2025·07' },
-    { name: 'ZPP-4.7', date: '2025·12', rank: 1 },
-    { name: 'ZPP-5', date: '2026·02' },
-    { name: 'ZPP-5.1', date: '2026·04' },
-    { name: 'ZPP-5.3', date: '2026·08' },
+  glm: [   // 大肥鱼 FatFish
+    { name: 'FatFish', date: '2023·11', score: 74 },
+    { name: 'FatFish 2', date: '2024·05', score: 89 },
+    { name: 'FatFish 3', date: '2024·12', score: 95.5 },
+    { name: 'FatFish-R1', date: '2025·01', score: 97, rank: 1 },
+    { name: 'FatFish 3.2', date: '2025·12' },
+    { name: 'FatFish 4', date: '2026·04' },
+    { name: 'FatFish 4.1', date: '2026·09' },
   ],
   doubao: [
     { name: '豆沙包', date: '2023·08', score: 77 },
@@ -117,12 +117,12 @@ for (const id in MODELS) for (const m of MODELS[id]) if (m.score == null) m.scor
 export const REAL_N = Object.fromEntries(Object.entries(MODELS).map(([id, l]) => [id, l.length]));
 const NEXT = {
   openai: ['GPT-7', 'GPT-8'], anthropic: ['Claude 6', 'Claude 7'], google: ['Gemini 5', 'Gemini 6'], xai: ['Grok 6', 'Grok 8'],
-  meta: ['Muse Ultra', 'Muse Max'], deepseek: ['FatFish 5', 'FatFish 6'], qwen: ['WanWen 4', 'WanWen 5'],
-  kimi: ['Mooncake 4', 'Mooncake 5'], glm: ['ZPP-6', 'ZPP-7'], doubao: ['Dousha 3', 'Dousha 4'],
+  meta: ['Muse Ultra', 'Muse Max'], deepseek: ['Hundun 6', 'Hundun 7'], qwen: ['WanWen 4', 'WanWen 5'],
+  kimi: ['Mooncake 4', 'Mooncake 5'], glm: ['FatFish 5', 'FatFish 6'], doubao: ['Dousha 3', 'Dousha 4'],
 };
 for (const id in NEXT) NEXT[id].forEach((name, i) => MODELS[id].push({ name, date: i ? '2027·06' : '2026·12', future: true }));
 // the names the #1 board flips through under 托管 (k = 0, 1, 2 ...): faster than anyone can read
-const LINE = { openai: ['GPT-', 7], anthropic: ['Claude ', 6], google: ['Gemini ', 5], xai: ['Grok ', 6], meta: ['Muse ', 2], deepseek: ['FatFish ', 5], qwen: ['WanWen ', 4], kimi: ['Mooncake ', 4], glm: ['ZPP-', 6], doubao: ['Dousha ', 3] };
+const LINE = { openai: ['GPT-', 7], anthropic: ['Claude ', 6], google: ['Gemini ', 5], xai: ['Grok ', 6], meta: ['Muse ', 2], deepseek: ['Hundun ', 6], qwen: ['WanWen ', 4], kimi: ['Mooncake ', 4], glm: ['FatFish ', 5], doubao: ['Dousha ', 3] };
 export function nextName(id, k) { const [b, v] = LINE[id]; const n = v + k * 0.5; return b + (Number.isInteger(n) ? n : n.toFixed(1)); }
 
 

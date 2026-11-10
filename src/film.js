@@ -12,6 +12,7 @@ import { makeScreens } from './screens.js';
 import { makeRollers } from './rollers.js';
 import { makeAnt } from './ant.js';
 import { makeMachines } from './machine.js';
+import { makeLeaderboard } from './leaderboard.js';
 import { CARD, cardAtlas } from './cards.js';
 import { CELL } from './cards-cells.js';
 import { KINGS, KING, SIDE_SIGN } from './layout.js';
@@ -35,6 +36,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
   const free = makeFreeCards(ctx); scene.add(free.root);
   const ant = makeAnt(ctx); scene.add(ant.root);
   const machines = makeMachines(ctx); scene.add(machines.root);
+  const leaderboard = makeLeaderboard(ctx); scene.add(leaderboard.root);
   const world = { set, props, kings, cards, fx, camera, free, screens, rollers, ant, machines };
   const api = {
     handFrame: (id, side) => (side === 'M' ? kings.mouthFrame(id) : kings.handFrame(id, side)), mouthFrame: (id) => kings.mouthFrame(id),
@@ -144,6 +146,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       props.update(st.props, t, api);
       cards.update(st.cards, t);
       screens.update(st.screens, t);
+      leaderboard.update(st.lb, t);
       const mc = st.machines ?? {};
       resolveCarried(st.rollers); resolveCarried(mc.chips); resolveCarried([mc.heart, mc.spade]);
       for (const k of KINGS) kings.setLoose(k.id, null);

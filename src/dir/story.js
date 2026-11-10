@@ -34,7 +34,7 @@ FOLLOW.forEach((id, i) => { AUTO[id] = at('5-04', (i + 0.62) * (2.6 / 5)); });
 export const HOLD = ['meta', 'kimi', 'doubao'];
 for (const id of HOLD) AUTO[id] = Infinity;
 export const OUT = {
-  meta: { hover: [at('5-05', 0.2), at('5-05', 1.25)], tap: at('5-05', 1.75), pass: [at('5-06', 0.85), at('5-06', 1.55)], out: at('5-06', 2.25), drag: [at('5-07', 0.35), at('5-07', 2.4)] },
+  meta: { hover: [at('5-05', 0.2), at('5-05', 1.25)], tap: at('5-05', 1.75), pass: [at('5-06', 2.0), at('5-06', 2.55)], out: at('5-06', 3.1), drag: [at('5-07', 0.35), at('5-07', 2.4)] },
   kimi: { pass: [at('5-08', 0.15)], out: at('5-08', 0.45), drag: [at('5-08', 0.6), at('5-08', 1.75)] },
   doubao: { pass: [at('5-08', 1.95)], out: at('5-08', 2.25), drag: [at('5-08', 2.4), at('5-08', 3.55)] },
 };
@@ -149,8 +149,8 @@ function buildPlays() {
     add({ who, t, ...card(who, v), dest: 'house', top: !!usTops[s] });
   }
   for (let s = 0; s < 7; s++) { const who = CN[(s + 2) % 5]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
-  // R1 out of DeepSeek's screen, straight into the house
-  add({ who: 'deepseek', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('deepseek', 4), scale: 1.15, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
+  // FatFish-R1 out of 大肥鱼's screen, straight into the house
+  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.15, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
@@ -296,3 +296,69 @@ export const GIANT_END = { scale: 30, from: 8.2, t0: at('8-04', 0.1), to: 1.05 }
 export function giantEndY(t) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)); return lerp(GIANT_END.from, GIANT_END.to, 1 - (1 - u) * (1 - u) * (1 - 0.35 * u)); }
 // the #1 at time t: { t, name, who } (who is undefined before the kings play)
 export function topAt(t) { const E = boardTops(); let e = E[0]; for (const x of E) { if (x.t > t) break; e = x; } return e; }
+
+// ---------------------------------------------------------------- (v8) the AI 智力排行榜
+// Every #1 on the old board is now a row overtaking the others on a scored leaderboard. A new #1 scores just above the
+// best: by whole points at first, by hundredths by 2026 (the fight over decimals); from 2026·11 (托管) the machines'
+// own cards jump far past the human line (100); their internal cards read ∞.
+let LB = null;
+function bump(date, max, t) {
+  if (t >= RED_T) return Infinity;
+  if (t >= NOW) return max * (1.18 + 0.5 * clamp((t - NOW) / (RED_T - NOW))) + 3;
+  const [y, m] = date.split('·').map(Number), mo = (y - 2022) * 12 + (m || 1) - 11;
+  if (mo < 0) return max + 13;                                   // AlphaGo over Watson
+  const target = 100 - 30 * Math.pow(0.5, mo / 7);               // 70 at ChatGPT .. 99.7 by 2026·10
+  const eps = y < 2024 ? 1.2 : y < 2025 ? 0.4 : y < 2026 ? 0.08 : 0.01 + 0.01 * ((Math.round(max * 1000) % 3));
+  return Math.min(99.99, Math.max(max + eps, target));
+}
+export function leaderTimeline() {
+  if (LB) return LB;
+  const E = boardTops().filter((e) => !e.dateOnly);
+  const S = { ibm: { model: 'Watson', score: 35 } };
+  const snaps = [];
+  const order = () => Object.keys(S).sort((a, b) => (S[a].out ? 1 : 0) - (S[b].out ? 1 : 0) || S[b].score - S[a].score);
+  const snap = (t) => snaps.push({ t, order: order(), data: JSON.parse(JSON.stringify(S, (k, v) => (v === Infinity ? 'Infinity' : v))) });
+  snap(-20);
+  // everyone at the table joins the board when the race starts (below ChatGPT, in seat order)
+  let joined = false;
+  const events = E.map((e) => ({ ...e, kind: 'top' }));
+  for (const id of HOLD) events.push({ t: OUT[id].out, who: id, kind: 'out' });
+  // every other card laid down also moves its company up the board (never past the #1): the field bunches up
+  for (const p of plays()) if (p.t > CUES.race && p.t < RED_T && !p.top && !p.chat && p.dest !== 'house' && p.date && p.who) events.push({ t: p.t + 0.1, who: p.who, kind: 'play', name: p.name, date: p.date, auto: p.style === 'auto' });
+  events.push({ t: CUES.race - 0.2, kind: 'join' });
+  events.sort((a, b) => a.t - b.t);
+  for (const e of events) {
+    if (e.kind === 'join') {
+      if (!joined) { joined = true; IDS.forEach((id, i) => { if (!S[id]) S[id] = { model: MODELS[id][0].name, score: 52 + ((i * 7) % 11) }; }); delete S.ibm; }
+      snap(e.t); continue;
+    }
+    if (e.kind === 'out') { if (S[e.who]) S[e.who].out = 1; snap(e.t); continue; }
+    if (e.kind === 'play') {
+      if (!joined || !S[e.who] || S[e.who].out || (e.t >= NOW && HOLD.includes(e.who))) continue;   // by hand you stay under the line
+      const max = Math.max(...Object.values(S).filter((x) => !x.out).map((x) => x.score)), r = mulberry32(Math.floor(e.t * 97))();
+      const sc = e.t >= NOW ? max * (0.25 + 0.6 * r) : Math.min(max - 0.03 - 0.3 * r * (100 - max) / 10, bump(e.date, 0, e.t) - 0.5 - 2 * r);
+      if (sc > S[e.who].score) { S[e.who] = { ...S[e.who], model: e.name, score: sc }; snap(e.t); }
+      continue;
+    }
+    if (e.t < -5) continue;
+    const who = e.who ?? 'ibm';
+    const max = Math.max(...Object.values(S).filter((x) => !x.out).map((x) => x.score));
+    S[who] = { ...(S[who] ?? {}), model: e.name, score: bump(e.date ?? '2016', max, e.t) };
+    snap(e.t);
+  }
+  for (const s of snaps) for (const id in s.data) if (s.data[id].score === 'Infinity') s.data[id].score = Infinity;
+  LB = snaps;
+  return LB;
+}
+export function leaderAt(t) {
+  const L = leaderTimeline();
+  let k = 0; for (let i = 0; i < L.length; i++) if (L[i].t <= t) k = i;
+  const cur = L[k], prev = L[Math.max(0, k - 1)], u = clamp((t - cur.t) / 0.3), e = u * u * (3 - 2 * u);
+  const rows = cur.order.map((id, i) => {
+    const pi = prev.order.indexOf(id), d = cur.data[id], pd = prev.data[id];
+    const score = pd && Number.isFinite(d.score) && Number.isFinite(pd.score) ? lerp(pd.score, d.score, clamp(u * 1.6)) : d.score;
+    return { who: id, model: d.model, score, y: pi < 0 ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: t >= RED_T ? clamp((t - RED_T) / 3) : 0 };
+  });
+  const top = cur.order[0], prevTop = prev.order[0];
+  return { rows, date: topAt(t).date, flash: top !== prevTop ? (1 - u) : 0, red: t >= RED_T ? 1 : 0 };
+}

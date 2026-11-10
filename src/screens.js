@@ -11,9 +11,11 @@ import { KINGS, KING, SEAT, SIDE_SIGN, CAMP } from './layout.js';
 import { cardAtlas } from './cards.js';
 import { drawLogo, WORDS } from './logos.js';
 import { CELL } from './cards-cells.js';
+import { MODELS } from './models.js';
+import { FUTURE } from './future-models.js';
 
 export const SCREEN = { W: 0.44, H: 0.28, TILT: 0.62, X: 0.97 };
-const CW = 640, CH = 408, ACW = 256, ACH = 372, ACOLS = 16;
+const CW = 640, CH = 408, ACW = 256, ACH = 372, ACOLS = 16, RES = 2;
 export const BTN = { hint: [0.86, 0.2], auto: [0.86, 0.48], cancel: [0.86, 0.76] };
 export const slotUV = (row, i) => [0.075 + i * 0.118, row === 0 ? 0.28 : 0.68];
 // the screen's frame in world space: centre, normal (toward the king), up (its top edge, away from him), right
@@ -36,9 +38,9 @@ export function makeScreens() {
   const frameMat = celMaterial({ color: '#16161a', id: 7, gloss: 0.6 });
   const S = {};
   for (const k of KINGS) {
-    const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
-    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.W, SCREEN.H), glowMaterial({ color: '#ffffff', map: tex, id: 160 }));
+    const cv = document.createElement('canvas'); cv.width = CW * RES; cv.height = CH * RES;   // (v8) drawn at 2x: names stay sharp in close-up
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 8;
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.W, SCREEN.H), glowMaterial({ color: '#d8d8d8', map: tex, id: 160 }));
     const body = new THREE.Mesh(new THREE.BoxGeometry(SCREEN.W + 0.03, SCREEN.H + 0.03, 0.018), frameMat);
     const trim = new THREE.Mesh(new THREE.BoxGeometry(SCREEN.W + 0.036, 0.008, 0.02), celMaterial({ color: CAMP[k.side], id: 160 }));
     const g = new THREE.Group();
@@ -53,8 +55,27 @@ export function makeScreens() {
   const atlas = () => cardAtlas().image;
   const drawCell = (c, cell, x, y, w, h) => { const ax = (cell % ACOLS) * ACW, ay = Math.floor(cell / ACOLS) * ACH; c.drawImage(atlas(), ax, ay, ACW, ACH, x, y, w, h); };
   const SANS = '"Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
+  // (v8) a model card drawn for the screen: big logo, big name (the atlas card's print is too small at this size)
+  const INV = {};
+  for (const k of KINGS) MODELS[k.id].forEach((m, v) => { INV[CELL[`${k.id}${v}`]] = { id: k.id, name: m.name }; });
+  for (const k of KINGS) (FUTURE[k.id] ?? []).forEach((n, f) => { INV[CELL[`future_${k.id}_${f}`]] = { id: k.id, name: n, internal: true }; });
+  function mini(c, cell, x, y, w, h) {
+    const m = INV[cell]; if (!m) { drawCell(c, cell, x, y, w, h); return; }
+    c.save();
+    c.fillStyle = m.internal ? '#2a0b0b' : '#f3ecdc'; c.beginPath(); c.roundRect(x, y, w, h, 6); c.fill();
+    c.strokeStyle = m.internal ? '#ff3a2a' : '#a99f8a'; c.lineWidth = 2; c.stroke();
+    drawLogo(c, m.id, x + w / 2, y + h * 0.33, w * 0.62, m.internal ? { color: '#ff8a7a' } : ['openai', 'xai'].includes(m.id) ? { color: '#151515' } : {});
+    // the name, as large as fits, on up to two lines
+    const words = m.name.split(' '), lines = words.length > 1 && m.name.length > 7 ? [words.slice(0, Math.ceil(words.length / 2)).join(' '), words.slice(Math.ceil(words.length / 2)).join(' ')] : [m.name];
+    c.fillStyle = m.internal ? '#ffd0c8' : '#1c1a17'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    let fs = 17; c.font = `900 ${fs}px ${SANS}`; while (fs > 9 && Math.max(...lines.map((l) => c.measureText(l).width)) > w - 6) { fs--; c.font = `900 ${fs}px ${SANS}`; }
+    lines.forEach((l, i) => c.fillText(l, x + w / 2, y + h * (lines.length > 1 ? 0.7 + i * 0.17 : 0.76)));
+    if (m.internal) { c.save(); c.translate(x + w / 2, y + h * 0.5); c.rotate(-0.35); c.strokeStyle = '#ff2a1a'; c.lineWidth = 3; c.strokeRect(-w * 0.46, -12, w * 0.92, 24); c.fillStyle = '#ff3a2a'; c.font = `900 15px ${SANS}`; c.fillText('危险', 0, 1); c.restore(); }
+    c.restore();
+  }
   function paint(id, s, t) {
     const c = S[id].ctx, side = KING[id].side;
+    c.setTransform(RES, 0, 0, RES, 0, 0);
     c.fillStyle = '#0b0f1c'; c.fillRect(0, 0, CW, CH);
     const g = c.createLinearGradient(0, 0, 0, CH); g.addColorStop(0, side === 'CN' ? '#2a1214' : '#111a33'); g.addColorStop(1, '#07080d');
     c.fillStyle = g; c.fillRect(0, 0, CW, CH);
@@ -69,7 +90,7 @@ export function makeScreens() {
       if (i === s.hi) { y -= 14; c.shadowColor = '#ffe27a'; c.shadowBlur = 26; c.fillStyle = '#ffe27a'; c.fillRect(x - 5, y - 5, cw + 10, ch + 10); c.shadowBlur = 0; }
       if (i === s.shake) x += Math.sin(t * 90) * 6;
       c.globalAlpha = i === s.tap ? 0.25 : s.pass && i !== s.hi ? 0.4 : 1;
-      drawCell(c, cell, x, y, cw, ch); c.globalAlpha = 1;
+      mini(c, cell, x, y, cw, ch); c.globalAlpha = 1;
     });
     // the unreleased: face down; the unaligned edged red (pulsing); those already played by the AI turned up, glyphs
     const n = s.hidden ?? 0;
@@ -77,8 +98,14 @@ export function makeScreens() {
       const [u, v] = slotUV(1, i), x = u * CW - cw / 2, y = v * CH - ch / 2;
       const red = (s.red ?? []).includes(i), flipped = i < (s.flipped ?? 0);
       if (red) { const p = 0.55 + 0.45 * Math.sin(t * 5 + i); c.shadowColor = '#ff2a1a'; c.shadowBlur = 18 + 14 * p; c.fillStyle = `rgba(255,40,26,${0.6 + 0.4 * p})`; c.fillRect(x - 4, y - 4, cw + 8, ch + 8); c.shadowBlur = 0; }
-      drawCell(c, flipped ? CELL[`future_${id}_${i % 2}`] : (side === 'CN' ? CELL.backCN : CELL.backUS), x, y, cw, ch);
+      if (flipped) mini(c, CELL[`future_${id}_${i % 2}`], x, y, cw, ch); else drawCell(c, side === 'CN' ? CELL.backCN : CELL.backUS, x, y, cw, ch);
       c.globalAlpha = 1;
+    }
+    // (v8) what the bottom row is: shown once the machine starts playing it
+    if ((s.flipped ?? 0) > 0) {
+      const y = slotUV(1, 0)[1] * CH - 48 - 22;
+      c.fillStyle = 'rgba(160,10,8,0.92)'; c.beginPath(); c.roundRect(16, y - 16, 330, 32, 8); c.fill();
+      c.fillStyle = '#ffe2dc'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 20px ${SANS}`; c.fillText('⚠ 未发布 · 内部危险模型', 26, y + 1);
     }
     // 要不起: nothing in his hand beats the #1
     if (s.pass && (s.hi ?? -1) < 0) {
