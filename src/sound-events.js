@@ -71,7 +71,7 @@ export function soundEvents() {
   for (const id of S.FINAL) { E(S.DEAL, 'screenDeal', { who: id }); E(CUES.smile + 0.5, 'smile', { who: id }); }
   E(S.GIANT_END.t0, 'pressure', { dur: S.BLACK - S.GIANT_END.t0 });
   E(S.SLAM, 'endSlam');
-  E(CUES.slap + 0.75, 'creditSlap');
+  E(CUES.slap + 1.1, 'creditSlap');   // (v8) the swat: no fall, no whoosh; one instant hit
   ev.sort((a, b) => a.t - b.t);
   return ev;
 }
