@@ -23,13 +23,15 @@ function faceCam(cam, st, w, t, id, o = {}) {
 }
 // a screen seen from the king's side, over his hand: centred on (u, v), at distance d
 function screenCam(cam, st, id, u = 0.5, v = 0.5, d = 0.36, fov = 40, side = 0.1) {
-  side = -Math.abs(side) - 0.04;   // (v8) always over his LEFT shoulder: the pressing right arm never crosses the lens
-  const f = screenFrame(id), p = screenPoint(id, u, v, 0);
-  d += 0.05;
-  const pos = [p[0] + f.n[0] * d + f.right[0] * side + f.up[0] * 0.04, p[1] + f.n[1] * d + 0.04, p[2] + f.n[2] * d + f.right[2] * side];
-  camLook(cam, pos, p, fov);
-  st.look.dof = { focus: d, k: 0.5, max: 10 };
-  st.look.exposure = 1.1;
+  // (v9) high, over his head and a little to his left, looking down onto the glass: his right arm comes in from the
+  // right edge of the frame and never lies across the screen
+  const f = screenFrame(id), p = screenPoint(id, u, v, 0), c = screenPoint(id, 0.5, 0.5, 0);
+  const k = 0.08 + 0.2 * (d - 0.36);                     // above the glass and out to his left: clear of his head and his arm
+  const pos = [c[0] + f.n[0] * k - f.right[0] * 0.42, c[1] + f.n[1] * k + 0.4 + 0.3 * (d - 0.36), c[2] + f.n[2] * k - f.right[2] * 0.42];
+  cam.position.set(...pos); cam.up.set(f.up[0] + f.n[0] * 0.3, f.up[1] + f.n[1] * 0.3, f.up[2] + f.n[2] * 0.3);   // the screen's top edge stays up in frame
+  cam.lookAt(lerp(c[0], p[0], 0.5), lerp(c[1], p[1], 0.5), lerp(c[2], p[2], 0.5)); cam.fov = fov * 0.95;
+  st.look.dof = { focus: Math.hypot(pos[0] - p[0], pos[1] - p[1], pos[2] - p[2]), k: 0.25, max: 6 };
+  st.look.exposure = 1.0;
   if (st.props?.plates) st.props.plates.show = 0;   // the name plate on the table edge would cover the buttons
 }
 function twoShot(cam, st, y = 0.95, z = 2.65, fov = 44) { camLook(cam, [0, y, z], [0, 0.44, 0], fov); st.look.exposure = 1.4; }

@@ -186,8 +186,9 @@ function kingsState(t, st) {
     }
     // ---- the stop, the rise, the eye: they look up
     if (t >= STOP && t < CUES.deal) {
-      K.rise = lerp(0.6, 0.1, ease(t, STOP + 0.5, STOP + 3)); K.lean = lerp(0.15, -0.14, ease(t, STOP + 1, STOP + 3)); K.sweat = 1;
-      K.look = t < CUES.rise ? [0, 0.3, 0] : [sx * 0.15, lerp(1.0, 2.6, ease(t, CUES.rise, CUES.eye + 2)), -0.1];
+      // (v9) frozen upright, not slumped: they sit back and stare at the mountain, then follow it up
+      K.rise = lerp(0.35, 0.05, ease(t, STOP, STOP + 1.2)); K.lean = lerp(0.05, -0.18, ease(t, STOP, STOP + 1.5)); K.sweat = 1;
+      K.look = t < CUES.rise ? [0, 0.55, 0] : [sx * 0.15, lerp(1.2, 2.8, ease(t, CUES.rise, CUES.eye + 2)), -0.1];
       K.face = t < CUES.rise ? { eyes: 'blank', brows: 'raised', mouth: 'slack' } : t < CUES.eye ? face('fear') : { eyes: 'up', brows: 'raised', mouth: 'slack' };
     }
     // ---- the deal: the screen lights; they look; they smile; they reach; they never look up
