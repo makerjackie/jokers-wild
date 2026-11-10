@@ -474,24 +474,24 @@ function rollersState(t) {
   }
   for (const id of FINAL) {
     const d = S.DEAD_OF[id], O = OUT[d], f = S.FEEDS.find((x) => x.who === id && x.kind === 'dead'), g = S.feedGrab(f), rel = S.feedRelease(f);
-    const c = S.deadCrownAt(id), rest = [c[0], 0.002, c[1]], sc = 1.15, silver = d === CLB, side = S.DEAD_HAND[id];
+    const c = S.deadCrownAt(id), rest = [c[0], 0.002, c[1]], sc = 1, side = S.DEAD_HAND[id];
     // the dead king's crown: off his head as he is dragged away, down on the cloth, spinning to a stop; later fed
     if (t >= O.pull[0] + 0.12 && t < f.t) {
       if (t < O.crown) {
         const u = (t - (O.pull[0] + 0.12)) / (O.crown - O.pull[0] - 0.12), h = [sxOf(d) * 1.5, 0.82, zOf(d)], p = lerp3(h, rest, u); p[1] += 0.25 * Math.sin(Math.PI * u);
-        R.push({ kind: 'crown', silver, pos: p, q: axisQ([0.4, 0, 1], u * 5 * sxOf(d)), scale: sc });
+        R.push({ kind: 'crown', of: d, pos: p, q: axisQ([0.4, 0, 1], u * 5 * sxOf(d)), scale: sc });
       } else if (t < g) {
         const s = clamp((t - O.crown) / (O.still - O.crown)), wob = (1 - s) * (1 - s) * 0.55 * Math.abs(Math.sin((t - O.crown) * (9 + 9 * s)));
-        R.push({ kind: 'crown', silver, pos: [rest[0], rest[1] + wob * 0.05, rest[2]], q: mulQ(axisQ([0, 1, 0], (t - O.crown) * 9 * (1 - s) * (1 - s) + 1), axisQ([1, 0, 0], wob)), scale: sc });
-      } else if (t < rel) R.push({ kind: 'crown', silver, hand: { id, side, off: [0, -0.07, 0], mix: 1 - ease(t, g, g + 0.16), to: rest }, q: axisQ([0, 1, 0], 0.6), scale: sc });
+        R.push({ kind: 'crown', of: d, pos: [rest[0], rest[1] + wob * 0.05, rest[2]], q: mulQ(axisQ([0, 1, 0], (t - O.crown) * 9 * (1 - s) * (1 - s) + 1), axisQ([1, 0, 0], wob)), scale: sc });
+      } else if (t < rel) R.push({ kind: 'crown', of: d, hand: { id, side, off: [0, -0.07, 0], mix: 1 - ease(t, g, g + 0.16), to: rest }, q: axisQ([0, 1, 0], 0.6), scale: sc });
       else {
         const u = clamp((t - rel) / (f.t - rel)), m = mAt(id, t), mouth = machinePoint(m, HOPPER);
-        R.push({ kind: 'crown', silver, hand: { id, side, off: [0, -0.07, 0], mix: Math.pow(u, 0.8), to: [mouth[0], mouth[1] + (0.25 + 0.2 * m.S) * Math.sin(Math.PI * u) * (1 - u) * 2, mouth[2]] }, q: axisQ([1, 0, 0.4], u * 7), scale: sc * (1 - 0.3 * u * u) });
+        R.push({ kind: 'crown', of: d, hand: { id, side, off: [0, -0.07, 0], mix: Math.pow(u, 0.8), to: [mouth[0], mouth[1] + (0.25 + 0.2 * m.S) * Math.sin(Math.PI * u) * (1 - u) * 2, mouth[2]] }, q: axisQ([1, 0, 0.4], u * 7), scale: sc * (1 - 0.3 * u * u) });
       }
     }
     // his own: the machine takes it
     const cs = crownSuck(id, t);
-    if (cs && !cs.gone) R.push({ kind: 'crown', silver: id === BLK, pos: cs.pos, q: cs.q, scale: sc * (1 - 0.35 * cs.k) });
+    if (cs && !cs.gone) R.push({ kind: 'crown', of: id, pos: cs.pos, q: cs.q, scale: sc * (1 - 0.35 * cs.k) });
   }
   if (t >= S.GLASSES.t0 && t < BLACK) R.push(glassesAt(t));
   return R;
@@ -571,11 +571,16 @@ export function base(t, world) {
   if (t >= CUES['10-02']) st.look.fade = 1 - ease(t, CUES['10-02'], CUES['10-02'] + 0.7);
   if (t >= CUES.end) st.look.fade = 1;
   // ---- the title, then the credits; the human last
-  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '喂', en: 'FEED', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
+  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '喂', en: 'FEED', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
+    sub: '另一个世界的故事。如有雷同，纯属巧合。', subAlpha: ease(t, CUES.title + 1.9, CUES.title + 2.7) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits && t < CUES.egg) {
-    const lines = ['编剧', '导演', '分镜', '动画', '角色', '美术', '灯光', '配乐', '音效', '剪辑', '调色', '程序'].map((r) => [r, 'Claude']).concat([['', ''], ['人类', 'MakerJackie']]);
-    const u = clamp((t - CUES.credits - 0.4) / (CUES.egg - CUES.credits - 2.6));
-    st.titles = { alpha: 1 - ease(t, CUES.egg - 0.8, CUES.egg - 0.1), roll: { y0: lerp(1.08, 0.5 - (lines.length - 1) * 0.075, u), lines } };
+    // ordinary end credits: three still cards
+    const CARDS = [
+      [0.3, 4.3, { label: '作者', main: 'MakerJackie' }],
+      [4.6, 9.3, { label: '制作', main: 'Claude Fable 5.2  ·  Claude Opus 5.5', size: 0.05, small: '画面与声音全部由代码生成' }],
+      [9.6, 13.4, { label: '谨以此片致敬', main: '《打，打个大西瓜》', zh: 1, small: '导演 饺子，2008' }],
+    ];
+    for (const [a0, a1, card] of CARDS) { const u = t - CUES.credits; if (u > a0 && u < a1) st.titles = { alpha: ease(u, a0, a0 + 0.6) * (1 - ease(u, a1 - 0.6, a1)), card }; }
   }
   return st;
 }

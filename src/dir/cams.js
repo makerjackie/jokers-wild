@@ -175,7 +175,7 @@ export const SHOTS = {
   '7-03': (t, st, w) => fromAbove(w.camera, st, [0, 0.3, 0], 17),
   '7-04': (t, st, w) => { const u = uRow(t, '7-04'); camLook(w.camera, [-0.9, 0.55, 2.3 - 0.1 * u], lerp3([4.5, 6.0, 0], [1.9, 0.9, 0], smooth((u - 0.55) * 2.6)), lerp(66, 40, smooth((u - 0.55) * 2.6))); st.look.far = 500; dim(st); },
   // from where his machine is, high behind him: he looks back and up at it, and his fear turns into a grin
-  '7-05': (t, st, w) => { const h = headOf(RED, w, st, t), k = ease(t, S.WIN - 0.2, S.WIN + 0.5); camLook(w.camera, [h[0] - lerp(0.72, 1.05, k), h[1] + lerp(0.5, 0.42, k), h[2] + 0.34], [h[0], h[1] - 0.02 + 0.1 * k, h[2]], lerp(34, 44, k)); st.look.far = 500; dim(st); },
+  '7-05': (t, st, w) => { const h = headOf(RED, w, st, t), k = ease(t, S.WIN - 0.2, S.WIN + 0.5); camLook(w.camera, [h[0] - lerp(0.5, 0.62, k), h[1] + lerp(0.95, 0.9, k), h[2] + 0.42], [h[0], h[1] - 0.02 + 0.06 * k, h[2]], lerp(34, 46, k)); st.look.far = 500; dim(st); },
   '7-06': (t, st, w) => { camLook(w.camera, [-0.25, 0.95, 1.45], [1.6, 1.02, 0], 42); st.look.far = 500; dim(st); },
   // ---------------------------------------------------------------- @8 没看见
   '8-01': (t, st, w) => { const m = S.machineAt(RED, t); camLook(w.camera, [-1.5, 0.5, 9.0], [m.pos[0] + 7, m.S * 0.45, 0], 60); st.look.far = 500; dim(st); },
@@ -185,7 +185,7 @@ export const SHOTS = {
     camLook(w.camera, pos, [r[0] - 0.08, r[1] + 0.01, r[2] - 0.02], 34); st.look.near = 0.01; st.look.dof = { focus: dist(pos, r), k: 0.6, max: 16 }; st.look.far = 500; dim(st);
   },
   '8-04': (t, st, w) => { const u = uRow(t, '8-04'); faceCam(w.camera, st, w, t, BLK, { d: 0.95 - 0.12 * u, dz: 0.3, dy: -0.12, fov: 32, exp: 1.7 }); st.look.far = 500; },
-  '8-05': (t, st, w) => { const u = uRow(t, '8-05'), far = S.plays().filter((p) => p.far && t > p.t && t < p.t + 1).reduce((s, p) => s + shake(t, p.t, 0.02, 30, 5), 0); camLook(w.camera, [3.6 + 0.3 * u, 1.55 + far, 3.0 + 0.3 * u], [-2.5, 2.2, -0.6], 58); st.look.far = 500; dim(st); },
+  '8-05': (t, st, w) => { const u = uRow(t, '8-05'), far = S.plays().filter((p) => p.far && t > p.t && t < p.t + 1).reduce((s, p) => s + shake(t, p.t, 0.02, 30, 5), 0); camLook(w.camera, [-1.3 - 0.25 * u, S.finalPlay().edgeY + 0.75 + far, 1.9 + 0.2 * u], [2.2, 1.7, -0.2], 54); st.look.far = 500; dim(st, 1.7); },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
   // ---------------------------------------------------------------- @9 片名
   '9-01': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },

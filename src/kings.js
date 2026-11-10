@@ -1542,6 +1542,7 @@ export function makeKings(ctx = {}) {
     kings[K.id] = { K, s, st, F, robeU, skirtU, seat, chair, squash, body, neck, headPivot, headC, crown, face, beard, beardU,
       sp, yaw: seatYaw(K.id), side: K.side === 'CN' ? -1 : 1, cur: { size: 1, rise: 0 },
       arms: { L: arm('L'), R: arm('R') }, frames: {}, card: null };
+    { const lc = buildCrown(K.id, s, mats, plateTex); lc.group.visible = false; root.add(lc.group); kings[K.id].loose = lc.group; }
   }
 
   // ---------------------------------------------------------------- per-frame state
@@ -1785,5 +1786,7 @@ export function makeKings(ctx = {}) {
     const h = top.y + 0.05, w = h * 0.68;
     k.cardY = h / 2 - 0.02; k.cardWH = [w, h];
   }
-  return { root, kings, update, handFrame, handWorld, headWorld, shoulderWorld, mouthFrame, restHand, aim, bodyFrame, headFrame, eyeFrame, faceFrame, maskFrame: faceFrame, gripFrame, crownTop, cardFrame, cardSize };
+  // (v6) his crown off his head: r = { pos, q, scale } in world space, or null to hide it. Origin: the band's bottom centre.
+  function setLoose(id, r) { const g = kings[id]?.loose; if (!g) return; g.visible = !!r; if (!r) return; g.position.set(...r.pos); if (r.q) g.quaternion.set(...r.q); g.scale.setScalar(r.scale ?? 1); }
+  return { root, kings, setLoose, update, handFrame, handWorld, headWorld, shoulderWorld, mouthFrame, restHand, aim, bodyFrame, headFrame, eyeFrame, faceFrame, maskFrame: faceFrame, gripFrame, crownTop, cardFrame, cardSize };
 }

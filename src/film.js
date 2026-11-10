@@ -144,6 +144,8 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       screens.update(st.screens, t);
       const mc = st.machines ?? {};
       resolveCarried(st.rollers); resolveCarried(mc.chips); resolveCarried([mc.heart, mc.spade]);
+      for (const k of KINGS) kings.setLoose(k.id, null);
+      for (const r of st.rollers ?? []) if (r.of && r.pos) kings.setLoose(r.of, r);
       rollers.update(st.rollers);
       ant.update(st.ant, t);
       machines.update(mc, t);
@@ -174,6 +176,17 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       if (tt.zh) { c.letterSpacing = `${Math.round(H * 0.03)}px`; c.fillText(tt.zh, W / 2 + Math.round(H * 0.015), H * (tt.y ?? 0.45)); }
       c.font = `${Math.round(H * 0.03)}px Georgia, "Times New Roman", serif`;
       if (tt.en) { c.letterSpacing = `${Math.round(H * 0.014)}px`; c.fillText(tt.en, W / 2, H * ((tt.y ?? 0.45) + 0.11)); }
+      // a line under the title; an end-credit card: a small label, the name, a smaller line under it
+      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.006)}px`; c.font = `${Math.round(H * 0.03)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`; c.fillText(tt.sub, W / 2, H * 0.72); c.globalAlpha = tt.alpha ?? 1; }
+      if (tt.card) {
+        const k = tt.card, zhF = '"Songti SC", "SimSun", "Noto Serif CJK SC", serif', enF = 'Georgia, "Times New Roman", serif';
+        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.012)}px`; c.font = `${Math.round(H * 0.032)}px ${zhF}`;
+        if (k.label) c.fillText(k.label, W / 2, H * 0.39);
+        c.fillStyle = '#efe6d2'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * (k.size ?? 0.062))}px ${k.zh ? zhF : enF}`;
+        c.fillText(k.main, W / 2, H * 0.5);
+        c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `${Math.round(H * 0.028)}px ${zhF}`;
+        if (k.small) c.fillText(k.small, W / 2, H * 0.61);
+      }
       if (tt.roll) {
         // the credits roll up from below: every role the same name, the human last
         const lh = H * 0.075, y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);

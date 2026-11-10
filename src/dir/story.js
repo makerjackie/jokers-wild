@@ -212,20 +212,20 @@ function buildPlays() {
   P.push({ who: RED, by: 'machine', final: true, tr: FINAL_TR, t: SLAM, S: MOUNT.S, cs: FINAL_CS, face: card(RED, '∞'), back: backOf(RED), glyph: 1, gcell: CELL.glyph9, at: [0, 0.3], yaw: -Math.PI / 2 });
   P.sort((a, b) => a.t - b.t);
   // ---- where each comes to rest: the pile on the table grows card by card; the far ones lie on the floor
-  let top = 0.003, k = 0;
+  let top = 0.003, surf = 0.003, k = 0;      // top: where the next card's underside goes; surf: the highest face so far
   for (const p of P) {
     const T = CARD.T * p.cs, up = [Math.cos(p.yaw), 0, Math.sin(p.yaw)];
     p.i = k++;
     if (p.final) {
-      const W = CARD.W * p.cs, yr = top + T / 2, yl = FLOOR_Y + T / 2 + 0.02, a = Math.asin((yr - yl) / W);
+      const W = CARD.W * p.cs, yr = surf + T / 2, yl = FLOOR_Y + T / 2 + 0.02, a = Math.asin((yr - yl) / W);
       p.rest = { pos: [FINAL_XR - (W / 2) * Math.cos(a), (yr + yl) / 2, p.at[1]], q: basisQ([-Math.sin(a), Math.cos(a), 0], [0, 0, -1]) };
-      p.edgeY = top;
+      p.edgeY = surf;
     } else if (p.far) p.rest = { pos: [p.at[0], FLOOR_Y + T / 2 + 0.004 * (p.i % 5), p.at[1]], q: basisQ([0, 1, 0], up) };
     else if (p.crush) p.rest = { pos: [p.at[0], CARD_Y, p.at[1]], q: basisQ([0, 1, 0], up) };
     else {
       const tl = 0.05 / p.cs;
       p.rest = { pos: [p.at[0], top + T / 2, p.at[1]], q: basisQ([(rnd() - 0.5) * tl, 1, (rnd() - 0.5) * tl], up) };
-      top += T * 0.3; p.top = top;
+      surf = Math.max(surf, top + T); top += T * 0.3; p.top = surf;
     }
   }
   return P;
@@ -256,7 +256,8 @@ export function lampSwingAt(t) {
   return val(t);
 }
 // the lamp's power: full, then half (the red machine drinks it), then an ember
-export const lampOnAt = (t) => lerp(lerp(1, 0.5, ease(t, PLUG.heart.bite, PLUG.heart.bite + 0.4)), 0.16, ease(t, PLUG.spade.bite, PLUG.spade.bite + 0.5));
+// (when the machines outgrow the hall their cords tear off it, and it burns as before: a small light between two mountains)
+export const lampOnAt = (t) => lerp(lerp(lerp(1, 0.5, ease(t, PLUG.heart.bite, PLUG.heart.bite + 0.4)), 0.16, ease(t, PLUG.spade.bite, PLUG.spade.bite + 0.5)), 1, ease(t, MOUNT.t0 + 0.5, MOUNT.t0 + 1.5));
 // who sits in the dark, and how deep: the light has left him
 const DARK = [
   { who: CLB, t0: R1 + 4.1, t1: OUT.club.pull[1] + 0.5 },
