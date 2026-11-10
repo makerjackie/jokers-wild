@@ -1,3 +1,21 @@
+# v8 (2026-11-10) — after the director's notes on v7
+
+- **Cast.** The CN lead (id `deepseek`) is now 混沌 HUNDUN: wholly invented, a faceless red pebble mark, stands for no real
+  company; it is the one who hits 要不起, presses 托管 and gets the "attack" warning. 大肥鱼 FatFish moved to id `glm` (seat 0)
+  and only plays the flattering beat: FatFish-R1 smashing the US house of cards (3-03, now 3 cuts: the jab, riding along
+  with the card so its name reads, the smash from the foot). 智普普 is gone.
+- **The AI 智力排行榜** (`src/leaderboard.js`, data `leaderTimeline()/leaderAt()` in story.js) replaces the split-flap
+  board: rank, logo, model, score bar, a dashed "人类水平 100" line. Scores follow the calendar (70 at ChatGPT, 99.x by 2026,
+  the fight over hundredths); every hand play moves its company up; after 2026·11 the 托管 players shoot past 100 into
+  thousands while the holdouts stall at ~97 and are marked 淘汰; then ∞ and glitching names. Only the overtaking row slides.
+- **Screens** drawn at 2x with readable model cards (logo + name), a header with the owner's mark, the hidden row labelled
+  "⚠ 未发布 · 内部危险模型" with 危险 stamps once played; the warning banner keeps clear of the buttons.
+- **Clipping / framing:** resting hands beside the screens; elbows out to the king's right; tapped cards on the right half
+  of the screen; screen close-ups over the left shoulder; blast cards spin flat; the crumb appears at the card's edge;
+  US always on screen-right; the giant #1 stops above the lamp and reads upright; exposure pass on wides and glows.
+- **Credits:** every role "AI", the writer "MakerJackie（人类）"; the last card is a swat (two frames, white flash, jolt).
+- Two frame-by-frame QC passes by fresh Opus reviewers (out/qc8, out/qc8b) drove three rounds of fixes.
+
 # 《失控》 OUT OF CONTROL — v7 (2026-11-10, the release version)
 
 v7 = the v3 (榜首) story rebuilt as the finished film, on branch `v7` (v4–v6 were detours; v6 《喂》 is on `master`).
