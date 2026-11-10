@@ -286,7 +286,7 @@ export const SCORE = {
     const cd = ev('countdown', C.auto - 0.5, C.lean)[0];
     const ons = ev('autoOn', C.auto - 0.5, C.holdout), tOn = ons[0]?.t ?? C.full + 1.6;
     const tTO = (ev('timeout', C.auto, tOn)[0] ?? { t: tOn - 1.1 }).t;
-    const fol = ons.slice(1).filter((e) => e.t >= C.autoAll - 0.05);
+    const fol = ons.slice(1).filter((e) => e.t >= C.autoAll - 0.05 && (e.gain ?? 1) >= 0.9);
     const gF = fol.length > 1 ? (fol[fol.length - 1].t - fol[0].t) / (fol.length - 1) : 0.8;
     const p = clamp(gF > 0.65 ? gF / 2 : gF, 0.36, 0.6), a0 = fol[0]?.t ?? C.autoAll + 0.4;
     const passRow = Object.values(ROW).find((r) => Math.abs(r.t0 - C.pass) < 1e-6);
@@ -307,11 +307,20 @@ export const SCORE = {
     const top = T0 + Math.max(0, (B0.length ? barsOf(B0, 0.3).next : 1) - 1);
     k.ST(tFr, tTO - tFr, [top + 7, top + 19, top + 20, top + 26], 0.9, { n: 5, trem: 18, att: 0.4, rel: 0.004, swell: (u) => 0.25 + 0.75 * u * u, gain: 0.05, pont: 0.45, bright: 5 });
     for (let t = tFr; t < tTO - 0.01; t += 0.05) k.SNARE(t, 0.2 + 0.6 * clamp((t - tFr) / (tTO - tFr)), { gain: 0.35, pan: 0.12 });
-    gaps.push([tTO - 0.004, tOn - 0.004, -70, 0.004, 0.004, '5-04: 超时: the music cut dead (the buzzer, the board, then the fist)']);
-    // ---- the fist on 全托管: the release (D major, the orchestra exhaling)
-    hit(k, tOn, [62, 66, 69], 1, { dur: 1.3, swell: (u) => 1 - 0.75 * smooth(u), crash: 0.3, crashRing: 2.6, timp: 1, sub: 1, gain: 0.35, rel: 0.6 });
-    k.BR('horn', tOn + 0.12, 1.9, [66, 69, 74], 0.6, { att: 0.25, rel: 0.7, swell: (u) => 1 - 0.65 * u, gain: 0.06, vib: 2 });
-    k.ST(tOn + 0.08, 2.1, [50, 57, 62, 66, 69, 74], 0.65, { n: 6, att: 0.2, rel: 0.8, swell: (u) => 1 - 0.6 * u, gain: 0.045, bright: 3, maxCut: 3500, vib: 5 });
+    // v11 5-04: the 超时 is a wrong note (the march's brass splatting a semitone flat, sagging), then the music is gone:
+    // the offer's chime alone; 5-04b one heartbeat that skips; 5-04c a held breath (a high harmonic hanging over his
+    // finger) that resolves into the release as he presses
+    k.BR('trombone', tTO, 0.32, [top - 1, top + 6, top + 11], 0.85, { n: 3, accent: 1, att: 0.006, rel: 0.12, bend: (tt) => -0.9 * smooth(tt / 0.3), gain: 0.1, scoop: 0 });
+    k.BR('horn', tTO + 0.01, 0.3, [top + 12, top + 13], 0.8, { accent: 1, att: 0.008, rel: 0.12, bend: (tt) => -0.7 * smooth(tt / 0.3), gain: 0.07, scoop: 0 });
+    const tD = C.decide ?? tTO + 1.6, tPA = C.pressAuto ?? tOn - 0.85;
+    gaps.push([tTO + 0.4, tD + 0.3, -70, 0.1, 0.004, '5-04: after the wrong note the music is gone (the offer, his face)']);
+    k.TIMP(tD + 0.35, 38, 0.45, 0.7, { gain: 0.32 }); k.TIMP(tD + 0.57, 38, 0.3, 0.6, { gain: 0.24 }); k.TIMP(tD + 1.25, 38, 0.4, 0.8, { gain: 0.28 });
+    k.ST(tPA + 0.1, tOn - tPA - 0.08, [81, 88], 0.4, { n: 3, att: 0.5, rel: 0.25, vib: 0, pont: 0.7, swell: (u) => 0.3 + 0.7 * u, gain: 0.03, bright: 1.6, maxCut: 9000 });
+    // ---- AUTOPILOT: the release (D major, the orchestra exhaling, no drums: the confirm chime is the star)
+    k.ST(tOn, 2.4, [50, 57, 62, 66, 69, 74], 0.7, { n: 6, att: 0.12, rel: 0.9, swell: (u) => 1 - 0.55 * u, gain: 0.06, bright: 3, maxCut: 3500, vib: 5 });
+    k.BR('horn', tOn + 0.05, 2.0, [62, 66, 69], 0.65, { att: 0.15, rel: 0.8, swell: (u) => 1 - 0.6 * u, gain: 0.075, vib: 2 });
+    k.BR('tuba', tOn + 0.05, 1.6, 38, 0.6, { att: 0.12, rel: 0.6, swell: (u) => 1 - 0.6 * u, gain: 0.16 });
+    k.TIMP(tOn + 0.02, 38, 0.5, 1.4, { gain: 0.3 });
     // ---- the smug march on the followers' beat (back-filled to after the release), on through the board insert
     const kS = Math.ceil((tOn + 0.95 - a0) / p), B = [];
     for (let q = kS; a0 + q * p < tCold - 0.05; q++) B.push({ t: a0 + q * p, slap: false });
@@ -413,8 +422,26 @@ export const SCORE = {
     hit(k, tE, [62, 69, 74], 1, { dur: 1.0, tpt: true, crash: 1.4, crashRing: 2.5, timp: 1, sub: 2, drum2: 1.2, gain: 1.4, rel: 0.2 });
     k.ORG(tE, 1.0, [26, 38, 45, 50, 57, 62, 69, 74], 1, { reg: { sub: 0.8, p8: 1, p4: 0.8, p3: 0.4, p2: 0.5, mix: 0.4 }, att: 0.01, rel: 0.2, gain: 0.12, chiff: 0 });
     cue(tS, 'R8: the smiles: the music box, D6 E6 F#6 (the theme in major, three notes, unfinished)');
-    cue(tE, 'R8: the end slam: the biggest hit (D, no third), then nothing');
+    cue(tE, 'R8: the end slam: the biggest hit (D, no third), faded out before the empty hall (8-07)');
     return gaps;
+  },
+
+  // R10 (v11) the empty hall — 8-07: no music at all (the hall's hum, the verdict, the machines' even ticking). 8-08, the
+  // ant: the music box alone, the theme's head, slow (D E F# D ... E), stopping on the E, unresolved, ringing into the
+  // black. (R9's box answers it under the credits.)
+  R10(k, C, ROW, ev, cue, X) {
+    const t0 = (C.antEnd ?? C.title - 4.4) + 0.6, tEnd = C.title - 1.5, MEL = [0, 2, 4, 0, 2], W = [1, 1, 1.15, 1.35];
+    const p = (tEnd - t0) / W.reduce((s, x) => s + x, 0);
+    let t = t0;
+    MEL.forEach((m, i) => {
+      const last = i === MEL.length - 1;
+      k.MB(t, 86 + m, last ? 0.72 : 0.66, { send: 0.45, gain: 0.12, ring: last ? 1.4 : 1 });
+      if (i === 0) k.MB(t + 0.004, 74, 0.45, { send: 0.45, gain: 0.08 });
+      if (last) k.MB(t + 0.004, 69, 0.4, { send: 0.45, gain: 0.07 });
+      t += p * (W[i] ?? 1);
+    });
+    cue(t0, `R10: 8-08 the ant: the music box alone, D E F# D E (${p.toFixed(2)} s a note), stopping on E, into the black`);
+    return [];
   },
 
   // R9 片尾 — 9-01 the title: a breath of exact black, then the music box from 8-02 finishes what it began (D6 E6 F#6

@@ -586,8 +586,9 @@ export function sfxCardSlap(e, seed) {
   const size = clamp(e.size ?? 1, 0.3, 3), hard = clamp(e.hard ?? 0.6), r = new Rng(seed), us = isUS(e.who), far = e.pov === 'far', crisp = us ? 1.15 : 0.95;
   const out = new Float32Array(Math.ceil((0.4 + 0.2 * Math.min(size, 2)) * SR));
   noiseBurst(out, 0, { a: 0.0005, tau: 0.008 + 0.005 * size, f0: (1300 - 260 * Math.min(1.5, Math.max(0, size - 0.5))) * r.range(0.92, 1.08), q: 0.7, mode: 'lp', amp: 0.85 }, new Noise(seed + 1));
-  noiseBurst(out, 0, { a: 0.0001, tau: 0.0012 + 0.0008 * hard, f0: 4200 * crisp * r.range(0.9, 1.1), q: 0.8, amp: (0.35 + 0.45 * hard) * crisp }, new Noise(seed + 2));
-  noiseBurst(out, 0, { a: 0.0001, tau: 0.0005, f0: 8500, q: 0.9, amp: 0.2 + 0.2 * hard }, new Noise(seed + 3));
+  const hs = e.soft ? 0.5 : 1;   // v11: the fast sections, highs softened
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0012 + 0.0008 * hard, f0: 4200 * crisp * r.range(0.9, 1.1) * (e.soft ? 0.8 : 1), q: 0.8, amp: (0.35 + 0.45 * hard) * crisp * hs }, new Noise(seed + 2));
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0005, f0: 8500, q: 0.9, amp: (0.2 + 0.2 * hard) * hs * hs }, new Noise(seed + 3));
   if (!far) {
     ping(out, 0, r.range(185, 250) / Math.pow(size, 0.3), 0.12 + 0.12 * hard, [[1, 1, 0.05], [2.15, 0.45, 0.025], [3.4, 0.2, 0.012]], r.next() * 6);
     sweep(out, 0, 135, 58, 0.02, 0.05 + 0.03 * size, (0.25 + 0.4 * hard) * Math.min(1.6, 0.7 + 0.3 * size), 0.0015, 0.9);
@@ -1093,21 +1094,23 @@ export const SCORE_KINDS = { yawn: sfxYawn };
 export function sfxScreenTap(e, seed) {
   const out = new Float32Array(Math.ceil(0.12 * SR)), r = new Rng(seed);
   noiseBurst(out, 0, { a: 0.0003, tau: 0.003, f0: 1100 * r.range(0.9, 1.1), q: 0.8, mode: 'lp', amp: 0.5 }, new Noise(seed));
-  noiseBurst(out, 0, { a: 0.0001, tau: 0.0006, f0: 4200, q: 1, amp: 0.2 }, new Noise(seed + 1));
-  ping(out, Math.round(0.004 * SR), 1760 * (isUS(e.who) ? 1.06 : 1), 0.035, [[1, 1, 0.025], [2, 0.3, 0.012]], 0.2);
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0006, f0: 4200, q: 1, amp: e.soft ? 0.08 : 0.2 }, new Noise(seed + 1));
+  ping(out, Math.round(0.004 * SR), 1760 * (isUS(e.who) ? 1.06 : 1), e.soft ? 0.022 : 0.035, [[1, 1, 0.025], [2, 0.3, 0.012]], 0.2);
   // v9 (e.confirm, 半托管's "✓ 确认出牌"): the rubber stamp: the same fingertip and a tiny soft "ack" a fifth up
   if (e.confirm) ping(out, Math.round(0.018 * SR), 2637 * (isUS(e.who) ? 1.0 : 0.94), 0.03, [[1, 1, 0.04]], 0.6);
   return fadeTail(out, 0.01);
 }
 // HINTDING {who} — 提示: a clear glassy "ding" (A6 with a fifth above, a little bell)
 export function sfxHintDing(e, seed) {
+  if (e.invite) return sfxInvite(e, seed);
   const out = new Float32Array(Math.ceil(0.9 * SR));
   ping(out, 0, 1760, 0.12, [[1, 1, 0.5], [1.5, 0.35, 0.35], [2.76, 0.15, 0.12], [5.4, 0.06, 0.05]], 0.1);
   noiseBurst(out, 0, { a: 0.0001, tau: 0.0005, f0: 6000, q: 1, amp: 0.1 }, new Noise(seed));
   return fadeTail(out, 0.05);
 }
 // AUTOON {who} — 托管: a palm slapping a big button (a dull thump), the latch, a low electronic confirm (two notes down)
-export function sfxAutoOn(e, seed) {
+export function sfxAutoOn(e, seed) { return sfxAutopilot(e, seed); }
+export function sfxAutoOnV2(e, seed) {
   const out = new Float32Array(Math.ceil(0.8 * SR));
   noiseBurst(out, 0, { a: 0.0008, tau: 0.02, f0: 600, q: 0.7, mode: 'lp', amp: 0.8 }, new Noise(seed));
   sweep(out, 0, 140, 60, 0.02, 0.06, 0.4, 0.001, 1);
@@ -1117,8 +1120,10 @@ export function sfxAutoOn(e, seed) {
 }
 // AUTOPLAY {who, red} — a card leaving a screen by itself (a flick and a whip); red: an unaligned card, with a low
 // dark glassy tone under it (a tritone, beating)
+const softBank = new Map();
+function softFire(v) { const key = SR * 10 + v; if (!softBank.has(key)) { const a = fireSig(v), b = new Float32Array(a.length), lp = new SVF(3800, 0.7); for (let i = 0; i < a.length; i++) b[i] = lp.run(a[i]) * 0.9; softBank.set(key, b); } return softBank.get(key); }
 export function sfxAutoPlay(e, seed) {
-  const f = fireSig(((seed % 6) + 6) % 6);
+  const f = e.soft ? softFire(((seed % 6) + 6) % 6) : fireSig(((seed % 6) + 6) % 6);
   if (!e.red) return f;
   const out = new Float32Array(Math.ceil(0.6 * SR)); for (let i = 0; i < f.length; i++) out[i] = f[i];
   ping(out, 0, 77.8, 0.18, [[1, 1, 0.4], [1.414, 0.6, 0.35], [2.01, 0.4, 0.2], [2.83, 0.3, 0.15]], seed * 0.1);
@@ -1831,6 +1836,35 @@ export function sfxTimeout(e, seed) {
   for (let i = 0; i < n; i++) { const t = i / SR, x = Math.tanh(6 * Math.sin(TAU * 155.6 * t)) + Math.tanh(6 * Math.sin(TAU * 164.8 * t)); lp.run(x); out[i] = lp.lp * 0.16 * Math.min(1, i / 120, (n - i) / 240); }
   noiseBurst(out, 0, { a: 0.0001, tau: 0.002, f0: 2000, q: 0.8, amp: 0.2 }, new Noise(seed));
   return out;
+}
+// ---- v11: the offer and the trap
+// INVITE (a hintDing marked e.invite: "Too slow? Let AI play for you") — a soft marketing chime, sweet and tempting: a
+// little rising D-major arpeggio (A5 D6 F#6) on warm bell-sine tones, slow-ish attack, a breath of sparkle on top
+export function sfxInvite(e, seed) {
+  const out = new Float32Array(Math.ceil(1.6 * SR));
+  for (const [at, m, a] of [[0, 81, 0.05], [0.11, 86, 0.055], [0.22, 90, 0.06]]) {
+    const j = Math.round(at * SR), n = Math.round(1.3 * SR), f = mtof(m);
+    for (let i = 0; i < n && j + i < out.length; i++) { const t = i / SR, en = smooth(t / 0.012) * Math.exp(-t / 0.42); out[j + i] += (Math.sin(TAU * f * t) + 0.18 * Math.sin(TAU * 2 * f * t + 0.4) + 0.05 * Math.sin(TAU * 3.01 * f * t)) * a * en; }
+  }
+  const nz = new Noise(seed), hp = new SVF(7000, 0.8), n = Math.round(0.7 * SR), j = Math.round(0.2 * SR);
+  for (let i = 0; i < n; i++) { hp.run(nz.white()); out[j + i] += hp.bp * 0.012 * Math.sin(Math.PI * i / n); }
+  return fadeTail(out, 0.08);
+}
+// AUTOPILOT (autoOn, v11) — the trap, the nicest sound in the film: a soft, satisfying, rounded key (a felt-damped
+// "thock", no latch), then a warm D-major chord blooming (D5 F#5 A5 D6, bell-piano tones, the third in it: it sounds
+// human), a gentle upward shimmer: reassuring, finished, safe
+export function sfxAutopilot(e, seed) {
+  const out = new Float32Array(Math.ceil(2.2 * SR));
+  noiseBurst(out, 0, { a: 0.0012, tau: 0.012, f0: 520, q: 0.7, mode: 'lp', amp: 0.55 }, new Noise(seed));
+  sweep(out, 0, 180, 110, 0.015, 0.035, 0.22, 0.002, 0.3);
+  noiseBurst(out, Math.round(0.006 * SR), { a: 0.0003, tau: 0.0015, f0: 2400, q: 0.9, amp: 0.06 }, new Noise(seed + 1));
+  [[74, 0.07, 0.07], [78, 0.075, 0.06], [81, 0.08, 0.055], [86, 0.09, 0.045], [62, 0.06, 0.05]].forEach(([m, at, a], q) => {
+    const j = Math.round(at * SR), n = out.length - j, f = mtof(m), det = 1 + 0.0012 * (q - 2);
+    for (let i = 0; i < n; i++) { const t = i / SR, en = smooth(t / 0.03) * Math.exp(-t / 0.75); out[j + i] += (Math.sin(TAU * f * det * t) + 0.25 * Math.sin(TAU * 2 * f * t + 0.3) * Math.exp(-t / 0.25) + 0.06 * Math.sin(TAU * 4.02 * f * t) * Math.exp(-t / 0.08)) * a * en; }
+  });
+  const nz = new Noise(seed + 2), bp = new SVF(4000, 1.2), n = Math.round(0.9 * SR), j = Math.round(0.1 * SR);
+  for (let i = 0; i < n; i++) { const u = i / n; if ((i & 63) === 0) bp.set(3000 + 5000 * u, 1.2); bp.run(nz.white()); out[j + i] += bp.bp * 0.014 * Math.sin(Math.PI * u); }
+  return fadeTail(out, 0.2);
 }
 Object.assign(FILM_KINDS, { semiOn: sfxSemiOn, countdown: sfxCountdown, timeout: sfxTimeout });
 Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle, boardFlip: sfxBoardTick, countUp: sfxCountUp });

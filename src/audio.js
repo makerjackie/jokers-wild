@@ -25,7 +25,7 @@ import { preOf } from './audio-kinds.js';
 // the true-peak ceiling: -1 dBTP with 0.2 dB to spare (ffmpeg's ebur128 oversampler reads ~0.1 dB hotter than ours)
 export const PEAK_DB = -1.2;
 // staging: the giant card and its board (3-06 + 3-07) land here before the glue; everything else is placed relative to it
-export const REF_LUFS = -11.0;
+export const REF_LUFS = -10.7;
 export const HUM_LEVEL = 0.0065, WALL_DRIVE_DB = 1.6;
 const clock = typeof performance !== 'undefined' && typeof performance.now === 'function' ? () => performance.now() : null;
 const now = () => (clock ? clock() : 0);
@@ -44,19 +44,21 @@ export const creditSlapOf = (events, C = CUES) => (events.find((e) => e.kind ===
 export const CREDIT_PRE = 0, CREDIT_LEN = 0.3;
 // the hard gates: true digital silence (every bus, the hum too): the cut (7-01); the title's first breath in the black
 // (9-01, until the music box comes in); 9-03 before the last card and after it, to the end
+// v11: after the slam, real silence for a breath, broken by the first sound of the empty hall (the screens' verdict)
+export const afterFirstOf = (events, C = CUES) => (events.filter((e) => e.t >= C.after - 0.01 && e.t < C.after + 2 && e.kind !== 'stop').sort((a, b) => a.t - b.t)[0] ?? { t: C.after + 0.4 }).t;
 export function gates(C = CUES, events = []) {
   const tS = creditSlapOf(events, C);
-  return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.title, C.title + TITLE_HOLD, '9-01 (the title, before the box)'],
+  return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.after - 0.15, afterFirstOf(events, C) - 0.005, '8-07 (the breath after the slam)'], [C.title, C.title + TITLE_HOLD, '9-01 (the title, before the box)'],
     [C.slap, tS - CREDIT_PRE - 0.002, '9-03 (the black before the last card)'], [tS + CREDIT_LEN, DURATION, '9-03 (after the last card: nothing)']];
 }
 // the walls driven into saturation in the master: [t0, t1, drive dB, ramp in, ramp out]
 export function wallDrives(C, events) {
   const big = events.find((e) => e.kind === 'bigSlam'), tB = big ? big.t : C.big + 2.0, end = events.find((e) => e.kind === 'endSlam'), tE = end ? end.t : C.black + 0.45;
-  return [[tB, C.boardBig, WALL_DRIVE_DB, 0.002, 0.25], [C.blizzard, stopOf(events, C), WALL_DRIVE_DB, 0.05, 0.001], [tE, C.title - 1, WALL_DRIVE_DB, 0.002, 0.5]];
+  return [[tB, C.boardBig, WALL_DRIVE_DB, 0.002, 0.25], [C.blizzard + 0.4, stopOf(events, C), WALL_DRIVE_DB * 0.6, 0.6, 0.001], [tE, C.after - 0.4, WALL_DRIVE_DB, 0.002, 0.3]];
 }
 // the chunks: [id, t0, t1, cut] (cut = { at }: everything of the chunk, music, effects and rooms, cut dead there)
 // (R9: the title and the credits, faded out before 9-03; END: the last card alone)
-const chunks = (C, ev) => [['R1', 0, C.screen], ['R2', C.screen, C.race], ['R3', C.race, C.stuck], ['R4', C.stuck, C.auto], ['R5', C.auto, C.red], ['R6', C.red, C.stop, { at: stopOf(ev, C) }], ['R7', C.stop, C.deal, { at: C.deal + 0.05, ramp: 0.6 }], ['R8', C.deal, C.title, { at: C.title - 0.02, ramp: 1.0 }], ['R9', C.title, C.slap, { at: C.slap - 0.02, ramp: 1.2 }], ['END', C.slap, DURATION]];
+const chunks = (C, ev) => [['R1', 0, C.screen], ['R2', C.screen, C.race], ['R3', C.race, C.stuck], ['R4', C.stuck, C.auto], ['R5', C.auto, C.red], ['R6', C.red, C.stop, { at: stopOf(ev, C) }], ['R7', C.stop, C.deal, { at: C.deal + 0.05, ramp: 0.6 }], ['R8', C.deal, C.after, { at: C.after - 0.18, ramp: 0.9 }], ['R10', C.after, C.title, { at: C.title - 0.02, ramp: 1.0 }], ['R9', C.title, C.slap, { at: C.slap - 0.02, ramp: 1.2 }], ['END', C.slap, DURATION]];
 const ROOMS = {
   m: { rt60: 2.4, damp: 4500, size: 1.35, pre: 0.022, lo: 90, wet: 0.85 },
   s: { rt60: 1.3, damp: 5200, size: 1.0, pre: 0.012, lo: 160, wet: 0.8 },
@@ -66,6 +68,7 @@ const ROOMS = {
 const ROOMS_AT = {
   R1: { b: { rt60: 3.6, damp: 3000, size: 1.7, pre: 0.05, lo: 60, wet: 0.95 } },
   R7: { m: { rt60: 4.2, damp: 3200, size: 1.7, pre: 0.04, lo: 70, wet: 0.95 }, b: { rt60: 5.0, damp: 2600, size: 1.8, pre: 0.06, lo: 55, wet: 1.0 } },
+  R10: { m: { rt60: 3.2, damp: 4000, size: 1.5, pre: 0.03, lo: 120, wet: 0.85 }, s: { rt60: 1.8, damp: 4200, size: 1.2, pre: 0.02, lo: 160, wet: 0.85 } },
   R8: { m: { rt60: 3.6, damp: 3600, size: 1.6, pre: 0.035, lo: 80, wet: 0.9 }, b: { rt60: 4.5, damp: 2800, size: 1.8, pre: 0.05, lo: 60, wet: 1.0 } },
   R9: { m: { rt60: 3.0, damp: 4200, size: 1.5, pre: 0.03, lo: 120, wet: 0.85 } },
 };
@@ -78,7 +81,7 @@ function* renderGen(sampleRate, opts) {
   const picture = opts.events ?? soundEvents(), test = !picture.length || !!opts.test;
   const prep = prepareEvents(test ? testEvents(C, ROW, SHOT) : picture, C, ROW);
   const all = [...prep.events, ...scoreEvents(C, ROW, prep.events)];
-  const events = all.map((e) => ({ ...e, seedIndex: seedOf(e) })).sort((a, b) => a.t - b.t || (a.seedIndex - b.seedIndex));
+  const events = all.map((e) => ({ ...e, seedIndex: e.seedFix ?? seedOf(e) })).sort((a, b) => a.t - b.t || (a.seedIndex - b.seedIndex));
   const vac = prep.vacuums;
   const L = new Float32Array(N), R = new Float32Array(N), out = { L, R, off: 0 };
   const report = [], counts = {}, unknown = {}, X = {};
@@ -142,7 +145,8 @@ function* renderGen(sampleRate, opts) {
     for (const [tv, e] of vac) { const a = tv - preOf(e); if (t > a - 0.04 && t < tv + 0.15) k *= t < a ? 1 - (t - a + 0.04) / 0.04 : t < tv ? 0 : (t - tv) / 0.15; }
     if (t >= z0) k *= t < z1 ? 0 : 0.85 * smooth01((t - z1) / 1.6);
     if (t > C.crush) k *= t < C.crumb + 0.6 ? 0.15 : 0.15 + 0.85 * smooth01((t - C.crumb - 0.6) / 1.5);
-    if (t > C.black) k *= 0;
+    // v11: gone at the black; back alone in the empty hall (8-07), a breath after the verdict; down again under the title
+    if (t > C.black) k *= t < C.after ? 0 : 0.9 * smooth01((t - C.after - 0.7) / 2.2) * (1 - smooth01((t - C.title + 0.9) / 0.85));
     return Math.max(0, k);
   };
   for (const [dst, off] of stems ? [[out, 0], [stems.amb, stems.amb.off]] : [[out, 0]]) yield* unit('hum', W.hum * DURATION, humIntoG(dst.L, dst.R, off, 0.02, DURATION, { level: HUM_LEVEL, lvlAt: humLvl }));

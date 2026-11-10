@@ -377,7 +377,7 @@ export function leaderTimeline() {
 export function leaderAt(t) {
   const L = leaderTimeline();
   let k = 0; for (let i = 0; i < L.length; i++) if (L[i].t <= t) k = i;
-  const cur = L[k], prev = L[Math.max(0, k - 1)], u = clamp((t - cur.t) / 0.22), e = u * u * (3 - 2 * u);
+  const cur = L[k], prev = L[Math.max(0, k - 1)], u = clamp((t - cur.t) / 0.12), e = u * u * (3 - 2 * u);
   const rows = cur.order.map((id, i) => {
     const pi = prev.order.indexOf(id), d = cur.data[id], pd = prev.data[id];
     const score = pd && Number.isFinite(d.score) && Number.isFinite(pd.score) ? lerp(pd.score, d.score, clamp(u * 1.6)) : d.score;

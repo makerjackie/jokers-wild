@@ -143,7 +143,7 @@ function kingsState(t, st) {
     // ---- 半托管: eyes on the other side while the finger confirms (a rubber stamp); then the hurry as the countdown shrinks
     if (SEMI[id] != null && t >= SEMI[id] && t < AUTO[id] && !(OUT[id] && t > OUT[id].pass[0] - 0.2)) {
       const hurry = clamp((t - LIMIT0) / (S.LIMIT1 - LIMIT0));
-      K.rise = 0.25 + 0.3 * hurry; K.lean = 0.12 + 0.12 * hurry; K.sweat = hurry;
+      K.rise = 0.18 + 0.1 * hurry; K.lean = 0.08 + 0.06 * hurry; K.sweat = hurry;   // (v11) hunched, but his head stays clear of the lens over his screen
       K.face = hurry < 0.45 ? face('smug', { eyes: 'side' }) : face('angry', { mouth: 'grit', eyes: 'down' });
       K.look = hurry < 0.45 && t > CUES['5-02'] ? headAt(oppOf(id) ?? other(id)) : f.c;
     }
@@ -202,7 +202,7 @@ function kingsState(t, st) {
     }
     // ---- the deal: the screen lights; they look; they smile; they reach; they never look up
     if (t >= CUES.deal) {
-      K.look = t < CUES.deal + 0.5 ? [sx * 0.15, 2.4, -0.1] : f.c; K.lean = 0.1; K.rise = 0.15; K.sweat = 0.6;
+      K.look = t < CUES.deal + 0.5 ? [sx * 0.15, 2.4, -0.1] : f.c; K.lean = 0.1; K.rise = 0.15; K.sweat = t < CUES.smile ? 0.6 : 0.15;
       K.face = t < CUES.smile ? face('worry', { eyes: 'down' }) : t < CUES.smile + 1.2 ? { eyes: 'down', brows: 'flat', mouth: 'smirk' } : { eyes: 'narrow', brows: 'arch', mouth: 'grin' };
       if (t > CUES.shadow) K.face = { eyes: 'narrow', brows: 'arch', mouth: 'grin' };
     }
@@ -397,7 +397,9 @@ function cardsState(t, st) {
     if (p.style === 'chat') { out.push({ ...base, ...chatFlight(p, t, d.rest) }); continue; }
     if (p.style === 'smash') { out.push({ ...base, ...smashFlight(p, t, d.rest) }); continue; }
     if (t > STOP) continue;
-    if (p.who === FINAL[0] && t > CUES.error && t < CUES.cancelUS) continue;   // (v8) nothing flies across his warning while we read it
+    if (p.who === FINAL[0] && t > CUES.error && t < CUES.cancelUS) continue;
+    if (p.who === 'openai' && t > CUES.cancelUS - 0.3 && t < CUES.accuse) continue;
+    if (FINAL.includes(p.who) && t > CUES.eyes - 0.5 && t < CUES.blizzard) continue;   // (v8) nothing flies across his warning while we read it
     out.push({ ...base, ...screenFlight(p, t, d.rest) });
   }
   // the house standing
@@ -409,16 +411,16 @@ function cardsState(t, st) {
   });
   // ---- (v11) after: nobody at the table; the screens go on playing each other, fast and even
   if (t >= AFTER && t < CUES.title + 0.5) {
-    const N = Math.floor((CUES.title + 0.5 - AFTER) / 0.13);
+    const N = Math.floor((CUES.title + 0.5 - AFTER) / 0.08);
     for (let i = 0; i < N; i++) {
-      const tr = AFTER - 1.2 + i * 0.13, r = mulberry32(i * 53 + 11), who = IDS[(i * 3) % IDS.length];
+      const tr = AFTER - 1.2 + i * 0.08, r = mulberry32(i * 53 + 11), who = IDS[(i * 3) % IDS.length];
       if (t < tr) break;
       if (who === 'openai' && tr < AFTER + 1.6) continue;   // nothing crosses the verdict while we read it
       const a = r() * Math.PI * 2, d = 0.2 * Math.sqrt(r());
-      const yw = r() * 6.28, rest = { pos: [Math.cos(a) * d * 0.8, CARD_Y + 0.0012 * i, -0.05 + Math.sin(a) * d * 1.5], q: flatQ(Math.cos(yw), Math.sin(yw)) };
-      const p = { who, slot: i % 5, tr, t: tr + 0.5, i, style: 'auto', scale: 1 };
+      const yw = r() * 6.28, rest = { pos: [Math.cos(a) * d * 0.8, CARD_Y + 0.0009 * i, -0.05 + Math.sin(a) * d * 1.5], q: flatQ(Math.cos(yw), Math.sin(yw)) };
+      const p = { who, slot: i % 5, tr, t: tr + 0.55, i, style: 'tap', scale: 1.25 };
       const base = { face: CELL[`future_${who}_${i % 2}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0, glow: 0.1 };
-      out.push(t < p.t ? { ...base, ...screenFlight(p, t, rest) } : { ...base, ...rest, scale: 1 });
+      out.push(t < p.t ? { ...base, ...screenFlight(p, t, rest) } : { ...base, ...rest, scale: 1.25 });
     }
   }
   // ---- the eye
@@ -491,12 +493,12 @@ export function base(t, world) {
     sub: 'A story from another world. Any resemblance to this one is purely coincidental.', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
     const lines = ['Directed by', 'Storyboards', 'Animation', 'Characters', 'Art direction', 'Lighting', 'Modeling', 'Music', 'Sound', 'Editing'].map((r) => [r, 'AI']).concat([['', ''], ['', ''], ['', ''], ['Written by a human', 'MakerJackie']]);
-    const LH = 0.052, stop = 0.82 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
+    const LH = 0.056, stop = 0.78 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
     const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
     // the swat: nothing moves, then in two frames a card slams onto his name, a white flash, a hard jolt; then black
     const hit = CUES.slap + 0.45, jolt = t > hit ? Math.exp(-(t - hit) * 14) * Math.sin((t - hit) * 95) * 0.035 : 0;
     st.titles = { alpha: 1, roll: { y0: lerp(1.08, stop, 1 - (1 - u) ** 2) + jolt, lines, lh: LH } };
-    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.82 + jolt, cell: 'aiAuto', fast: 1 };
+    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.78 + jolt, cell: 'aiAuto', fast: 1 };
     if (t > hit && t < hit + 0.09) st.titles.flash = 1 - (t - hit) / 0.09;
     st.titles.alpha = t > CUES.fin - 0.35 ? 0 : 1;
     if (st.titles.slap) st.titles.slap.alpha = st.titles.alpha;

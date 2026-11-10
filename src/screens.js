@@ -120,8 +120,8 @@ export function makeScreens() {
     }
     // 要不起: nothing in his hand beats the #1
     if (s.pass && (s.hi ?? -1) < 0) {
-      c.fillStyle = 'rgba(10,10,14,0.78)'; c.beginPath(); c.roundRect(CW * 0.2, CH * 0.06, CW * 0.36, 50, 25); c.fill();
-      c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`; c.fillText("CAN'T BEAT IT", CW * 0.38, CH * 0.06 + 26);
+      c.fillStyle = 'rgba(10,10,14,0.78)'; c.beginPath(); c.roundRect(CW * 0.2, CH * 0.415, CW * 0.36, 50, 25); c.fill();
+      c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`; c.fillText("CAN'T BEAT IT", CW * 0.38, CH * 0.415 + 26);
     }
     // a card dealt from above
     if (s.deal != null) { const x = CW * 0.56 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }

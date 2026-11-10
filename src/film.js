@@ -199,7 +199,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         c.restore();
       }
       // a line under the title; an end-credit card: a small label, the name, a smaller line under it
-      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; line(tt.sub, H * 0.036, H * 0.003, H * 0.72, W * 0.9, 'italic'); c.globalAlpha = tt.alpha ?? 1; }
+      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; line(tt.sub, H * 0.044, H * 0.003, H * 0.72, W * 0.92, 'italic'); c.globalAlpha = tt.alpha ?? 1; }
       if (tt.card) {
         const k = tt.card;
         c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.012)}px`; c.font = `${Math.round(H * 0.032)}px ${LATIN}`;
@@ -218,9 +218,9 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         tt.roll.lines.forEach(([role, name], i) => {
           const y = y0 + i * lh; if (y < -lh || y > H + lh) return;
           c.letterSpacing = `${Math.round(H * 0.002)}px`;
-          c.textAlign = 'right'; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.034)}px ${LATIN}`; c.fillText(role, W / 2 - gut, y, half);
+          c.textAlign = 'right'; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.042)}px ${LATIN}`; c.fillText(role, W / 2 - gut, y, half);
           c.letterSpacing = '0px';
-          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.04)}px ${LATIN}`; c.fillText(name, W / 2 + gut, y, half);
+          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.05)}px ${LATIN}`; c.fillText(name, W / 2 + gut, y, half);
         });
         c.textAlign = 'center';
       }
@@ -228,9 +228,9 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         // (v7) the last card of the film: it falls out of the dark onto the last name and covers it
         const k = tt.slap, img = cardAtlas().image, cell = CELL[k.cell] ?? CELL.num1;
         const ACW = 256, ACH = 372, ax = (cell % 16) * ACW, ay = Math.floor(cell / 16) * ACH;
-        const ch = H * (k.flat ? 0.4 : 0.46), cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
+        const ch = H * (k.flat ? 0.4 : 0.42), cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
         // fast (the swat): it comes at the lens, huge, and lands flat in two frames; flat: lying across the name line
-        const cx = W / 2 + H * (k.flat ? 0.235 : 0.19), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
+        const cx = W / 2 + H * (k.flat ? 0.235 : 0.185), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
         c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate((k.flat ? Math.PI / 2 : 0) - 0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
         c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
         c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);

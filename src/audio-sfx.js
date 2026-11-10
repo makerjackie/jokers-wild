@@ -26,7 +26,7 @@ export const MIX = {
   cardWhoosh: [0.5, 0.1, 's'], chatWake: [0.9, 0.35, 'b'], typing: [1.1, 0.2, 's'], awe: [0.35, 0.22, 's'], chuckle: [0.45, 0.1, 's'],
   scuffle: [0.8, 0.12, 's'], cardSkim: [0.8, 0.1, 's'], towerCrash: [0.9, 0.16, 's'], bigSlam: [1.0, 0.32, 'b'], lampSwing: [0.8, 0.22, 'b'],
   chairSlide: [0.9, 0.28, 'b'], tremble: [0.9, 0.05, 's'], breath: [0.9, 0.06, 's'], cardDown: [0.8, 0.08, 's'], deckTwitch: [0.7, 0.18, 's'],
-  deckFire: [0.6, 0.12, 's'], stream: [0.55, 0.14, 's'], blizzard: [0.95, 0.22, 'b'], stop: [0, 0, 's'], cardsFall: [0.7, 0.2, 's'],
+  deckFire: [0.6, 0.12, 's'], stream: [0.55, 0.14, 's'], blizzard: [0.85, 0.22, 'b'], stop: [0, 0, 's'], cardsFall: [0.7, 0.2, 's'],
   cardStand: [0.75, 0.3, 'b'], standWave: [0.9, 0.3, 'b'], rise: [1.0, 0.35, 'b'], lampSpin: [0.8, 0.3, 'b'], farSlap: [1.0, 0.45, 'b'],
   leafFall: [0.45, 0.25, 'b'], cardTap: [0.6, 0.12, 's'], peek: [0.7, 0.08, 's'], smallSlap: [0.55, 0.12, 's'], smile: [0, 0, 's'], rage: [0, 0, 's'],
   // the score's own
@@ -37,7 +37,7 @@ export const MIX = {
   // v3 (榜首)
   blast: [2.4, 0.3, 'b'], denied: [0.7, 0.06, 's'], errorAlarm: [1.6, 0.15, 's'], screenEye: [0.4, 0.3, 'b'], pressure: [0.5, 0.2, 'b'], boardFlip: [0.5, 0.1, 's'],
   // v7: the holdouts (the chairs go into the dark: the big room), the last card (dry: no room at all)
-  hesitate: [0.9, 0.06, 's'], eliminated: [0.6, 0.12, 's'], dragOut: [1.0, 0.3, 'b'], creditSlap: [1.4, 0, 's'], countUp: [2.0, 0.1, 's'],
+  hesitate: [0.9, 0.06, 's'], eliminated: [0.6, 0.12, 's'], dragOut: [0.8, 0.3, 'b'], creditSlap: [1.4, 0, 's'], countUp: [2.0, 0.1, 's'],
   // v9: 半托管, the round timer, 超时
   semiOn: [0.8, 0.2, 's'], countdown: [1.9, 0.08, 's'], timeout: [0.9, 0.1, 's'],
 };
@@ -57,7 +57,7 @@ export const SCENE = {
   cardSkim: { '3-03': 8 },
   crumbRoll: { '1-06': -10 },
   cancelPress: { '6-04': 0 },
-  autoOn: { '5-04': 2 },
+  autoOn: { '5-04c': 2 },
   chuckle: { '5-10': -2 },
   hintDing: { '4-02': 8, '4-04': 9, '5-01': -6, '5-02': -8 },
 };
@@ -66,7 +66,8 @@ export const SCENE = {
 const HOLD_KEEP = ['timeout', 'eliminated', 'dragOut', 'screenTap', 'chuckle', 'countUp'];
 // the rows where the leaderboard fills the frame: its moves there are the whole board reshuffling (a cascade of slides)
 const BOARD_SHOTS = ['2-03', '2-07', '3-04', '3-07', '4-03', '6-02'];
-export const HUSH = { '5-04': [-5, ['countdown', 'timeout', 'autoOn', 'boardFlip']], '5-07': [-10, HOLD_KEEP], '5-08': [-10, HOLD_KEEP], '5-09': [-10, HOLD_KEEP], '5-10': [-13, HOLD_KEEP] };
+// v11: the offer (5-04 .. 5-04c): the table falls away around OpenAI's screen; 5-04b nearly silent
+export const HUSH = { '5-04': [-8, ['countdown', 'timeout', 'hintDing', 'boardFlip']], '5-04b': [-20, []], '5-04c': [-13, ['autoOn']], '5-07': [-10, HOLD_KEEP], '5-08': [-10, HOLD_KEEP], '5-09': [-10, HOLD_KEEP], '5-10': [-13, HOLD_KEEP] };
 // CHOKES: at these film times every effect that started earlier is cut (8 ms), except the kinds kept
 export function chokes(C) { return [[C.crumb, new Set(['crumbRoll', 'antStep'])], [C.stop, new Set()], [C.black, new Set(['endSlam'])]]; }
 function sceneOf(C, ROW) {
@@ -93,6 +94,8 @@ export function levels(C, ROW) {
   const A = [];
   // the machine's dense stream under the music, the red cards louder as they take over
   A.push(['autoPlay', [[C.red, 0], [C.blizzard, 3]]]);
+  // v11: the blizzard comes in over a second instead of a cliff
+  A.push(['blizzard', [[C.blizzard, -7], [C.blizzard + 1.1, 0]]]);
   // the leaderboard under 托管: the moves come in bursts, far back
   A.push(['boardFlip', [[C.auto + 1.5, 0], [C.auto + 3, -7]]]);
   // the giant card's ring pulled back under the board's flip (3-07)
@@ -162,6 +165,23 @@ export function prepareEvents(events, C, ROW) {
   for (const e of out) if (e.kind === 'screenTap' && e.t >= C.semi && e.t < C.red) e.confirm = true;
   { const to = out.filter((e) => e.kind === 'timeout').sort((a, b) => a.t - b.t);
     for (const e of out) if (e.kind === 'countdown') { const x = to.find((q) => q.t > e.t && q.t < e.t + (e.dur || 0) + 0.5); if (x) { e.stopAt = x.t - e.t; notes.push(`countdown ${e.t.toFixed(2)}..${x.t.toFixed(2)}: stopped dead at the 超时`); } } }
+  // v11: the offer: the last hintDing before each king's autoOn is the "Too slow? Let AI play for you" popup
+  for (const a of out.filter((e) => e.kind === 'autoOn')) {
+    const d = out.filter((e) => e.kind === 'hintDing' && e.who === a.who && e.t < a.t && e.t > a.t - 4).sort((x, y) => y.t - x.t)[0];
+    if (d) d.invite = true;
+  }
+  // v11: the empty hall (8-07): the machines' cards, metronomic and too perfect: two fixed waveforms, tick and tock. Under
+  // the ant (8-08) they are far up the table, heard through the wood like the opening's game
+  { let n = 0;
+    for (const e of out) if (e.t >= C.after && e.t < C.title && (e.kind === 'cardSlap' || e.kind === 'autoPlay')) {
+      if (e.t >= C.antEnd) { if (e.kind === 'autoPlay') e.gain = 0; else { e.kind = 'cardToss'; e.pov = 'ant'; e.gain *= 0.55; } continue; }
+      e.seedFix = e.kind === 'cardSlap' ? 4242 + (n++ % 2) * 17 : 4300; e.machine = true;
+    } }
+  // v11: the fast sections: where the screens and slaps crowd (6+ in half a second) their highs are softened
+  { const D = out.filter((e) => e.kind === 'cardSlap' || e.kind === 'autoPlay' || e.kind === 'screenTap').sort((a, b) => a.t - b.t);
+    let nS = 0;
+    for (let i = 0, a = 0, b = 0; i < D.length; i++) { while (D[a].t < D[i].t - 0.25) a++; while (b < D.length && D[b].t < D[i].t + 0.25) b++; if (b - a >= 6 && !D[i].machine && D[i].pov !== 'ant') { D[i].soft = true; nS++; } }
+    notes.push(`the fast sections: ${nS} slaps / flicks / taps with their highs softened`); }
   // background slaps (gain < 0.6) are a bed: thinned in bursts; the decks' flicks too
   for (const [kind, N0] of Object.entries(DENSE)) {
     const L = out.filter((e) => (kind === 'cardSlapBed' ? e.kind === 'cardSlap' && e.gain < 0.6 : kind === 'cardSlapDeck' ? e.kind === 'cardSlap' && e.deck && e.gain >= 0.6 : kind === 'confirmTap' ? e.kind === 'screenTap' && e.confirm : e.kind === kind)).sort((a, b) => a.t - b.t);
@@ -215,6 +235,8 @@ export function scoreEvents(C, ROW, events) {
   if (!has('cardToss', ROW['1-02'].t0, ROW['1-05'].t0)) [[1.2, 'meta', 0.6], [3.1, 'xai', 0.5]].map(([k, w, g]) => [ROW['1-02'].t0 + k, w, g]).concat([[ROW['1-03'].t0 + 1.5, 'google', 0.55]]).forEach(([t, w, g]) => ev(t, 'cardToss', { who: w, pov: 'ant', gain: g, size: 0.8 }));
   // 1-07: a king yawning far down the table, the lazy game going on
   if (!has('yawn')) ev(ROW['1-07'].t0 + 1.9, 'yawn', { who: 'mistral', pan: 0.55, gain: 0.9 });
+  // v11 8-07: the leaderboard still turning over in the empty hall, far away (the screen alone, no chime)
+  if (C.after && !has('boardFlip', C.after, C.title)) for (let t = C.after + 1.1, i = 0; t < C.antEnd + 0.6; t += 0.85 + 0.1 * (i % 3), i++) ev(t, 'boardFlip', { gain: 0.22, dateOnly: i % 4 === 3, pan: -0.15 });
   // the holdouts' leaderboard insert (v8 5-06, v9 5-07): the auto scores counting up past "人类 100", Meta stuck at 93
   const passRow = Object.values(ROW).find((r) => Math.abs(r.t0 - C.pass) < 1e-6), ins = passRow?.cuts?.length > 1 ? passRow.cuts[0] : null;
   if (ins && !has('countUp')) ev(ins.t0 + 0.08, 'countUp', { dur: ins.t1 - ins.t0 - 0.12 });

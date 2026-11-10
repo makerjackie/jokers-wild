@@ -1,7 +1,7 @@
-# 《失控》 OUT OF CONTROL (v7 score, v9 picture) — sound
+# 《失控》 OUT OF CONTROL (v7 score, v11 picture) — sound
 
 Everything is synthesized in plain JavaScript (no samples), deterministic: two renders are bit-identical, and so is the
-async render. `renderScore(sampleRate)` in `src/audio.js` renders the whole film (2:35.1) from the director's
+async render. `renderScore(sampleRate)` in `src/audio.js` renders the whole film (2:47.5) from the director's
 `soundEvents()` (`src/sound-events.js`) and `CUES` / `ROW`. No second is hard-coded, so after a picture retime you re-run
 the tool. The base is the v3 score (commit `74e8244`: its kit, its theme, its R1–R4 and R6–R8 cues), with R5 rebuilt and
 R9 new. The 《喂》 v6 kinds are still in `audio-kinds.js`, but this film does not use them.
@@ -11,6 +11,16 @@ node tools/render-audio.mjs [--test] [--twice] [--async] [--cues] [--stems] [--n
   -> out/score.wav (48 kHz 16-bit), out/score-spec.png, out/levels.txt (every shot vs shots.txt's loudness column,
      the gates, the vacuums, the limiter, a click scan, ffmpeg ebur128)
 ```
+
+## v11 (final polish)
+
+- **The offer, 5-04..5-04c:** OpenAI's 超时 is a wrong note (the march's brass splatting a semitone flat), then the music is gone. The "Too slow? Let AI play for you" popup (the last hintDing before each king's autoOn, marked `invite`) is a sweet rising D-major chime (A5 D6 F#6). 5-04b: one heartbeat, then a beat that skips; the table nearly silent (HUSH -20). 5-04c: a high harmonic hangs over his finger. **AUTOPILOT** (autoOn) is now the nicest sound in the film: a felt-soft key, then a warm D-major chord blooming, the third in it, a gentle shimmer. The music's release under it has no drums (strings, horns, a soft timpani), so the chime is the star.
+- **The empty hall, 8-07 / 8-08 (chunk R10):** the end slam is faded out by 8-07, then **exact zero** until the first sound of the hall: the screens' verdict (`eliminated`, the same sound the holdouts got). Then the lamp's hum comes back alone. The machines' cards come in at 0.13 s, metronomic and too perfect: two fixed waveforms, tick and tock (`seedFix`). The leaderboard turns over far away, with no chime. No human sounds. 8-08, the ant: the opening's steps; the machines' cards are now far up the table, a muffled "dup" through the wood; the music box alone plays the theme's head, D E F# D E, stopping on the E, unresolved, into the black. The box under the credits (R9) answers it, coming home to D.
+- **Mix:**
+  - **Fast sections:** wherever 6+ slaps / flicks / taps crowd into half a second, their highs are softened (the cards' 4–8 kHz crack halved, the flicks low-passed, the taps' tick cut).
+  - **The blizzard** fades in over 1.1 s instead of arriving as a cliff, with a gentler wall drive.
+  - **The chairs** are 2 dB lower.
+  - **Pre-slam music** can't tail across the black: R8 fades out by 8-07, and the breath after the slam is gated.
 
 ## The idea
 
@@ -67,23 +77,24 @@ the table's foot; seat 2 (the finalists, Claude left, OpenAI right) at ±0.35, s
 |---|---|---|
 | 7-01 the cut | the `stop` event | 7-02 |
 | 9-01 the title in black | 9-01 | +1.0 s (`TITLE_HOLD`), then the music box |
+| 8-07 the breath after the slam | `C.after` − 0.15 s | the first event of the empty hall − 5 ms |
 | 9-03 before the swat | 9-03 | `creditSlap` − 2 ms |
 | 9-03 after the swat | `creditSlap` + 0.3 s | the end |
 
 The R8 chunk fades to nothing by 9-01. The R9 chunk (the box and its room) fades over 1.2 s into 9-03. The swat is
 alone in its own END chunk.
 
-## Measured (v9 picture, 2:35.1, the director's 1465 events, 2026-11-10)
+## Measured (v11 picture, 2:47.5, the director's 1897 events, 2026-11-11)
 
 | | |
 |---|---|
-| integrated / LRA | **-16.2 LUFS** / 16.5 LU (ffmpeg ebur128: -16.2) |
+| integrated / LRA | **-16.4 LUFS** / 17.3 LU (ffmpeg ebur128: -16.4) |
 | sample / true peak | -1.2 dBFS / **-1.2 dBTP** (ffmpeg's oversampler reads -1.1) |
-| limiter, deepest | -5.3 dB (0:20.2, the ChatGPT slap; 0:39.5, the smash); glue 4.6 dB |
-| shots in their loudness class | 75 / 79. **Off:** 2-05 wall -2.2 (as in v3); 3-03.01 wall -1.9 (the jab before the card flies); 5-03 +6.3 (the countdown's strain peak, 0.3 over "medium"; I left it there on purpose); 9-03 -6.8 (see below) |
+| limiter, deepest | -5.6 dB (0:20.2, the ChatGPT slap; 0:39.5, the smash); glue 4.6 dB |
+| shots in their loudness class | 80 / 84. **Off:** 2-05 wall -2.2; 3-03.01 wall -1.7; 5-03 +6.5 (the countdown's strain peak, on purpose); 9-03 -8.3 (the swat: too short for the meter) |
 | the swat (9-03) | the v8 synth: sample peak -2.3 dBFS, true peak at the ceiling, momentary max -14.7 LUFS (the end slam: -6.8). An event this short can't read loud on a 0.4 s meter, and more gain only feeds the limiter. By far the loudest thing in the credits, out of exact zero, then exact zero |
-| act 5 | 5-01 -20 / -20, 5-02 -20.5 / -18.7 / -17.6, 5-03 -15.7, 5-04 -16.5 (the gap, then the release), 5-05 -17.4, 5-06 -17, 5-07 -21 / -21, 5-08 -17.6, 5-09 -16.8, 5-10 -27.5, 5-11 -15.7, 5-12 -15.6 |
-| act 9 | 9-01 -42.7, 9-02 -43.7 (the box, momentary max -37), then the swat |
+| act 5 / 8 | 5-04 -19.7, 5-04b -33.8, 5-04c -23.9; 8-06 -10.8 (wall), 8-07 -29.3 / -30.4, 8-08 -40.2 |
+| act 9 | 9-01 -42.8, 9-02 -43.8, then the swat at `CUES.slap` + 0.45 |
 | gates | all four exact zero; click scan clean |
 | determinism | a second render and renderScoreAsync are both bit-identical |
 

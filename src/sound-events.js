@@ -59,7 +59,7 @@ export function soundEvents() {
   }
   for (const id of ['openai', 'anthropic', 'google', 'xai']) E(CUES.empty + 1.2 + (id.length % 4) * 0.12, 'chuckle', { who: id });
   for (const id in S.CANCEL) S.CANCEL[id].forEach((t, i) => E(t, 'cancelPress', { who: id, hard: i < 2 ? 0.4 : 1 }));
-  E(at('5-02', 0.6), 'chuckle', { who: 'openai' });
+  E(at('5-05', 0.5), 'chuckle', { who: 'openai' });
   for (const id of S.FINAL) E(S.ERR_T, 'errorAlarm', { who: id, gain: id === S.FINAL[0] ? 1 : 0.6 });
   E(S.ACCUSE + 0.1, 'rage', { who: S.FINAL[0] });
   E(S.ACCUSE + 0.55, 'rage', { who: 'openai' });

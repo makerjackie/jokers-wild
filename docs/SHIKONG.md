@@ -59,6 +59,16 @@ kings, cards and sound kit; a new story. Shot table: `docs/script/shots.txt` (so
 tools/shotlist.py` → `src/shots-data.js`, `docs/script/SHOTLIST.md`). Code rules: `docs/INTERFACES.md` (pure function of
 t, celMaterial / glowMaterial, material ids, onTwos, fwidth fades, no assets, own files only, no git). 2:50.6, 68 shots.
 
+## v11 (2026-11-10) — international cut, final polish
+
+- No Chinese on screen. Title: OUT OF CONTROL. UI: AI HINT / AUTOPILOT / CANCEL. Credits in English; "Written by a human — MakerJackie", swatted by the AI AUTOPILOT card.
+- Every king is named: logo + wordmark on the lid of his screen (the opening king is OpenAI).
+- Leaderboard redrawn as a club honours board (lacquer, gilt, paper strips, vermilion human line).
+- The AUTOPILOT beat is OpenAI's own choice: TIME OUT → "Too slow? Let AI play for you" → he reads it, stares at Claude, smirks (5-04b) → his finger hangs, presses (5-04c) → "AUTOPILOT ON · Play faster. Win more. Relax." Holdouts: TIME OUT → ELIMINATED · TOO SLOW.
+- New ending after the black slam: empty chairs, every screen ELIMINATED · TOO SLOW, the machines play on (8-07); the ant walks again (8-08); title; credits.
+- Acting: poses ease over 0.3 s, kings blink, breathe and move their heads; face shots are taken from beyond the top edge of the screen (povCam); a slow creep on every non-macro shot.
+- Score: sweet offer chime, warm AUTOPILOT chord, bare music box under the ant. 166.0 s, -16.4 LUFS.
+
 ## The story
 
 **人以为自己在发牌。比到最后，桌子中间那堆所有出过的牌醒了；从此它发牌，人接着打。**
