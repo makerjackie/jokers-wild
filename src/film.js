@@ -207,12 +207,14 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         const k = tt.slap, img = cardAtlas().image, cell = CELL[k.cell] ?? CELL.num1;
         const ACW = 256, ACH = 372, ax = (cell % 16) * ACW, ay = Math.floor(cell / 16) * ACH;
         const ch = H * 0.5, cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
-        const cx = W / 2 + H * 0.2, cy = H * k.y + (1 - e) * -H * 0.75, sc = 1 + 0.5 * (1 - e);
-        c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate(-0.07 + 0.3 * (1 - e)); c.scale(sc, sc);
+        // fast (the swat): it comes at the lens, huge, and lands flat in two frames
+        const cx = W / 2 + H * 0.2, cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
+        c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate(-0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
         c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
         c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);
         c.restore();
       }
+      if (tt.flash) { c.save(); c.globalAlpha = Math.min(1, tt.flash) * 0.85; c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.restore(); }
       if (tt.credit) { c.globalAlpha = (tt.alpha ?? 1) * 0.8; c.font = `${Math.round(H * 0.026)}px Georgia, "Times New Roman", serif`; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.fillText(tt.credit, W / 2, H * 0.86); }
       c.restore();
     },

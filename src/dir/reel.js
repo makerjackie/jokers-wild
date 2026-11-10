@@ -59,7 +59,7 @@ function handFor(id, t) {
   const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.14 : best.kind === 'cancel' ? 0.08 : 0.06);
   const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], best.kind === 'hover' ? touch + 0.05 + 0.012 * Math.sin(t * 9) : touch);
   let target;
-  if (t < best.t - 0.12) target = lerp3(pathRest(id), hov, smooth((t - (best.t - 0.5)) / 0.38));
+  if (t < best.t - 0.12) { const e = smooth((t - (best.t - 0.5)) / 0.38); target = lerp3(pathRest(id), hov, e); target[1] += 0.1 * Math.sin(Math.PI * e); }   // up and over the screen's edge
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
   else if (t < best.t + best.hold) target = on;
   else target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
@@ -67,8 +67,8 @@ function handFor(id, t) {
   if (best.pose === 'open') return { target, pose: 'open', fingers: f.up, palm: [-f.n[0], -f.n[1], -f.n[2]], kind: best.kind };
   return { target, pose: best.pose, fingers, kind: best.kind };
 }
-const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.18, 0.12, f.c[2] + 0.12 * (KING[id].side === 'CN' ? 1 : -1)]; };
-const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.4, -0.8, 0], ...extra });
+const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.22, 0.2, f.c[2] + 0.2 * (KING[id].side === 'CN' ? 1 : -1)]; };
+const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.85, -0.25, 0], ...extra });   // (v8) elbow out, not down through the table
 
 // ---------------------------------------------------------------- kings
 const oppOf = (id) => KINGS.find((k) => k.side !== KING[id].side && k.seat === KING[id].seat).id;
@@ -255,9 +255,10 @@ function blastCard(d, t) {
   const v = 1.6 + 1.2 * r(), kd = 0.55, dist = (v / kd) * (1 - Math.exp(-kd * s));
   const x = Math.max(-0.72, Math.min(0.72, p0[0] + dx * dist * 0.5)), z = p0[2] + dz * dist;
   const onTable = Math.abs(z) < 3.2;
-  const lift = (0.04 + 0.14 * r()) * Math.sin(Math.min(Math.PI, s * 4));
+  // (v8) skidding and spinning flat (about the vertical), each at its own height: no card cuts through the cloth or another
+  const lift = (0.012 + 0.003 * (d.i % 9) + 0.08 * r()) * Math.min(1, s * 6) * Math.exp(-s * 0.8);
   const fall = onTable ? 0 : 3.5 * Math.max(0, s - 0.2) ** 2;
-  const q = mulQ(d.rest.q, axisQ([dz, 0.3, -dx], s * (9 + 8 * r())));
+  const q = mulQ(axisQ([0, 1, 0], s * (5 + 6 * r()) * (r() > 0.5 ? 1 : -1)), mulQ(axisQ([dz, 0, -dx], 0.12 * Math.sin(s * 9 + d.i)), d.rest.q));
   const y = p0[1] + lift - fall;
   return { pos: [x, Math.max(onTable ? CARD_Y : -2, y), z], q, gone: s > 2.4 || y < -0.9 };
 }
@@ -285,11 +286,12 @@ function chatFlight(p, t, rest) {
   const u = clamp((t - hang) / 0.28);
   return { pos: lerp3(top, rest.pos, u * u * u), q: rest.q, scale: lerp(1.15, 1, u) };
 }
+export function smashPos(t) { const p = S.plays().find((q) => q.style === 'smash'); const d = S.heap().D.find((x) => x.play === p); return smashFlight(p, t, d.rest).pos; }
 function smashFlight(p, t, rest) {
   // R1: straight and flat out of DeepSeek's screen into the house, then skids on
   const f = screenFrame(p.who), from = screenPoint(p.who, 0.35, 0.3, 0.02), qs = basisQ(f.n, f.up);
   const flat = basisQ([0, 1, 0], [1, 0, 0]);
-  if (t < SMASH.hit) { const u = clamp((t - p.tr) / (SMASH.hit - p.tr)), e = u * u * (0.4 + 0.6 * u); return { pos: lerp3(from, HOUSE_HIT, e), q: slerpQ(qs, flat, clamp(u * 3)), scale: p.scale }; }
+  if (t < SMASH.hit) { const u = clamp((t - p.tr) / (SMASH.hit - p.tr)), e = u * (0.75 + 0.25 * u), pos = lerp3(from, HOUSE_HIT, e); pos[1] += 0.12 * Math.sin(Math.PI * Math.min(1, u * 1.2)); return { pos, q: slerpQ(qs, flat, clamp(u * 3)), scale: p.scale }; }
   const u = clamp((t - SMASH.hit) / (p.t - SMASH.hit));
   return { pos: lerp3(HOUSE_HIT, rest.pos, 1 - (1 - u) ** 2), q: slerpQ(flat, rest.q, u), scale: p.scale };
 }
@@ -344,7 +346,7 @@ function cardsState(t, st) {
     const base = { face: d.face, back: d.back, scale: d.scale, glyph: d.glyph ?? 0, gcell: d.gcell ?? CELL.glyph0, writhe: d.writhe ?? 0, glow: d.red ? 0.35 : 0 };
     let pose = { pos: d.rest.pos, q: d.rest.q };
     if (d.blown && t >= CHAT_T) { const b = blastCard(d, t); if (b.gone) continue; pose = b; }
-    if (d.play?.chat) base.glow = 0.3 * ease(t, d.t + 0.05, d.t + 0.5) * (1 - ease(t, at('2-09'), at('3-01', 1.0)));
+    if (d.play?.chat) base.glow = 0.16 * ease(t, d.t + 0.05, d.t + 0.5) * (1 - ease(t, at('2-09'), at('3-01', 1.0)));
     if (t > STOP) {
       const l = liftOf(d);
       if (t > l) { pose = riseFrom(pose, l, t, ((d.i * 0.618) % 1)); if (pose.pos[1] > 9 || t - l > 3.4) continue; base.glow = 0.15; }
@@ -384,7 +386,8 @@ function rollersState(t) {
   const R = [];
   if (t >= S.CRUSH + 0.6 && t < CUES.table + 1.0) {
     const u = clamp((t - (CUES.crumb + 0.3)) / 1.1), e = 1 - (1 - u) * (1 - u);
-    R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.02 + 0.07 * e, 0.0036, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1.45 });
+    // (v8) it appears at the card's edge (never inside the card) and rolls out from there
+    if (u > 0) R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.033 + 0.07 * e, 0.0034, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1.45 });
   }
   return R;
 }
@@ -421,8 +424,8 @@ export function base(t, world) {
   cardsState(t, st);
   // ---- light: ChatGPT's glow on the faces; the red screens; the eye's cold light
   const chat = S.plays().find((p) => p.chat);
-  if (t > chat.t && t < at('3-01', 1.5)) { const g = ease(t, chat.t, chat.t + 0.3) * (1 - ease(t, at('2-09'), at('3-01', 1.0))); st.look.p3 = { pos: [0, 0.2, 0], col: [0.8 * g, 1.15 * g, 0.88 * g], range: 2.5 }; }
-  if (t > RED_T && t < STOP) { const g = ease(t, RED_T, RED_T + 1.5); st.look.p3 = { pos: [0, 0.6, 0], col: [1.4 * g, 0.18 * g, 0.12 * g], range: 3.2 }; }
+  if (t > chat.t && t < at('3-01', 1.5)) { const g = ease(t, chat.t, chat.t + 0.3) * (1 - ease(t, at('2-09'), at('3-01', 1.0))); st.look.p3 = { pos: [0, 0.2, 0], col: [0.38 * g, 0.55 * g, 0.42 * g], range: 2.2 }; }
+  if (t > RED_T && t < STOP) { const g = ease(t, RED_T, RED_T + 1.5); st.look.p3 = { pos: [0, 0.6, 0], col: [0.9 * g, 0.12 * g, 0.08 * g], range: 3.0 }; }
   if (t > EYE.open0 - 1 && t < BLACK) { const g = ease(t, EYE.open0, EYE.open1); st.look.p2 = { pos: [0, EYE.c[1] - 1.5, -0.1], col: [0.9 * g, 0.88 * g, 0.75 * g], range: 14 }; }
   if (t > DEAL && t < BLACK) { const g = ease(t, DEAL, DEAL + 0.6); st.look.p3 = { pos: [0, 0.35, 0], col: [0.9 * g, 0.85 * g, 0.7 * g], range: 2.6 }; }
   // the last card's shadow: from the middle of the table outward, over the screens, over the smiling faces
@@ -433,14 +436,15 @@ export function base(t, world) {
   if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
     sub: '另一个世界的故事。如有雷同，纯属巧合。', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
-    const F = 'Claude Fable 5.2', O = 'Claude Opus 5.5';
-    const lines = [['导演', F], ['分镜', F], ['动画', F], ['角色', F], ['美术', F], ['灯光', F], ['建模', `${F} · ${O}`], ['配乐', O], ['音效', O], ['剪辑', F], ['', ''], ['编剧', 'MakerJackie（人类）']];
+    const lines = ['导演', '分镜', '动画', '角色', '美术', '灯光', '建模', '配乐', '音效', '剪辑'].map((r) => [r, 'AI']).concat([['', ''], ['编剧', 'MakerJackie（人类）']]);
     const LH = 0.075, stop = 0.52 - (lines.length - 1) * LH;           // the last line comes to rest just under the middle
     const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
-    const hit = CUES.slap + 0.75, jolt = t > hit ? Math.exp(-(t - hit) * 18) * Math.sin((t - hit) * 70) * 0.006 : 0;
+    // the swat: nothing moves, then in two frames a card slams onto his name, a white flash, a hard jolt; then black
+    const hit = CUES.slap + 1.1, jolt = t > hit ? Math.exp(-(t - hit) * 14) * Math.sin((t - hit) * 95) * 0.035 : 0;
     st.titles = { alpha: 1, roll: { y0: lerp(1.08, stop, 1 - (1 - u) ** 2) + jolt, lines } };
-    if (t > CUES.slap) st.titles.slap = { u: clamp((t - CUES.slap) / 0.75), y: 0.52 + jolt, cell: 'num1' };
-    st.titles.alpha = 1 - ease(t, CUES.fin - 0.5, CUES.fin);
+    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.52 + jolt, cell: 'num1', fast: 1 };
+    if (t > hit && t < hit + 0.09) st.titles.flash = 1 - (t - hit) / 0.09;
+    st.titles.alpha = t > CUES.fin - 0.35 ? 0 : 1;
     if (st.titles.slap) st.titles.slap.alpha = st.titles.alpha;
   }
   return st;

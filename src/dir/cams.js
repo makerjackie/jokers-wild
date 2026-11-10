@@ -3,11 +3,12 @@ import { KING, SIDE_SIGN, SEAT } from '../layout.js';
 import { clamp, smooth, lerp, lerp3, ease } from '../util.js';
 import { at, uRow, camLook, camPath, M1 } from './core.js';
 import * as S from './story.js';
+import { smashPos } from './reel.js';
 import { screenFrame, screenPoint, BTN } from '../screens.js';
 
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 function macro(cam, st, pos, look, fov = 40, focus = 0.08, k = 0.5) { camLook(cam, pos, look, fov); st.look.near = 0.0025; st.look.dof = { focus, k, max: 34 }; }
-function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 2.25; st.look.lampPow = 1.3; }
+function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 2.0; st.look.lampPow = 1.1; }
 let _posed = null;
 const headOf = (id, w, st, t) => {
   if (w?.kings?.update && st && _posed !== st) { w.kings.update(st.kings, t); _posed = st; }
@@ -22,11 +23,12 @@ function faceCam(cam, st, w, t, id, o = {}) {
 }
 // a screen seen from the king's side, over his hand: centred on (u, v), at distance d
 function screenCam(cam, st, id, u = 0.5, v = 0.5, d = 0.36, fov = 40, side = 0.1) {
+  side = -Math.abs(side) - 0.04;   // (v8) always over his LEFT shoulder: the pressing right arm never crosses the lens
   const f = screenFrame(id), p = screenPoint(id, u, v, 0);
   const pos = [p[0] + f.n[0] * d + f.right[0] * side + f.up[0] * 0.04, p[1] + f.n[1] * d + 0.03, p[2] + f.n[2] * d + f.right[2] * side];
   camLook(cam, pos, p, fov);
   st.look.dof = { focus: d, k: 0.5, max: 10 };
-  st.look.exposure = 1.25;
+  st.look.exposure = 1.1;
   if (st.props?.plates) st.props.plates.show = 0;   // the name plate on the table edge would cover the buttons
 }
 function twoShot(cam, st, y = 0.95, z = 2.65, fov = 44) { camLook(cam, [0, y, z], [0, 0.44, 0], fov); st.look.exposure = 1.4; }
@@ -108,8 +110,14 @@ export const SHOTS = {
     if (cut === 6) return camLook(w.camera, [0.03, 0.8, 0.06], [0, 0.03, 0], 30);
     return faceCam(w.camera, st, w, t, 'openai', { d: 0.8, dz: -0.22, fov: 30 });
   },
-  '3-02': (t, st, w) => { const u = uRow(t, '3-02'); camLook(w.camera, [-0.05 + 0.04 * u, 0.2, -1.5], [0.36, 0.13, -0.6], 46); st.look.dof = { focus: 1.0, k: 0.2, max: 4 }; st.look.exposure = 1.35; },
-  '3-03': (t, st, w) => { camLook(w.camera, [-0.05 + shake(t, S.SMASH.hit, 0.01), 0.2 + shake(t, S.SMASH.hit, 0.008, 60), -1.5], [0.25, 0.13, -0.6], 54); st.look.exposure = 1.35; },
+  '3-02': (t, st, w) => { const u = uRow(t, '3-02'); camLook(w.camera, [0.1 - 0.04 * u, 0.22, 0.55], [0.4, 0.14, -0.62], 46); st.look.dof = { focus: 1.0, k: 0.2, max: 4 }; st.look.exposure = 1.35; },
+  // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
+  '3-03': (t, st, w, shot) => {
+    const cut = +shot.id.split('.')[1];
+    if (cut === 1) return screenCam(w.camera, st, 'glm', 0.35, 0.32, 0.42, 46, 0.1);
+    if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
+    camLook(w.camera, [0.02 + shake(t, S.SMASH.hit, 0.01), 0.22 + shake(t, S.SMASH.hit, 0.008, 60), 0.6], [0.36, 0.14, -0.62], 50); st.look.exposure = 1.4;
+  },
   '3-04': (t, st, w) => boardCam(w.camera, st, t, '3-04'),
   '3-05': (t, st, w) => { camLook(w.camera, [-0.55, 0.62, 0.95], [1.5, 0.62, -0.4], 46); st.look.exposure = 1.4; },
   '3-06': (t, st, w) => { const g = S.plays().find((p) => p.style === 'giant'); camLook(w.camera, [-0.75 + shake(t, g.t, 0.02), 0.6 + shake(t, g.t, 0.02, 50), 1.35], [0.65, 0.55, -0.1], 56); },
@@ -161,7 +169,7 @@ export const SHOTS = {
   '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [2.6, S.EYE.c[1] - 0.6 - 0.4 * u, 2.2], [0, 0, 0.0], 26); st.look.far = 300; st.look.exposure = 1.9; },
   // ---------------------------------------------------------------- @8 结尾
   '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'deepseek'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },
-  '8-02': (t, st, w) => { camLook(w.camera, [0, 0.72, -1.7], [0, 0.55, 0.15], 52); st.look.exposure = 1.8; },
+  '8-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.75], [0, 0.55, -0.1], 52); st.look.exposure = 1.7; },
   '8-03': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.38, 0.5, 0.4, 44),
   // low, looking up past their heads: the last card coming down out of the eye
   '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [0, 0.32, 1.75 - 0.15 * u], [0, lerp(3.4, 2.4, u), -0.4], 74); st.look.far = 300; st.look.exposure = 1.85; },

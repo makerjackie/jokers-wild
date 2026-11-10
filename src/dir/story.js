@@ -76,7 +76,7 @@ function houseSlots() {
   return S;
 }
 export const HOUSE_SLOTS = houseSlots();
-export const SMASH = { go: at('3-03', 0.55), hit: at('3-03', 1.0) };
+export const SMASH = { go: at('3-03', 0.75), hit: at('3-03', 2.95) };   // (v8) slow enough to read: FatFish-R1, flat, across the table
 export const HOUSE_HIT = [HOUSE.x, 0.12, HOUSE.z];
 export function houseFall(s) {
   const h = HOUSE_SLOTS[s], r = mulberry32(900 + s * 7);
@@ -150,7 +150,7 @@ function buildPlays() {
   }
   for (let s = 0; s < 7; s++) { const who = CN[(s + 2) % 5]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
   // FatFish-R1 out of 大肥鱼's screen, straight into the house
-  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.15, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
+  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
