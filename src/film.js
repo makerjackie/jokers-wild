@@ -182,7 +182,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       c.font = `${Math.round(H * 0.03)}px Georgia, "Times New Roman", serif`;
       if (tt.en) { c.letterSpacing = `${Math.round(H * 0.014)}px`; c.fillText(tt.en, W / 2, H * ((tt.y ?? 0.45) + 0.11)); }
       // a line under the title; an end-credit card: a small label, the name, a smaller line under it
-      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.006)}px`; c.font = `${Math.round(H * 0.03)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`; c.fillText(tt.sub, W / 2, H * 0.72); c.globalAlpha = tt.alpha ?? 1; }
+      if (tt.sub) { c.globalAlpha = tt.subAlpha ?? 1; c.fillStyle = '#cfc5b2'; c.letterSpacing = `${Math.round(H * 0.006)}px`; c.font = `${Math.round(H * 0.038)}px "Songti SC", "SimSun", "Noto Serif CJK SC", serif`; c.fillText(tt.sub, W / 2, H * 0.72); c.globalAlpha = tt.alpha ?? 1; }
       if (tt.card) {
         const k = tt.card, zhF = '"Songti SC", "SimSun", "Noto Serif CJK SC", serif', enF = 'Georgia, "Times New Roman", serif';
         c.fillStyle = '#9d9483'; c.letterSpacing = `${Math.round(H * 0.012)}px`; c.font = `${Math.round(H * 0.032)}px ${zhF}`;
@@ -194,22 +194,22 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       }
       if (tt.roll) {
         // the credits roll up from below: every role the same name, the human last
-        const lh = H * 0.075, y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);
+        const lh = H * (tt.roll.lh ?? 0.075), y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);
         c.globalAlpha = tt.alpha ?? 1; c.letterSpacing = '0px';
         tt.roll.lines.forEach(([role, name], i) => {
           const y = y0 + i * lh; if (y < -lh || y > H + lh) return;
-          c.textAlign = 'right'; c.fillStyle = '#9d9483'; c.font = `${Math.round(H * 0.03)}px "Songti SC", "SimSun", serif`; c.fillText(role, W / 2 - H * 0.03, y);
-          c.textAlign = 'left'; c.fillStyle = '#efe6d2'; c.font = `${Math.round(H * 0.034)}px Georgia, "Times New Roman", serif`; c.fillText(name, W / 2 + H * 0.03, y);
+          c.textAlign = 'right'; c.fillStyle = '#b9b09e'; c.font = `${Math.round(H * 0.036)}px "Songti SC", "SimSun", serif`; c.fillText(role, W / 2 - H * 0.03, y);
+          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.04)}px Georgia, "Times New Roman", serif`; c.fillText(name, W / 2 + H * 0.03, y);
         });
       }
       if (tt.slap) {
         // (v7) the last card of the film: it falls out of the dark onto the last name and covers it
         const k = tt.slap, img = cardAtlas().image, cell = CELL[k.cell] ?? CELL.num1;
         const ACW = 256, ACH = 372, ax = (cell % 16) * ACW, ay = Math.floor(cell / 16) * ACH;
-        const ch = H * 0.5, cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
-        // fast (the swat): it comes at the lens, huge, and lands flat in two frames
-        const cx = W / 2 + H * 0.2, cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
-        c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate(-0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
+        const ch = H * (k.flat ? 0.4 : 0.5), cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
+        // fast (the swat): it comes at the lens, huge, and lands flat in two frames; flat: lying across the name line
+        const cx = W / 2 + H * (k.flat ? 0.235 : 0.2), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
+        c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate((k.flat ? Math.PI / 2 : 0) - 0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
         c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
         c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);
         c.restore();

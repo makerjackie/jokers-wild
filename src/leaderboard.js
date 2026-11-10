@@ -57,16 +57,17 @@ export function makeLeaderboard() {
     const hx = BAR0 + (BAR1 - BAR0) * 0.72;
     c.save(); c.setLineDash([14, 12]); c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 4;
     c.beginPath(); c.moveTo(hx, HEAD + 4); c.lineTo(hx, CH - 14); c.stroke(); c.restore();
-    c.fillStyle = 'rgba(255,255,255,0.75)'; c.textAlign = 'center'; c.font = `bold 24px ${SANS}`; c.fillText('人类 100', hx, HEAD + 4 - 14 + 0);
+    c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.font = `900 32px ${SANS}`; c.fillText('人类水平 100', hx, HEAD - 30);
     // rows, bottom first so a row moving up passes over the others
-    const rows = [...(s.rows ?? [])].sort((a, b) => b.y - a.y);
+    // settled rows first, then the ones moving (they pass over the others on solid plates)
+    const rows = [...(s.rows ?? [])].sort((a, b) => (Math.abs(a.y - Math.round(a.y)) > 0.01) - (Math.abs(b.y - Math.round(b.y)) > 0.01) || b.y - a.y);
     for (const r of rows) {
       if (r.y > ROWS - 0.05) continue;
       const y = HEAD + 8 + r.y * RH, mid = y + RH / 2, top = r.y < 0.5 && !r.out;
       c.save();
       if (r.out) c.globalAlpha = 0.45;
       // row plate
-      c.fillStyle = top ? `rgba(255,196,64,${0.22 + 0.5 * (s.flash ?? 0)})` : 'rgba(255,255,255,0.05)';
+      c.fillStyle = top ? (s.flash ?? 0) > 0.3 ? '#7a5a12' : '#4a380e' : '#161a26';
       c.beginPath(); c.roundRect(24, y + 5, CW - 48, RH - 10, 14); c.fill();
       if (top) { c.strokeStyle = '#ffc440'; c.lineWidth = 4; c.stroke(); }
       // rank

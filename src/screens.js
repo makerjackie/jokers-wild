@@ -35,7 +35,7 @@ export function screenPoint(id, u, v, lift = 0.004) {
 
 export function makeScreens() {
   const root = new THREE.Group(); root.name = 'screens';
-  const frameMat = celMaterial({ color: '#16161a', id: 7, gloss: 0.6 });
+  const frameMat = celMaterial({ color: '#2a2a31', id: 7, gloss: 0.6 });
   const S = {};
   for (const k of KINGS) {
     const cv = document.createElement('canvas'); cv.width = CW * RES; cv.height = CH * RES;   // (v8) drawn at 2x: names stay sharp in close-up
@@ -102,7 +102,7 @@ export function makeScreens() {
       c.globalAlpha = 1;
     }
     // (v8) what the bottom row is: shown once the machine starts playing it
-    if ((s.flipped ?? 0) > 0) {
+    if ((s.flipped ?? 0) > 0 && (s.hidden ?? 0) > 0) {
       const y = slotUV(1, 0)[1] * CH - 48 - 22;
       c.fillStyle = 'rgba(160,10,8,0.92)'; c.beginPath(); c.roundRect(16, y - 16, 330, 32, 8); c.fill();
       c.fillStyle = '#ffe2dc'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 20px ${SANS}`; c.fillText('⚠ 未发布 · 内部危险模型', 26, y + 1);
@@ -131,10 +131,10 @@ export function makeScreens() {
     // 系统异常: the cancel did nothing
     if (s.error) {
       const k = Math.sin(t * 9) > -0.4 ? 1 : 0.55;
-      c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, CH * 0.3, CW, CH * 0.4);
-      c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW - 12, CH * 0.4 - 12);
+      c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, CH * 0.3, CW * 0.76, CH * 0.4);
+      c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW * 0.76 - 12, CH * 0.4 - 12);
       c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 ${s.attacker ? 44 : 50}px ${SANS}`; c.fillText(s.attacker ? `⚠ 您正遭受 ${s.attacker} 攻击` : '⚠ 您正遭受对方攻击', CW / 2, CH * 0.45); c.font = `bold 22px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW / 2, CH * 0.6);
+      c.font = `900 ${s.attacker ? 40 : 46}px ${SANS}`; c.fillText(s.attacker ? `⚠ 您正遭受 ${s.attacker} 攻击` : '⚠ 您正遭受对方攻击', CW * 0.38, CH * 0.45, CW * 0.72); c.font = `bold 26px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW * 0.38, CH * 0.6, CW * 0.72);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);
