@@ -1653,3 +1653,95 @@ export function sfxChairPush(e, seed) {
 }
 Object.assign(FILM_KINDS, { lampLean: sfxLampLean, lightLeaves: sfxLightLeaves, dragOut: sfxDragOut, crownSpin: sfxCrownSpin, button: sfxButton, plugBite: sfxPlugBite,
   suck: sfxSuck, keyStrain: sfxKeyStrain, shout: sfxShout, cheer: sfxCheerB, chuckle: sfxChuckleB, glassSlide: sfxGlassSlide, chairBack: sfxChairPush });
+
+// ======================================================================================================================
+// 《失控》 v7: the holdouts, the lying alarm, the last card. (The v3 chuckle is the film's again, not FEED's horn laugh.)
+// HESITATE {who} — Meta's hand going out over 托管 and coming back: a sleeve's soft rustle out, a held breath (a short
+// nasal intake that stops), the sleeve back, slower
+export function sfxHesitate(e, seed) {
+  const out = new Float32Array(Math.ceil(1.5 * SR)), nz = new Noise(seed), bp = new SVF(1600, 0.9), lp = new SVF(700, 0.7), br = new SVF(1900, 2.2), dr = new Drift(seed + 1, 9);
+  const seg = (t, a, d) => { const x = (t - a) / d; return x > 0 && x < 1 ? Math.pow(Math.sin(Math.PI * x), 1.3) : 0; };
+  for (let i = 0; i < out.length; i++) {
+    const t = i / SR, w = nz.white(); bp.run(w); lp.run(w); br.run(nz.white());
+    const cloth = (seg(t, 0, 0.32) + 0.75 * seg(t, 0.78, 0.5)) * (0.55 + 0.45 * Math.abs(dr.at(t)));
+    const held = t > 0.26 && t < 0.62 ? smooth((t - 0.26) / 0.25) * (t < 0.6 ? 1 : (0.62 - t) / 0.02) : 0;
+    out[i] = (bp.bp * 0.11 + lp.lp * 0.05) * cloth + br.bp * 0.045 * held;
+  }
+  return fadeTail(out, 0.03);
+}
+// ELIMINATED {who} — 淘汰: his screen goes grey. The game's flat verdict (two dull square-ish tones falling a tritone,
+// A3 then E-flat3), then the panel dying: the backlight's click, a falling whine, a little electric fizz, nothing
+export function sfxEliminated(e, seed) {
+  const out = new Float32Array(Math.ceil(1.6 * SR));
+  for (const [at, f, d, a] of [[0, 220, 0.16, 0.16], [0.2, 155.56, 0.42, 0.18]]) {
+    const j = Math.round(at * SR), n = Math.round(d * SR), lp = new SVF(1400, 0.7);
+    for (let i = 0; i < n; i++) { const t = i / SR; lp.run(Math.tanh(2.5 * Math.sin(TAU * f * t))); out[j + i] += lp.lp * a * Math.min(1, i / 96) * Math.exp(-t / (0.5 * d)) * Math.min(1, (n - i) / 240); }
+  }
+  const off = sfxLightOff(e, seed + 3), j = Math.round(0.68 * SR);
+  for (let i = 0; i < off.length && j + i < out.length; i++) out[j + i] += off[i] * 0.55;
+  sweep(out, j, 1900, 70, 0.09, 0.16, 0.05, 0.002, 0);
+  return fadeTail(out, 0.05);
+}
+// DRAGOUT {who, dur} — a king and his heavy throne-like chair dragged back over stone into the dark, his hands still on
+// the table: first his nails across the linen, catching on the wood edge and slipping off (a dry "tk"); the jolt of the
+// weight; the oak legs juddering on the stone (stick-slip), one leg squealing, grating; away into the dark (darker,
+// thinner, outward), gone
+export function sfxDragOutV7(e, seed) {
+  const d = Math.max(0.6, e.dur || 1.5), pan = clamp(e.pan ?? 0, -1, 1), side = Math.sign(pan || 1), S = pair(d + 0.5), r = new Rng(seed);
+  const far = (u) => smooth(clamp(u)), speed = (u) => 0.6 + 0.4 * Math.exp(-u * 2.2);
+  // the chair: two heavy legs (lower, slower than the v3 chair), the squealing one, the stone's grit
+  const legs = new Float32Array(Math.ceil((d + 0.3) * SR));
+  for (const leg of [0, 1]) add(legs, friction(d, { modes: WOOD.map(([f, q, a]) => [f * 0.72 * (leg ? 1.11 : 1), q, a]), rate: (u) => (14 + 55 * speed(u)) * (leg ? 1.17 : 1), env: (u) => smooth(u / 0.03) * (1 - smooth((u - 0.88) / 0.12)), gain: 0.22, drive: 2.0, jit: 0.7, jitHz: 19 }, seed + 11 + leg * 31), leg ? 0.8 : 1);
+  add(legs, friction(d * 0.85, { modes: [[760, 70, 1], [1530, 80, 0.55], [2290, 90, 0.3], [3050, 95, 0.12]], rate: (u) => 38 + 30 * u, env: (u) => Math.pow(Math.max(0, Math.sin(Math.PI * (1.6 * u + 0.1))), 2) * (1 - 0.6 * u), gain: 0.07, drive: 1.5, jit: 0.5, jitHz: 7 }, seed + 50), 1);
+  const nz = new Noise(seed + 2), grit = new SVF(3000, 0.8), lo = new SVF(110, 0.7), dist = new SVF(8000, 0.6), n = legs.length;
+  for (let i = 0; i < n; i++) {
+    const u = i / (d * SR);
+    if ((i & 63) === 0) dist.set(8000 * Math.pow(500 / 8000, far(u)), 0.6);
+    const en = smooth(u / 0.02) * (u < 1 ? 1 - 0.88 * far(u) : 0.12 * Math.max(0, 1 - (u - 1) * d / 0.25));
+    grit.run(nz.white()); lo.run(nz.brown());
+    const v = dist.run((legs[i] + grit.bp * 0.05 * speed(u)) * en) + lo.lp * 0.7 * speed(u) * en, [gl, gr] = panGains(pan + (clamp(pan + side * 0.55, -1, 1) - pan) * far(u));
+    S.L[i] += v * gl * Math.SQRT2; S.R[i] += v * gr * Math.SQRT2;
+  }
+  // the jolt: the weight lurching back, a low knock through the floor
+  const J = new Float32Array(Math.round(0.6 * SR));
+  sweep(J, 0, 120, 42, 0.03, 0.09, 0.8, 0.002, 1.4); noiseBurst(J, 0, { a: 0.001, tau: 0.02, f0: 500, q: 0.7, mode: 'lp', amp: 0.6 }, new Noise(seed + 4));
+  ping(J, 0, 96, 0.22, [[1, 1, 0.08], [2.1, 0.5, 0.04]], 0.4);
+  addPan(S, J, pan * 0.8, 0, 0.9);
+  // his nails across the linen, catching on the edge, slipping off: a dry tick (centre: the table)
+  const nd = Math.min(0.55, 0.35 * d), N = new Float32Array(Math.round((nd + 0.1) * SR)), nzN = new Noise(seed + 7), bN = new SVF(4200, 1.6), bW = new SVF(1900, 3);
+  for (let i = 0; i < Math.round(nd * SR); i++) { const t = i / SR, u = t / nd, jud = 0.35 + 0.65 * Math.pow(Math.abs(Math.sin(Math.PI * 31 * t)), 3); bN.run(nzN.white()); bW.run(nzN.white()); N[i] = (bN.bp * 0.12 + (u > 0.7 ? bW.bp * 0.08 * (u - 0.7) / 0.3 : 0)) * jud * smooth(u / 0.1); }
+  noiseBurst(N, Math.round(nd * SR), { a: 0.0001, tau: 0.0012, f0: 3600, q: 0.9, amp: 0.4 }, new Noise(seed + 8)); ping(N, Math.round(nd * SR), r.range(900, 1100), 0.06, [[1, 1, 0.02], [2.4, 0.4, 0.01]], 0.3);
+  addPan(S, N, pan * 0.35, Math.round(0.02 * SR));
+  fadeTail(S.L, 0.08); fadeTail(S.R, 0.08);
+  return { L: S.L, R: S.R, panned: true };
+}
+// ATTACKALARM {who} (errorAlarm) — "⚠ 您正遭受对方攻击": the system warning him, calm and official, which is the lie: a
+// clean announcement chime (A6 down to D6, a fifth, glass-pure: the AI's own interval, no third), twice, over a
+// steady piercing pulse (A5, a soft square, six beats a second) and a low throb. Polished, not broken.
+export function sfxAttackAlarm(e, seed) {
+  const d = 1.25, out = new Float32Array(Math.ceil((d + 0.9) * SR));
+  for (const [at, m] of [[0, 93], [0.22, 86], [0.62, 93], [0.84, 86]]) ping(out, Math.round(at * SR), mtof(m), 0.11, [[1, 1, 0.55], [2, 0.18, 0.3], [3, 0.12, 0.18], [4.2, 0.05, 0.08]], 0.1);
+  const lp = new SVF(4200, 0.7), n = Math.round(d * SR);
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, gate = Math.pow(Math.max(0, Math.sin(Math.PI * 6 * t)), 0.6); p += 880 / SR; p -= Math.floor(p);
+    lp.run(Math.tanh(1.6 * Math.sin(TAU * p)));
+    const throb = Math.sin(TAU * 73.4 * t) * 0.5 * (0.5 + 0.5 * Math.sin(TAU * 3 * t - 1.5));
+    out[i] += (lp.lp * 0.035 * gate + throb * 0.05) * smooth(t / 0.02) * Math.min(1, (n - i) / (0.05 * SR));
+  }
+  return fadeTail(out, 0.1);
+}
+// CREDITSLAP — the very last sound: one card slapped down on the writer's name in a dead-silent black, close and dry
+// (no room): the card's breath of air, the palm's "pak", the crack, the table's short thump. Nothing after it.
+export function sfxCreditSlap(e, seed) {
+  const pre = 0.05, at = Math.round(pre * SR), out = new Float32Array(Math.ceil((pre + 0.5) * SR)), r = new Rng(seed);
+  { const nz = new Noise(seed + 5), bp = new SVF(1500, 1.0); for (let i = 0; i < at; i++) { const u = i / at; bp.run(nz.white()); out[i] += bp.bp * 0.07 * u * u; } }
+  noiseBurst(out, at, { a: 0.0004, tau: 0.011, f0: 1150, q: 0.7, mode: 'lp', amp: 0.95 }, new Noise(seed + 1));
+  noiseBurst(out, at, { a: 0.0001, tau: 0.0018, f0: 4300, q: 0.8, amp: 0.75 }, new Noise(seed + 2));
+  noiseBurst(out, at, { a: 0.0001, tau: 0.0006, f0: 8000, q: 0.9, amp: 0.3 }, new Noise(seed + 3));
+  ping(out, at, r.range(195, 215), 0.2, [[1, 1, 0.045], [2.15, 0.45, 0.022], [3.4, 0.2, 0.011]], 0.7);
+  sweep(out, at, 130, 55, 0.02, 0.08, 0.6, 0.0015, 0.9);
+  fadeTail(out, 0.12); out.pre = pre;
+  return out;
+}
+Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle });
