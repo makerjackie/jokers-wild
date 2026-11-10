@@ -7,7 +7,7 @@ import { screenFrame, screenPoint, BTN } from '../screens.js';
 
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 function macro(cam, st, pos, look, fov = 40, focus = 0.08, k = 0.5) { camLook(cam, pos, look, fov); st.look.near = 0.0025; st.look.dof = { focus, k, max: 34 }; }
-function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 1.9; st.look.lampPow = 1.15; }
+function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 2.25; st.look.lampPow = 1.3; }
 let _posed = null;
 const headOf = (id, w, st, t) => {
   if (w?.kings?.update && st && _posed !== st) { w.kings.update(st.kings, t); _posed = st; }
@@ -68,8 +68,10 @@ export const SHOTS = {
   },
   // side on: the card's shadow, the slap
   '1-05': (t, st, w) => {
-    const pos = [AC[0] - 0.05, 0.012 + shake(t, S.CRUSH, 0.002), AC[2] + 0.09];
-    macro(w.camera, st, pos, [AC[0] + 0.01, 0.006, AC[2]], 46, dist(pos, AC), 1.6);
+    // (v7) far enough to see it come: the ant, the card's shadow growing over it, the card coming down flat
+    const pos = [AC[0] - 0.13, 0.035 + shake(t, S.CRUSH, 0.003), AC[2] + 0.2];
+    macro(w.camera, st, pos, [AC[0] + 0.0, 0.01, AC[2]], 40, dist(pos, AC), 0.9);
+    st.look.exposure = 1.5;
     if (t > S.CRUSH && t < S.CRUSH + 0.08) st.look.flash = 0.18 * (1 - (t - S.CRUSH) / 0.08);
   },
   // the card lies there; the crumb rolls out from under it
@@ -151,11 +153,11 @@ export const SHOTS = {
   '7-03': (t, st, w) => { const u = uRow(t, '7-03'); camLook(w.camera, [1.1, 0.5, 2.2], [0.2, S.EYE.c[1], -0.6 - 0.3 * u], 78); st.look.far = 300; st.look.exposure = 1.8; },
   // from the cloth, where the ant was (1-03): the king looking up
   '7-04': (t, st, w) => {
-    const h = headOf(S.ANT_KING, w, st, t), u = uRow(t, '7-04'), pos = [0.5 - 0.02 * u, 0.22, 0.8];
-    camLook(w.camera, pos, [h[0], h[1] + 0.05, h[2]], 40);
-    st.look.near = 0.01; st.look.dof = { focus: dist(pos, h), k: 0.3, max: 6 }; st.look.exposure = 1.4;
+    // exactly where the ant was (1-03), at its height: the king looks up, the way it looked up at him
+    const h = headOf(S.ANT_KING, w, st, t), u = uRow(t, '7-04'), pos = [S.ANT_CRUSH[0] - 0.05, 0.0095 + 0.004 * u, S.ANT_CRUSH[1] + 0.07];
+    macro(w.camera, st, pos, [h[0] - 0.1, h[1] + 0.02, h[2] + 0.06], 50, dist(pos, h), 0.18);
+    st.look.exposure = 1.6;
   },
-  // the eye's view: high, off the lamp's axis (the lamp hangs out of frame), two specks at an empty table
   '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [2.6, S.EYE.c[1] - 0.6 - 0.4 * u, 2.2], [0, 0, 0.0], 26); st.look.far = 300; st.look.exposure = 1.9; },
   // ---------------------------------------------------------------- @8 结尾
   '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'deepseek'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },

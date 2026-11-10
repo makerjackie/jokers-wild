@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { celMaterial, glowMaterial } from './materials.js';
 import { KINGS, KING, SEAT, SIDE_SIGN, CAMP } from './layout.js';
 import { cardAtlas } from './cards.js';
+import { drawLogo, WORDS } from './logos.js';
 import { CELL } from './cards-cells.js';
 
 export const SCREEN = { W: 0.44, H: 0.28, TILT: 0.62, X: 0.97 };
@@ -58,6 +59,10 @@ export function makeScreens() {
     const g = c.createLinearGradient(0, 0, 0, CH); g.addColorStop(0, side === 'CN' ? '#2a1214' : '#111a33'); g.addColorStop(1, '#07080d');
     c.fillStyle = g; c.fillRect(0, 0, CW, CH);
     const cw = 66, ch = 96;
+    // (v7) whose screen this is: his mark and name, top left
+    { const B = 50; c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(0, 0, CW, B);
+      drawLogo(c, id, 30, B / 2, 34, ['openai', 'xai'].includes(id) ? { color: '#f2f2f2' } : {});
+      c.fillStyle = '#e9e3d6'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `bold 24px ${SANS}`; c.fillText(WORDS[id] ?? id, 56, B / 2 + 1); }
     // released cards
     (s.hand ?? []).slice(0, 6).forEach((cell, i) => {
       const [u, v] = slotUV(0, i); let x = u * CW - cw / 2, y = v * CH - ch / 2;
@@ -99,7 +104,7 @@ export function makeScreens() {
     // 系统异常: the cancel did nothing
     if (s.error) {
       const k = Math.sin(t * 9) > -0.4 ? 1 : 0.55;
-      c.fillStyle = `rgba(120,8,6,${0.88 * k})`; c.fillRect(0, CH * 0.3, CW, CH * 0.4);
+      c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, CH * 0.3, CW, CH * 0.4);
       c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW - 12, CH * 0.4 - 12);
       c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.font = `900 ${s.attacker ? 44 : 50}px ${SANS}`; c.fillText(s.attacker ? `⚠ 您正遭受 ${s.attacker} 攻击` : '⚠ 您正遭受对方攻击', CW / 2, CH * 0.45); c.font = `bold 22px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW / 2, CH * 0.6);

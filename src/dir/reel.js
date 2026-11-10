@@ -328,7 +328,8 @@ function eyeCards(t, out) {
     const q = basisQ([0, -1, 0], [Math.cos(s.yaw), 0, Math.sin(s.yaw)]);
     const visible = s.kind !== 'white' || Math.abs(s.z) <= s.lid * Math.max(0.05, open) + 0.01;
     if (!visible) return;
-    const cell = s.kind === 'pupil' ? CELL.backBlack : s.kind === 'iris' ? CELL[`glyph${i % 16}`] : CELL.blank;
+    // the white of the eye: every model card they ever played
+    const cell = s.kind === 'pupil' ? CELL.backBlack : s.kind === 'iris' ? CELL[`glyph${i % 16}`] : CELL[`${IDS[i % IDS.length]}${(i * 7) % 10}`];
     out.push({ pos, q, scale: (s.kind === 'white' ? 2.3 : 1.9) * 1.7, face: cell, back: CELL.backBlack, glyph: 0, writhe: s.kind === 'iris' ? 0.5 : 0, glow: s.kind === 'pupil' ? 0 : s.kind === 'iris' ? 0.9 : 0.55 });
   });
 }
