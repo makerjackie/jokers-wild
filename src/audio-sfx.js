@@ -1,12 +1,12 @@
-// Sound department — the effects track and the ambience of 《喂》 FEED (v5) (docs/SOUND.md).
+// Sound department — the effects track and the ambience of 《喂》 FEED (v6) (docs/SOUND.md).
 // 1. Every picture event from soundEvents() (owned by the director) is rendered with the synth for its kind
 //    (audio-kinds.js FILM_KINDS), at the kind's mix level x the event's gain x the row's SCENE dB, panned from `who`
-//    (heart = the red king, left; spade = the black king, right; their machines with them), sent to its room.
-//    prepareEvents shapes the list for the mix: the two VACUUMS (the slap that kills the ant, the last card), the big
-//    machines sent to the hall, 4-07 muffled (his hand on his own crown: only distant low taks).
-// 2. The score's own ambience (scoreEvents): the robe as the toy comes out from under the table (2-04).
-// 3. The lamp's hum (audio.js schedules it).
-// When soundEvents() is empty the film runs on testEvents() (a small stand-in).
+//    (heart front left, diamond back left, spade front right, club back right; their machines with them), sent to
+//    its room. prepareEvents shapes the list for the mix: the two VACUUMS (the slap that kills the ant, the last card),
+//    the big machines sent to the hall, the rows where the film goes close and quiet (5-05, 7-03) muffled.
+// 2. The score's own ambience (scoreEvents): the chain settling after the first round (2-02), the robe as the toy
+//    comes out from under the table (3-04).
+// 3. The lamp's hum and the machines' mains buzz (audio.js schedules them).
 // Nothing here hard-codes a film second: times come from CUES / ROW / the events.
 import { SR, TAU, Noise, Drift, SVF, Rng, panGains, smooth, clamp, put, BLOCK, drive } from './audio-dsp.js';
 import { SFX_KINDS as V12_KINDS, SFX_GEN as V12_GEN } from './audio-sfxlib.js';
@@ -18,11 +18,13 @@ export const SFX_GEN = { ...V12_GEN, ...FILM_GEN };
 // per-kind mix: [gain, room send, group]. Groups: 's' the effects room, 'b' the big room (the hall; the ant's-eye
 // impacts; the mountains), 'm' the music's room. Solo events (the vacuums) go to their own uncarved group.
 export const MIX = {
-  antStep: [0.55, 0.05, 's'], cardWhoosh: [0.5, 0.1, 's'], cardSlap: [0.8, 0.14, 's'], crumbRoll: [0.6, 0.05, 's'], lampSwing: [0.6, 0.22, 'b'], chuckle: [0.45, 0.1, 's'],
+  antStep: [0.55, 0.05, 's'], cardWhoosh: [0.5, 0.1, 's'], cardSlap: [0.8, 0.2, 's'], crumbRoll: [0.6, 0.05, 's'], lampSwing: [0.6, 0.22, 'b'], chuckle: [0.5, 0.2, 's'],
   thud: [0.9, 0.2, 's'], clockwork: [0.22, 0.06, 's'], rundown: [0.4, 0.1, 's'], tak: [0.6, 0.16, 's'], slabLand: [0.7, 0.2, 's'], pat: [0.6, 0.08, 's'],
   chipDrop: [0.55, 0.12, 's'], crownLift: [0.7, 0.2, 's'], crownDrop: [0.7, 0.2, 's'], gulp: [0.8, 0.15, 's'], creak: [0.8, 0.2, 's'],
-  burst: [1.0, 0.35, 'b'], grow: [0.8, 0.3, 'b'], cheer: [0.6, 0.25, 'b'], pressure: [0.6, 0.2, 'b'], endSlam: [1.7, 0.32, 'b'], ringRoll: [0.8, 0.15, 's'],
+  burst: [1.0, 0.35, 'b'], grow: [0.8, 0.3, 'b'], cheer: [0.5, 0.3, 'b'], shout: [0.5, 0.3, 'b'], pressure: [0.6, 0.2, 'b'], endSlam: [2.4, 0.32, 'b'],
   cloth: [0.5, 0.08, 's'], footDown: [0.6, 0.12, 's'],
+  lampLean: [0.7, 0.25, 'b'], lightLeaves: [0.5, 0.2, 's'], dragOut: [1.0, 0.3, 'b'], crownSpin: [0.9, 0.25, 's'], button: [0.7, 0.1, 's'], plugBite: [0.9, 0.25, 'b'],
+  suck: [0.7, 0.2, 's'], keyStrain: [0.8, 0.15, 's'], glassSlide: [0.7, 0.15, 's'], chairBack: [0.5, 0.3, 'b'],
 };
 const mixOf = (k) => MIX[k] ?? [1, 0.15, 's'];
 const ANT_BIG = new Set(['cardSlap', 'cardWhoosh']);
@@ -30,18 +32,19 @@ export const groupOf = (e) => (e.solo ? 'x' : e.group ?? (e.pov === 'ant' && ANT
 
 // the re-recording mix: dB by kind for events starting in a row; tuned by measurement against shots.txt's column 9
 export const SCENE = {
-  cardSlap: { '1-05': 2, '1-07': 8, '2-01': 8 },
-  thud: { '2-04': 6, '3-01': 6 },
-  tak: { '2-05': 12, '2-06': 6, '3-01': 8, '3-02': 6, '3-03': 4, '3-04': 6, '4-01': 4, '4-02': 4, '4-07': -14, '5-03': -22, '5-04': -12, '6-03': -34, '6-04': -8, '8-05': -9 },
-  slabLand: { '2-05': 8, '2-06': 4, '3-01': 6, '3-02': 5, '3-03': 3, '3-04': 5, '4-01': 3, '4-02': 3, '4-07': -18, '5-03': -14, '5-04': -12, '5-05': -6, '6-04': -12 },
-  lampSwing: { '4-07': -30 },
-  rundown: { '5-03': -12, '5-04': -6 },
-  cheer: { '5-03': -4 },
-  pressure: { '6-01': 7 },
-  ringRoll: { '6-03': -9 },
-  pat: { '2-05': 6 },
-  gulp: { '3-04': 4, '4-01': 3, '4-02': 3 },
-  chipDrop: { '3-04': 4, '4-01': 3, '4-02': 3 },
+  cardSlap: { '1-05': 2, '1-07': 8, '2-01': 6, '3-01': 6, '4-03': 6 },
+  lampLean: { '2-01': 4, '3-01': 4, '5-05': -30 },
+  thud: { '3-04': 6, '4-01': 6, '6-07': 2 },
+  tak: { '3-06': 12, '3-07': 6, '4-01': 8, '4-02': 6, '4-03': 5, '4-04': 5, '4-05': 5, '5-01': 4, '5-02': 5, '5-03': 4, '5-04': 4, '5-05': -14, '6-01': -8, '6-02': -8, '6-03': -9, '7-03': -30, '7-04': -10, '8-04': -10, '8-05': -10, '8-06': -25, '10-05': -9 },
+  slabLand: { '3-06': 8, '3-07': 4, '4-01': 6, '4-02': 5, '4-03': 4, '4-04': 4, '4-05': 4, '5-01': 3, '5-02': 4, '5-03': 3, '5-04': 3, '5-05': -18, '6-01': -10, '6-02': -10, '6-03': -17, '7-03': -28, '7-04': -10, '7-05': -8, '7-06': -8, '8-05': 3 },
+  rundown: { '7-03': -24 },
+  shout: { '7-03': -6, '7-04': -4 },
+  pressure: { '8-01': 9, '10-04': 5 },
+  lampSwing: { '2-02': 11 },
+  pat: { '3-06': 6 },
+  gulp: { '5-02': 4, '5-03': 3, '5-04': 3 },
+  chipDrop: { '5-02': 4, '5-03': 3, '5-04': 3 },
+  button: { '3-05': 12, '6-03': 3 },
 };
 export const HUSH = {};
 // CHOKES: [film time, kinds kept, fade s]: every effect that started earlier is cut there, except the kinds kept
@@ -69,8 +72,9 @@ function sceneDb(S, e) {
 }
 // level automation (dB over film time), per kind: [kind, [[t, dB], ...], from0?, from1?]
 export function levels(C, ROW) {
-  // the spring's ratchet sinks under the music as the machines grow
-  return [['clockwork', [[C['3-01'], 0], [C['4-02'], -6], [C['4-06'], -14]]]];
+  // the spring's ratchet sinks under the music as the machines grow, and is nearly gone in the close, quiet row
+  // (5-05); the lamp's metronome creak sinks under the feeding too
+  return [['clockwork', [[C['3-05'], 9], [C['3-06'], 3], [C['4-02'], 0], [C['5-03'], -6], [C['5-06'], -12]]], ['lampLean', [[C['4-05'], 0], [C['5-04'], -5], [C['5-06'], -8]], C['4-02'], Infinity]];
 }
 function autoOf(A, e, len) {
   const out = [], t1 = e.t + len / SR;
@@ -82,9 +86,7 @@ const dbAt = (keys, t) => { if (t <= keys[0][0]) return keys[0][1]; for (let i =
 // ---- pans: heart (the red king and his machine) left, spade right, seen from the table's foot
 export function panOf(e) {
   if (e.pan !== undefined) return e.pan;
-  if (e.who === 'heart') return -0.35;
-  if (e.who === 'spade') return 0.35;
-  return 0;
+  return { heart: -0.38, spade: 0.38, diamond: -0.6, club: 0.6 }[e.who] ?? 0;
 }
 
 // the vacuums: the slap that kills the ant (the first cardSlap from the ant's eye) and the last card
@@ -93,7 +95,12 @@ export function findVacuums(events) {
   return [ant, events.find((e) => e.kind === 'endSlam')].filter(Boolean);
 }
 export function prepareEvents(events, C, ROW) {
-  const notes = [], out = events.map((e) => ({ ...e, gain: e.gain ?? 1 }));
+  const notes = [];
+  let out = events.map((e) => ({ ...e, gain: e.gain ?? 1 }));
+  // the springs' ratchets stop for the close, quiet row (5-05) and pick up after it
+  { const h0 = ROW['5-05'].t0, h1 = ROW['5-06'].t0, add = [];
+    for (const e of out) if (e.kind === 'clockwork' && e.t < h0 && e.t + (e.dur || 0) > h1) { add.push({ ...e, t: h1, dur: e.t + e.dur - h1 }); e.dur = h0 - e.t; }
+    out = out.concat(add); }
   // the vacuums: the hit and what brings it are solo (their own uncarved group): the whoosh; under the last card the
   // air pressing down and the red king still cheering. audio.js carves everything else over the hit's pre-roll.
   const vac = findVacuums(out);
@@ -101,17 +108,15 @@ export function prepareEvents(events, C, ROW) {
     v.solo = true;
     for (const e of out) {
       if (e.kind === 'cardWhoosh' && e.t < v.t && e.t + (e.dur || 0.35) > v.t - preOf(v) - 0.05 && e.t > v.t - 1.5) e.solo = true;
-      if (v.kind === 'endSlam' && (e.kind === 'pressure' || e.kind === 'cheer') && e.t < v.t && e.t + (e.dur || 0) > v.t - 0.5) e.solo = true;
+      if (v.kind === 'endSlam' && (e.kind === 'pressure' || e.kind === 'cheer' || e.kind === 'shout') && e.t < v.t && e.t + (e.dur || 0) > v.t - 0.5) e.solo = true;
     }
   }
-  // 4-07 (his hand on his own crown): everything is far away and dull
-  const h0 = ROW['4-07'].t0, h1 = ROW['4-08'].t0; let nM = 0;
-  for (const e of out) if (e.t >= h0 && e.t < h1) { e.muff = 220; nM++; }
-  if (nM) notes.push(`4-07: ${nM} events muffled (220 Hz) and pulled far back`);
-  // 5-03 (from high above): the mountains' taks are small from up here
-  for (const e of out) if (e.t >= ROW['5-03'].t0 && e.t < ROW['5-04'].t0 && (e.kind === 'tak' || e.kind === 'slabLand')) e.muff = 900;
-  // 6-03 (the ring): the machine goes on, far above
-  for (const e of out) if (e.t >= ROW['6-03'].t0 && e.t < ROW['6-04'].t0 && e.kind === 'tak') e.muff = 400;
+  // 5-05 (he hides his last chip) and 7-03 (from high above, nothing reaches us): everything far away and dull
+  const KEEP = new Set(['cloth', 'shout', 'cheer']); let nM = 0;
+  for (const [id, fc] of [['5-05', 240], ['7-03', 300]]) for (const e of out) if (e.t >= ROW[id].t0 && e.t < ROW[id].t1 && !KEEP.has(e.kind)) { e.muff = fc; nM++; }
+  if (nM) notes.push(`5-05, 7-03: ${nM} events muffled and pulled far back`);
+  // 8-06 (black): the machine goes on, far above
+  for (const e of out) if (e.t >= ROW['8-06'].t0 && e.t < ROW['8-06'].t1 && e.kind === 'tak') e.muff = 400;
   for (const e of out) {
     if ((e.kind === 'tak' && (e.size ?? 0) >= 2) || (e.kind === 'slabLand' && ((e.size ?? 0) >= 5 || e.far))) e.group = 'b';   // the hall
     if (e.kind === 'antStep' && e.variant === undefined) e.variant = ((Math.round(e.t * 1000) * 5 + 3) % 8 + 8) % 8;
@@ -124,8 +129,11 @@ export function prepareEvents(events, C, ROW) {
 // ---- the score's own ambience events (dropped when the director's list has the kind there)
 export function scoreEvents(C, ROW, events) {
   const E = [], has = (kind, a, b) => events.some((e) => e.kind === kind && e.t >= a && e.t < b);
-  // 2-04: the red king reaches under the table: his robe
-  if (!has('cloth', ROW['2-04'].t0, ROW['2-05'].t0)) E.push({ t: ROW['2-04'].t0 + 0.35, kind: 'cloth', dur: 1.3, gain: 1.6, pan: -0.35, amb: true });
+  // 2-02: the chain settling after the round's last swing (the lamp stays over the winner)
+  const leans = events.filter((e) => e.kind === 'lampLean' && (e.amp ?? 1) >= 0.7 && e.t >= ROW['2-01'].t0 && e.t < ROW['2-02'].t0);
+  if (leans.length && !has('lampSwing', ROW['2-01'].t0, ROW['2-03'].t0)) E.push({ t: leans[leans.length - 1].t + 0.75, kind: 'lampSwing', amp: 0.5, dur: 2.6, gain: 1, amb: true });
+  // 3-04: the red king reaches under the table: his robe
+  if (!has('cloth', ROW['3-04'].t0, ROW['3-05'].t0)) E.push({ t: ROW['3-04'].t0 + 0.35, kind: 'cloth', dur: 1.3, gain: 1.6, pan: -0.38, amb: true });
   return E;
 }
 
@@ -134,10 +142,10 @@ export function testEvents(C, ROW) {
   const E = [], ev = (t, kind, o = {}) => E.push({ t, kind, gain: 1, ...o }), at = (id, k = 0) => ROW[id].t0 + k;
   for (let t = 0.3; t < at('1-05', 0.9); t += 0.106) ev(t, 'antStep', { surface: 'cloth', gain: Math.min(1, t / 1.5) });
   ev(at('1-05', 0.6), 'cardWhoosh', { who: 'heart', dur: 0.35 }); ev(at('1-05', 0.95), 'cardSlap', { who: 'heart', size: 1, hard: 1, pov: 'ant' });
-  for (let t = at('2-05', 1.2), i = 0; t < at('4-07'); t += 0.6, i++) { const s = 0.3 * Math.pow(1.07, i); ev(t, 'tak', { who: i % 2 ? 'spade' : 'heart', size: +s.toFixed(2), gain: 0.8 }); ev(t + 0.45, 'slabLand', { who: i % 2 ? 'spade' : 'heart', size: +(s * 3).toFixed(2), gain: 0.8 }); }
-  ev(at('5-01', 1.1), 'burst', { dur: 2.4 });
-  for (let t = at('5-01', 4.5); t < at('6-01'); t += 1.35) ev(t, 'tak', { who: 'heart', size: 30, gain: 0.8 });
-  ev(at('6-02', 1.5), 'endSlam');
+  for (let t = at('3-06', 0.9), i = 0; t < at('5-05'); t += 0.6, i++) { const s = 0.3 * Math.pow(1.03, i); ev(t, 'tak', { who: i % 2 ? 'spade' : 'heart', size: +s.toFixed(2), gain: 0.8 }); ev(t + 0.45, 'slabLand', { who: i % 2 ? 'spade' : 'heart', size: +(s * 3).toFixed(2), gain: 0.8 }); }
+  ev(at('7-01', 1.4), 'burst', { dur: 2.4 });
+  for (let t = at('7-01', 4.1); t < at('8-01'); t += 1.35) ev(t, 'tak', { who: 'heart', size: 30, gain: 0.8 });
+  ev(at('8-02', 1.6), 'endSlam');
   return E.sort((a, b) => a.t - b.t);
 }
 
@@ -197,7 +205,7 @@ function* inBlocks(i0, i1, run) {
 function humSetup(L, off, t0, t1, o = {}) {
   const lvl = o.level ?? 0.01, lvlAt = o.lvlAt ?? (() => 1), i0 = Math.max(0, Math.round(t0 * SR) - off), i1 = Math.min(L.length, Math.round(t1 * SR) - off);
   if (i1 <= i0) return null;
-  const P = 2048, H = [[1, 1, 0], [2, 0.3, 0.7], [3, 0.17, 1.9], [4, 0.05, 0.4], [5, 0.035, 2.6], [6, 0.018, 1.1]];
+  const P = 2048, H = o.H ?? [[1, 1, 0], [2, 0.3, 0.7], [3, 0.17, 1.9], [4, 0.05, 0.4], [5, 0.035, 2.6], [6, 0.018, 1.1]];
   const wL = new Float32Array(P + 1), wR = new Float32Array(P + 1);
   for (let i = 0; i <= P; i++) { const x = TAU * i / P; for (const [k, a, p] of H) { wL[i] += a * Math.sin(k * x + p); wR[i] += a * Math.sin(k * x + p + (k === 2 ? 0.35 : k === 3 ? -0.2 : 0)); } }
   const nl = Math.round(4.7 * SR), xf = Math.round(0.25 * SR), nL = new Float32Array(nl), nR = new Float32Array(nl);

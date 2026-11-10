@@ -35,7 +35,7 @@ const K = S.ANT_KING;
 // the table from its foot: the kings, the pile between them, the lamp's pool
 function tableCam(cam, st, y = 1.1, z = 2.4, fov = 50, ly = 0.3) { camLook(cam, [0, y, z], [0, ly, -0.4], fov); st.look.exposure = 1.45; }
 // the whole table and the lamp over it
-function lampWide(cam, st, t, row) { const u = uRow(t, row); camLook(cam, [0, 1.55, 6.3 - 0.25 * u], [0, 1.25, -0.5], 46); st.look.exposure = 1.75; st.look.lampPow = 1.1; }
+function lampWide(cam, st, t, row) { const u = uRow(t, row); camLook(cam, [0, 1.55, 6.3 - 0.25 * u], [0, 1.25, -0.5], 46); st.look.exposure = 2.3; st.look.lampPow = 1.1; }
 // one king across the pile, the card he plays in front of him
 function acrossCam(cam, st, id, o = {}) {
   const sx = sxOf(id), z = S.zOf(id);
@@ -99,10 +99,11 @@ export const SHOTS = {
     st.look.exposure = lerp(1.3, 1.75, smooth(u));
   },
   // ---------------------------------------------------------------- @2 规矩
-  '2-01': (t, st, w, shot) => acrossCam(w.camera, st, [CLB, DIA, RED, BLK][cutOf(shot) - 1]),
-  '2-02': (t, st, w) => lampWide(w.camera, st, t, '2-02'),
+  // one high frame, no cut: four cards, and after each higher one the lamp swings over to the man who played it
+  '2-01': (t, st, w) => { const u = uRow(t, '2-01'); camLook(w.camera, [0, 2.95 - 0.1 * u, 5.7 - 0.3 * u], [0, 1.0, -0.6], 46); st.look.exposure = 2.1; },
+  '2-02': (t, st, w) => { const u = uRow(t, '2-02'); camLook(w.camera, [-0.55 + 0.06 * u, 0.98, 0.95], [1.62, 0.6, -0.72], 44); st.look.exposure = 1.9; },
   '2-03': (t, st, w) => { const u = uRow(t, '2-03'); faceCam(w.camera, st, w, t, CLB, { d: 0.85 - 0.08 * u, dz: -0.34, fov: 32, exp: 1.9 }); },
-  '2-04': (t, st, w) => { camLook(w.camera, [-0.25, 0.95 + shake(t, S.OUT.club.pull[0], 0.012, 40, 6), 0.35], [1.75, 0.45, -1.2], 52); st.look.exposure = 1.7; },
+  '2-04': (t, st, w) => { camLook(w.camera, [-0.15, 1.0 + shake(t, S.OUT.club.pull[0], 0.012, 40, 6), -0.15], [2.35, 0.5, -1.25], 54); st.look.exposure = 2.2; },
   '2-05': (t, st, w) => { const u = uRow(t, '2-05'); camLook(w.camera, [1.85, 0.95, -2.5 + 0.12 * u], [-0.2, 0.42, -0.45], 56); st.look.exposure = 1.6; },
   // ---------------------------------------------------------------- @3 托管
   '3-01': (t, st, w) => lampWide(w.camera, st, t, '3-01'),
@@ -111,7 +112,7 @@ export const SHOTS = {
     faceCam(w.camera, st, w, t, RED, { d: 0.7, dz: 0.24, fov: 30, exp: 1.9 });
   },
   '3-03': (t, st, w) => { const u = uRow(t, '3-03'); camLook(w.camera, [-0.55 + 0.05 * u, 0.42, 0.05], [1.0, 0.06, -0.97], 26); st.look.exposure = 1.7; st.look.dof = { focus: 1.85, k: 0.3, max: 8 }; },
-  '3-04': (t, st, w) => acrossCam(w.camera, st, RED, { x: 0.5, y: 0.6, z: 1.0, lx: 1.05, ly: 0.3, lz: 0, fov: 46, exp: 2.4 }),
+  '3-04': (t, st, w) => acrossCam(w.camera, st, RED, { x: 0.3, y: 0.62, z: 0.85, lx: 1.2, ly: 0.32, lz: 0.05, fov: 36, exp: 2.6 }),
   '3-05': (t, st, w) => {
     const m = S.machineAt(RED, t), a = machinePoint(m, BTN_AUTO), c = machinePoint(m, BTN_CANCEL), b = [(a[0] + c[0]) / 2, a[1], (a[2] + c[2]) / 2], u = uRow(t, '3-05');
     macro(w.camera, st, [b[0] - 0.24 + 0.02 * u, b[1] + 0.36, b[2] + 0.12], [b[0] + 0.03, b[1], b[2]], 34, 0.45, 0.3); st.look.near = 0.01; st.look.exposure = 2.0;
@@ -122,8 +123,8 @@ export const SHOTS = {
   '4-01': (t, st, w) => acrossCam(w.camera, st, BLK, { x: 0.55, y: 0.62 + shake(t, S.PLACE.spade.down, 0.012, 50, 7), z: 1.0, lx: 1.0, ly: 0.34, lz: 0, fov: 46 }),
   '4-02': (t, st, w) => { camLook(w.camera, [0.03, 1.7, 0.16], [0, 0, 0], 52); st.look.exposure = 1.4; },
   '4-03': (t, st, w) => { const u = uRow(t, '4-03'); camLook(w.camera, [0.55 - 0.08 * u, 0.82, -0.95], [-1.3, 0.42, -1.32], 36); st.look.exposure = 1.9; },
-  '4-04': (t, st, w) => { camLook(w.camera, [0.25, 0.95 + shake(t, S.OUT.diamond.pull[0], 0.012, 40, 6), 0.35], [-1.75, 0.45, -1.2], 52); st.look.exposure = 1.7; },
-  '4-05': (t, st, w) => tableCam(w.camera, st, 1.2, 3.1, 50, 0.4),
+  '4-04': (t, st, w) => { camLook(w.camera, [0.15, 1.0 + shake(t, S.OUT.diamond.pull[0], 0.012, 40, 6), -0.15], [-2.35, 0.5, -1.25], 54); st.look.exposure = 2.2; },
+  '4-05': (t, st, w) => { tableCam(w.camera, st, 1.2, 3.1, 50, 0.4); st.look.exposure = 2.0; },
   // ---------------------------------------------------------------- @5 喂
   '5-01': (t, st, w) => { const u = uRow(t, '5-01'); camLook(w.camera, [-0.42 - 0.03 * u, 0.24, 0.62], [-0.72, 0.17, 0], 34); st.look.exposure = 1.6; st.look.near = 0.01; st.look.dof = { focus: 0.7, k: 0.4, max: 10 }; },
   '5-02': (t, st, w) => { camLook(w.camera, [-0.36, 0.46, 0.72], [-0.8, 0.24, 0.1], 42); st.look.exposure = 1.5; st.look.near = 0.01; },
@@ -141,9 +142,9 @@ export const SHOTS = {
     if (cutOf(shot) === 1) return sideFace(w.camera, st, w, t, RED, { exp: 1.6 });
     camLook(w.camera, [-0.8, 0.5, 1.35], [-1.25, 0.26, 0.24], 38); st.look.exposure = 1.6;
   },
-  '5-06': (t, st, w) => { const u = uRow(t, '5-06'); camLook(w.camera, [0, 1.7, 4.4 - 0.2 * u], [0, 0.75, 0], 48); st.look.exposure = 1.7; st.look.lampPow = 1.15; },
-  '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [-0.1, 0.5, 2.7 - 0.15 * u], [-0.55, 1.45, 0], 62); st.look.exposure = lerp(1.6, 1.7, ease(t, S.PLUG.heart.bite, S.PLUG.heart.bite + 0.5)); },
-  '5-08': (t, st, w) => { const u = uRow(t, '5-08'); camLook(w.camera, [0.1, 0.5, 2.7 - 0.15 * u], [0.55, 1.45, 0], 62); st.look.exposure = lerp(1.7, 1.75, ease(t, S.PLUG.spade.bite, S.PLUG.spade.bite + 0.5)); },
+  '5-06': (t, st, w) => { const u = uRow(t, '5-06'); camLook(w.camera, [0, 1.7, 4.4 - 0.2 * u], [0, 0.75, 0], 48); st.look.exposure = 2.2; st.look.lampPow = 1.15; },
+  '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [-0.1, 0.5, 2.7 - 0.15 * u], [-0.55, 1.45, 0], 62); st.look.exposure = lerp(2.1, 2.3, ease(t, S.PLUG.heart.bite, S.PLUG.heart.bite + 0.5)); },
+  '5-08': (t, st, w) => { const u = uRow(t, '5-08'); camLook(w.camera, [0.1, 0.5, 2.7 - 0.15 * u], [0.55, 1.45, 0], 62); st.look.exposure = lerp(2.3, 2.5, ease(t, S.PLUG.spade.bite, S.PLUG.spade.bite + 0.5)); },
   '5-09': (t, st, w, shot) => deadCrownCam(w.camera, st, BLK, cutOf(shot)),
   '5-10': (t, st, w, shot) => deadCrownCam(w.camera, st, RED, cutOf(shot)),
   // ---------------------------------------------------------------- @6 夺不回来
@@ -174,12 +175,17 @@ export const SHOTS = {
   '7-02': (t, st, w) => { const u = uRow(t, '7-02'); camLook(w.camera, [0.1, 0.58, 1.5], [0, 8 + u, -3], 76); st.look.far = 500; dim(st); },
   '7-03': (t, st, w) => fromAbove(w.camera, st, [0, 0.3, 0], 17),
   '7-04': (t, st, w) => { const u = uRow(t, '7-04'); camLook(w.camera, [-0.9, 0.55, 2.3 - 0.1 * u], lerp3([4.5, 6.0, 0], [1.9, 0.9, 0], smooth((u - 0.55) * 2.6)), lerp(66, 40, smooth((u - 0.55) * 2.6))); st.look.far = 500; dim(st); },
-  // from where his machine is, high behind him: he looks back and up at it, and his fear turns into a grin
-  '7-05': (t, st, w) => { const h = headOf(RED, w, st, t), k = ease(t, S.WIN - 0.2, S.WIN + 0.5); camLook(w.camera, [h[0] - lerp(0.5, 0.62, k), h[1] + lerp(0.95, 0.9, k), h[2] + 0.42], [h[0], h[1] - 0.02 + 0.06 * k, h[2]], lerp(34, 46, k)); st.look.far = 500; dim(st); },
+  // his face, from the table: terror; he sees the other machine is dark; a small smile; he stands and cheers
+  '7-05': (t, st, w) => { const k = ease(t, S.WIN - 0.2, S.WIN + 0.5); faceCam(w.camera, st, w, t, RED, { d: lerp(0.8, 1.45, k), dz: 0.3, dy: lerp(-0.12, -0.3, k), ly: 0.02 + 0.12 * k, fov: lerp(32, 40, k), exp: 1.7 }); st.look.far = 500; },
   '7-06': (t, st, w) => { camLook(w.camera, [-0.25, 0.95, 1.45], [1.6, 1.02, 0], 42); st.look.far = 500; dim(st); },
   // ---------------------------------------------------------------- @8 没看见
   '8-01': (t, st, w) => { const m = S.machineAt(RED, t); camLook(w.camera, [-1.5, 0.5, 9.0], [m.pos[0] + 7, m.S * 0.45, 0], 60); st.look.far = 500; dim(st); },
-  '8-02': (t, st, w) => { const y = S.finalPlay().edgeY; camLook(w.camera, [0.55, y + 0.22 + shake(t, S.SLAM, 0.03, 40, 5), 1.25], [-1.5, 0.92, 0], 46); st.look.far = 500; dim(st); },
+  '8-02': (t, st, w, shot) => {
+    st.look.far = 500;
+    // from far off: the lamp-lit table, a man cheering at it, and a card the size of a field coming down on him
+    if (cutOf(shot) === 1) { camLook(w.camera, [4.5, 1.6, 24], [-3.5, 4.2, 0], 42); return dim(st, 2.0); }
+    const y = S.finalPlay().edgeY; camLook(w.camera, [0.55, y + 0.22 + shake(t, S.SLAM, 0.03, 40, 5), 1.25], [-1.5, 0.92, 0], 46); dim(st);
+  },
   '8-03': (t, st, w) => {
     const r = glassesAt(S.GLASSES.t1 + 2).pos, u = uRow(t, '8-03'), pos = [r[0] + 0.3, r[1] + 0.1, r[2] + 0.42 - 0.03 * u];
     camLook(w.camera, pos, [r[0] - 0.08, r[1] + 0.01, r[2] - 0.02], 34); st.look.near = 0.01; st.look.dof = { focus: dist(pos, r), k: 0.6, max: 16 }; st.look.far = 500; dim(st);
@@ -194,14 +200,14 @@ export const SHOTS = {
   '10-01': (t, st, w) => { camLook(w.camera, [3.0, FLOOR_Y + 0.01, 1.6], [3.0, FLOOR_Y, 1.5], 30); st.look.fade = 1; },
   '10-02': (t, st, w) => {
     const a = S.eggAnt(t).pos, pos = [a[0] - 0.02, a[1] + 0.0095, a[2] + 0.075];
-    macro(w.camera, st, pos, [a[0] - 0.008, a[1] + 0.004, a[2]], 30, dist(pos, a), 3.0); st.look.exposure = 1.9; st.look.far = 500;
+    macro(w.camera, st, pos, [a[0] - 0.008, a[1] + 0.004, a[2]], 30, dist(pos, a), 3.0); st.look.exposure = 2.4; st.look.far = 500;
   },
   '10-03': (t, st, w, shot) => {
-    if (cutOf(shot) === 2) { const b = S.eggAnt(t).pos, p2 = [b[0] - 0.035, b[1] + 0.006, b[2] + 0.062]; macro(w.camera, st, p2, [b[0], b[1] + 0.012, b[2]], 44, dist(p2, b), 2.0); st.look.exposure = 2.1; st.look.far = 500; return; }
+    if (cutOf(shot) === 2) { const b = S.eggAnt(t).pos, p2 = [b[0] - 0.035, b[1] + 0.006, b[2] + 0.062]; macro(w.camera, st, p2, [b[0], b[1] + 0.012, b[2]], 44, dist(p2, b), 2.0); st.look.exposure = 2.5; st.look.far = 500; return; }
     const a = S.eggAnt(S.EGG.foot.hover).pos, pos = [a[0] + 0.03, a[1] + 0.03, a[2] + 0.34];
-    macro(w.camera, st, pos, [a[0] + 0.01, a[1] + 0.05, a[2] - 0.05], 38, 0.35, 0.8); st.look.exposure = 1.9; st.look.far = 500;
+    macro(w.camera, st, pos, [a[0] + 0.01, a[1] + 0.05, a[2] - 0.05], 38, 0.35, 0.8); st.look.exposure = 2.4; st.look.far = 500;
   },
-  '10-04': (t, st, w) => { const p = S.eggWalker(at('10-04', 1.6)); fromAbove(w.camera, st, [p[0], FLOOR_Y, p[2]], 11); },
+  '10-04': (t, st, w) => { const p = S.eggWalker(at('10-04', 1.6)); fromAbove(w.camera, st, [p[0], FLOOR_Y, p[2]], 11); st.look.exposure = 2.3; },
   '10-05': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
 };
 void clamp;

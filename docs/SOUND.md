@@ -1,82 +1,85 @@
-# 《喂》 FEED (v5) — sound (temp score)
+# 《喂》 FEED (v6) — sound
 
-Everything is synthesized in plain JavaScript (no samples), deterministic (two renders bit-identical).
-`renderScore(sampleRate)` in `src/audio.js` renders the whole film (1:59.1) from the director's `soundEvents()`
-(`src/sound-events.js`) and `CUES` / `ROW`. **Nobody has listened to this: every level is a measurement, pitches were
-checked by spectral peaks.**
+Everything is synthesized in plain JavaScript (no samples), deterministic (two renders bit-identical; the async render
+too). `renderScore(sampleRate)` in `src/audio.js` renders the whole film (3:00.9) from the director's `soundEvents()`
+(`src/sound-events.js`) and `CUES` / `ROW`, so a retimed picture is re-scored by running the tool again.
+**Nobody has listened to this: every level is a measurement; pitches were spot-checked by spectral peaks.**
 
 ```
-node tools/render-audio.mjs [--test] [--twice] [--cues] [--stems] [--no-spec] [--kinds]
-  out/score.wav, out/levels.txt, out/score-spec.png
+node tools/render-audio.mjs [--test] [--twice] [--async] [--cues] [--stems] [--no-spec] [--kinds]
+  out/score.wav, out/levels.txt (every row against its planned loudness), out/score-spec.png
 ```
 
 ## Files
 
 | file | what |
 |---|---|
-| `src/audio.js` | the render: chunks (per cue; R1, R4, R5, R6 split where the sound drops out), groups and rooms, the two vacuums, the hum, the master |
-| `src/audio-music.js` | the score: `TUNE`, `tierOf` (a machine's voice by its height), `beatsOf`, `SCORE.R2, R3, R4a, R4c, R5a, R5b, R7` |
-| `src/audio-sfx.js` | `MIX`, `SCENE` (dB per kind per row), `prepareEvents`, `scoreEvents`, event rendering, the hum |
-| `src/audio-kinds.js` | one synth per event kind (`FILM_KINDS`; the v5 kinds are the last section; older kinds are kept, unused) |
-| `src/audio-voices.js`, `audio-inst.js`, `audio-sfxlib.js`, `audio-dsp.js`, `audio-master.js` | instruments, older synths, DSP, rooms / limiter / meters |
+| `src/audio.js` | the render: chunks (per cue, split where the film drops to silence), groups and rooms, the two vacuums, the lamp's hum and the machines' mains buzz, the master |
+| `src/audio-music.js` | the score: `TUNE`, `tierOf` (a machine's voice by its height), harmony modes, `beatsOf`, `SCORE.R2 .. R9` |
+| `src/audio-sfx.js` | `MIX`, `SCENE` (dB per kind per row), `levels()`, `prepareEvents`, `scoreEvents`, event rendering, the hum |
+| `src/audio-kinds.js` | one synth per event kind (`FILM_KINDS`; v5's and v6's are the last two sections; older kinds kept, unused), the kings' voices |
+| `audio-voices.js`, `audio-inst.js`, `audio-sfxlib.js`, `audio-dsp.js`, `audio-master.js` | instruments, older synths, DSP, rooms / limiter / meters |
 
-## The one idea
+## Three ideas
 
-**The machine never changes what it does; it only gets bigger.**
-
-- **`tak {who, size}`** is one two-part gesture (the hammer on its bell, then the card leaving the slot) and every part
-  of it is a power of the machine's height: the bell's pitch (D7 on the 0.3 m toy, about 0.6 octave lower per doubling,
-  always a D or an A: D2 at 30 m), its ring (0.1 s to 1.3 s), the gap between hammer and card (14 ms to 0.22 s), the
-  card's flick (30 ms to 0.4 s of air), a thump under big hammers; from 8 m up it is heard from far below (dulled, in
-  the hall).
-- **The music is one small tune** (D major, eight-note phrases: A1 A2, then B and an ending). **Every tak is the tune's
-  next note, sung by that machine in the voice its size gives it:** music box (0.3 m) → toy piano and a plucked bass →
-  pizzicato → low strings → horns and tuba → trombones, tuba, war drums (2.2 m) → the whole orchestra (3.6 m) → the same
-  tune four octaves under the music box, slow, organ and everything (30 m). A slow machine's card landing is the
-  off-beat (the next note).
+1. **The machine never changes what it does; it only gets bigger.** `tak {who, size}` is one gesture (the hammer on
+   its bell, then the card leaving the slot); the bell's pitch (D7 on the 0.3 m toy, D2 at 30 m, always a D or an A),
+   its ring, the gap between hammer and card and the card's flick are all powers of the machine's height.
+2. **One small tune, and the machines play it.** D major, eight-note phrases. Every tak is the tune's next note, in
+   the voice of that machine's size: music box → toy piano → pizzicato → low strings → (the hall dark) cellos, basses,
+   soft trombones, tuba → trombones, tuba, war drums → at 30 m organ and everything, four octaves under the music box.
+   **It goes wrong as the kings lose it:** right until the dead kings' crowns are fed (5-09: B-flat under the tonic,
+   the first wrong harmony); minor from the moment the machine takes for itself (6-02); the mountain plays it in minor
+   over a Neapolitan bass. The credits give it back whole, in major, on the music box alone.
+3. **No human voice.** Every vocal sound a king makes is his own brass instrument through a plunger mute (a "wah"
+   whose pitch bends): heart a trumpet, spade a trombone, diamond a cornet, club a euphonium; one timbre per king,
+   always. Chuckles, the cut-off cry of a man dragged out, the grunt at the key, "stop!" (a pick-up and a hard falling
+   note, again and again, faster and higher), the cheer (whoops, laughs, and the tune's first three notes as a fanfare).
 
 ## Cue by cue
 
 | cue | sound and music |
 |---|---|
-| **R1** ant | No music. Steps from nothing; the lamp's hum with the picture; 0.32 s of vacuum (only the card's air), then the slap from the ant's height; everything faded out by the cut to 1-06; the crumb; 1-07 two card slaps in the empty hall. |
-| **R2** losing | The K: two plucked low notes and a timpani (a swagger). 2-02 a heartbeat. 2-03 nothing. 2-04 his robe (the score's own `cloth`), the toy set down. 2-05 the music box: a note on each tak and each landing. 2-06 it goes on; a low B-flat slides down to A under the black king. |
-| **R3** a bigger one | The black machine comes down with a low thump of the orchestra. Two machines, two voices: music box (red, left) and toy piano an octave lower (black, right). 3-03 the red one's notes sag flat and stop as its spring runs down; black plays on alone. 3-04 a chip, a gulp: red is back, as a toy piano. |
-| **R4** feeding | The same tune, each tak in its machine's current voice: lower and heavier at every gulp (a timpani stroke and a small cymbal on each). 4-06 trombones, tuba, war drums, slow: a wall. **4-07** everything faded out by the cut; only the taks and landings, muffled (220 Hz) and far. 4-08 / 4-09 the tune back, held down; a timpani roll into 5-01. |
-| **R5** mountains | 5-01 the organ from its lowest note; at the `burst` the tune four octaves down, a note every 0.675 s (the mountains' taks fall on every other note): organ, brass, strings, drums. 5-02 the same, a little under. 5-03 cut: the music box, tiny, same tune, same beat; far cheering. 5-04 the box runs down with the black machine and stops. 5-05 no music: one man cheering. |
-| **R6** it did not see | No music. 6-01 one tak. The air pressing down, he is still cheering (both kept through the vacuum), the last card: the loudest 0.4 s of the film (-8.0 LUFS-M). Faded out by the cut to 6-03: the ring; one tak far above; 6-04 a far landing and a tak. |
-| **R7** title, credits | The music box alone: the whole tune (32 notes), its own bass tines, slowing into a last D major chord; over 2 s before 8-01. |
-| **R8** epilogue | No music. Steps on stone; cloth; the foot (the softest sound in the film); the pressure rising under 8-04, ended at 8-05; one tak. |
+| **R1** ant | No music. Steps from nothing; the lamp's hum with the picture; 0.32 s of vacuum, the slap from the ant's height, all faded out by the cut; the crumb; 1-07 only the room (no card events there). |
+| **R2** the rule | No music. Each card: a slap, then the lamp leaning (chain creak, clinks, a low swoosh of light toward that king). 2-02 the chain settling (the score's own). 2-03 the light slides off the club king (a falling sweep, a held breath) and a heartbeat quickens until his chair goes: the jolt, the scrape receding, his euphonium's cry cut off; the crown spins down like a coin. Only when it has stopped: **one low held D**, at the edge of hearing. |
+| **R3** auto | The low D holds; the heartbeat again as the dark reaches the red king; 3-03 only the note. It lets go as he brings out the toy. 托管: a click, the spring's answer, a small rising chime, the ratchet. **First tak: the tune begins**, music box, a note on each tak and each landing. 3-07 a low B-flat slides to A under the black king. |
+| **R4** the one without a machine | The black machine comes down with a low thump of the orchestra; from its first tak two voices (music box left, toy piano right). The lamp's small leans are a soft chain tick, lower to the left, higher to the right. The diamond king's slap: the music ducks 12 dB for 0.8 s after it (the lean that does not come). He is dragged out (his cornet's cry) and **the tune does not notice**. 4-05 two brass chuckles; the red machine's notes sag as it runs down. |
+| **R5** feeding | The low D and the heartbeat on the red king until his first chip; then the tune fed, heavier at each gulp. **5-05** everything faded out by the cut; only his robe, and the machines muffled and far. 5-06 low strings, the table groaning. The plugs: a spark, a low sforzando, a high harmonic sagging away; the lamp's hum dims and the machines' mains buzz comes up and stays; the tune loses its top. 5-09 the first wrong harmony. |
+| **R6** no taking it back | 6-01 the tune far down. 6-02 the funnel takes the chip: minor from that swallow. **6-03** the music is taken away (-24 dB): the same click as 托管, dead, harder and harder, the taks going on in tempo. 6-04 the key (steel groaning, his trumpet's grunts). 6-05 / 6-06 each crown: a tremolo cluster swelling with the funnel's breath, a hit of the dark orchestra on the swallow. 6-07 a roll and a swell, then the machines land on the floor: D minor with its E-flat, held. 6-08 the tune in trombones, tuba, war drums. |
+| **R7** mountains | 7-01 the funnels eat the hall; the organ from its lowest note; at the `burst` the tune four octaves down, minor, a note every 0.675 s (the mountains' taks fall on every other one): the biggest music of the film. **7-03** cut to nothing: far, muffled taks and two tiny horns. 7-04 the low D under the starving machine and the trombone shouting at it. 7-05 the trumpet's shout stops; **1.0 s of real silence** (music, effects and rooms carved to nothing); then the trumpet cheers. 7-06 trumpet cheering, trombone shouting: no music. |
+| **R8** it did not see | 8-01 one tak. The air pressing down, both horns still going (kept through the vacuum), the last card: the loudest 0.4 s of the film. All faded out by the cut: the spectacles (a thin hiss of wire on card, three rocks). 8-04 two taks far overhead. 8-05 a low pedal (D and A, organ and basses), far booms, his chair pushed back. 8-06 faded to black; one tak, far. |
+| **R9** title, credits | The music box alone: the whole tune in major (32 notes), its own bass tines, slowing into a last D major chord; over 2 s before 10-01. |
+| **R10** epilogue | No music. Steps on stone; cloth; the foot; the pressure rising, ended at the cut; one tak ringing out. |
 
-## Event kinds (v5)
+## Event kinds new in v6
 
 | kind | sound |
 |---|---|
-| tak `{who, size}` | above |
-| slabLand `{who, size, far}` | 1: a pat on the pile; 2-3: a thump; 5+: a boom, the floor, things rattling; far: thunder a long way off |
-| thud `{who, hard}` | wood under brass, the mechanism jingling, its bell jarred; hard: the table jumps |
-| clockwork / rundown `{who, dur, size}` | an even tick-tock ratchet and a whirr / the ratchet slowing, a last tooth, the hammer drooping; size 30: slow low knocks and iron groaning |
-| pat | a palm on brass, the bell answering |
-| chipDrop `{n}` | clay clinks on brass, the funnel ringing, a rattle down its throat |
-| crownLift / crownDrop | a small ring of gold / a clang, the funnel ringing, it rattles down |
-| gulp `{size}` | a throat closing and opening, then the swell: metal stretching, air drawn in; lower and longer with size |
-| creak | the table's wood, slow stick-slip |
-| burst / grow | a deep crack, stone raining, timbers, air / rumble, iron groaning lower, stone trickling |
-| cheer `{who, far}` | open-mouthed whoops and short laughs (synthetic voice: the least convincing sound here); far: tiny, thin |
-| ringRoll | a ring rolling, then spinning down like a coin |
-| cloth / footDown | a swish of heavy cloth / the softest pad and a grain of grit |
-| antStep `stone` | the same three ticks, harder, a hair of ring |
-| kept | cardWhoosh, cardSlap, crumbRoll, lampSwing, chuckle, pressure, endSlam |
+| lampLean `{who, amp}` | big: an iron creak, a second smaller one, clinks, a low swoosh of light crossing to that king; small (amp < 0.7): one short creak and a clink, four cached variants (a metronome) |
+| lightLeaves `{who}` | a soft falling sweep on his side, a small intake of breath (noise, not voice) |
+| dragOut `{who, dur}` | the jolt, two chair legs scraping away and dulling, his horn's rising cry cut dead at 0.4 s |
+| crownSpin `{who, dur}` | a clang the cloth swallows, the rim wobbling faster and lower, a flat knock |
+| button `{who, mode, hard}` | one click (down, the spring's answer) in both modes; 'auto': then a rising two-note chime (A6 D7 for the red machine, E6 A6 for the black); 'cancel': nothing; harder: a fist with it |
+| plugBite `{who}` | brass teeth, crackle, an arc's buzz, the mains hum swelling, the lamp's tone sagging |
+| suck `{who, dur}` | a brass throat drawing air, its vowel rising, louder, shut at the end; 'both': the same, enormous |
+| keyStrain `{dur}` | steel groaning, the ratchet forced tooth by tooth, two grunts, thrown back: a last grunt and the chair's knock |
+| shout / cheer / chuckle | the kings' horns (above); `far`: thin and tiny |
+| glassSlide `{dur}` | wire on card, then rocking on its rims, each softer |
+| chairBack `{who, dur}` | two slow, heavy pushes of a chair over stone |
+
+v5's kinds are unchanged (tak, slabLand, thud, clockwork, rundown, pat, chipDrop, crownLift, crownDrop, gulp, creak,
+burst, grow, pressure, endSlam, cloth, footDown, antStep stone).
 
 ## Mix
 
-Pans: heart (red king and machine) left, spade right; the mountains nearly centred. Vacuums: the ant's slap and the last
-card. Rooms: the hall; a vast one from 5-01. Hum: gone when the hall breaks. Master: staging on 5-01, glue, walls driven
-(4-06, 5-01, the last card), true-peak limiter at -1.2 dBTP. No digital-zero gates (no row plans loudness 0).
+Pans from `who`: heart front left, diamond back left, spade front right, club back right. Vacuums: the ant's slap and
+the last card. Hum: the lamp's 50 Hz from 1-02, dimmed by each plug, gone at the burst; the mains buzz (100 Hz and up)
+from the first plug to the burst. Master: staging on 7-01, glue, walls driven (6-07 .. 7-01, the last card), true-peak
+limiter at -1.2 dBTP. No digital-zero gates (no row plans loudness 0).
 
-## Measured (2026-11-09, the director's 333 events)
+## Measured (2026-11-10, the director's 520 events)
 
-Integrated -16.6 LUFS (ffmpeg agrees), true peak -1.2 dBTP, no clicks, two renders bit-identical. 50 of 52 cuts in
-their planned class; every ROW in class except **6-02** (wall): mean -13.8 LUFS, 1.8 LU short, because the card lands
-1.5 s into a 2.4 s shot (the hit itself is the film's loudest moment). The first cut of the 4-02 montage is -24 (the
-row as a whole -19.7, in class).
+Integrated -16.9 LUFS (ffmpeg agrees), true peak -1.2 dBTP, no clicks. 73 of 75 cuts in their planned class; every ROW
+in class except **1-07** (planned 2, measured -48.5: the row has no events, only the room). The first half of 6-07 (the
+crescendo) is -13.4; the row as a whole is -11.2. The last card: -6.9 LUFS over its loudest 0.4 s (next loudest: -7.8,
+the machines landing in 6-07).

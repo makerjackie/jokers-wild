@@ -133,7 +133,7 @@ function moves() {
     const V = (dz) => (t) => [sx * 1.5 + 0.02 * Math.sin(t * 13), 1.5 + 0.03 * Math.sin(t * 17 + dz), dz * 0.45];
     const off = (t) => [sx * 1.05, 0.98 + 0.05 * Math.sin(t * 16), rz * 0.25 + 0.08 * Math.sin(t * 16)];
     add(RED, 'L', 'open', [[S.WIN - 0.1, REST], [S.WIN + 0.25, V(-rz)], [SLAM + 0.1, V(-rz)]]);
-    add(RED, 'R', 'open', [[S.WIN - 0.1, REST], [S.WIN + 0.25, V(rz)], [at('8-02', 0.2), V(rz)], [at('8-02', 0.5), off], [at('8-02', 1.2), off], [SLAM + 0.1, V(rz)]]); }
+    add(RED, 'R', 'open', [[S.WIN - 0.1, REST], [S.WIN + 0.25, V(rz)], [at('8-02', 1.5), V(rz)], [at('8-02', 1.75), off], [at('8-02', 2.15), off], [SLAM + 0.1, V(rz)]]); }
   // the black king points up at what is coming
   { const sx = sxOf(BLK), up = (t) => [sx * 1.1 + 0.02 * Math.sin(t * 15), 1.38 + 0.03 * Math.sin(t * 19), 0.05];
     add(BLK, 'R', 'point', [[S.POINT - 0.3, REST], [S.POINT, up], [SLAM, up], [SLAM + 0.6, REST]]); }
@@ -173,7 +173,7 @@ function earlyKing(id, t, K) {
   // lit: pleased with himself; just lost the light: sour; in the dark: afraid
   if (lead) { K.look = mine ? PILE : headAt(lead); K.face = mine ? face('proud', { mouth: 'grin' }) : F('side', 'knit', 'frown'); if (mine) K.lean = -0.06; }
   if (myPlay) { K.lean = 0.2; K.rise = 0.22; K.look = PILE; K.face = F('down', 'knit', myPlay.hard ? 'grit' : 'flat'); }
-  if (dark?.who === id) { K.sweat = dark.k; K.face = F('wide', 'worried', 'flat'); K.look = t % 2.2 < 1.2 ? PILE : LAMP_PT; K.lean = 0.1; }
+  if (dark?.who === id) { K.sweat = dark.k; K.face = F('wide', 'worried', 'flat'); K.look = t % 2.2 < 1.2 ? PILE : lead && lead !== id ? headAt(lead) : fan; K.lean = 0.1; }
   // someone is being dragged out: everyone watches; then the crown; then the lamp; then their own cards
   for (const d of [CLB, DIA]) {
     const O = OUT[d]; if (d === id) continue;
@@ -208,7 +208,7 @@ function kingsState(t, st) {
     if (seat <= 0) { K.enter = 0; continue; }
     if (seat < 1) K.enter = Math.max(0.002, seat);
     if (red && t >= SLAM) { K.enter = 0; continue; }
-    if (id === BLK && t >= S.BACK[0]) K.enter = lerp(1, 0.3, ease(t, S.BACK[0], S.BACK[1]));
+    if (id === BLK && t >= S.BACK[0]) K.enter = lerp(1, 0.03, ease(t, S.BACK[0], S.BACK[1]));
     if (id === BLK && t >= CUES.egg) { K.empty = 1; continue; }
     if (fin && t >= S.CROWN_SUCK[id].lift) K.crown = 0;
     if (fin) { const push = S.pushOf(id, t); if (push > 0.0005) K.enter = 1 - Math.cbrt(push / ENTER_DX); }
@@ -320,8 +320,8 @@ function kingsState(t, st) {
       } else {
         const u = t - CUES['7-05'], won = t >= S.WIN, j = ease(t, S.WIN, S.WIN + 0.25), theirDead = [9, 9, 0];
         K.rise = won ? j : u < 0.8 ? 0.55 : lerp(0.55, 0.1, ease(u, 0.8, 1.2)); K.lean = won ? lerp(-0.05, -0.52, j) : u < 0.8 ? -0.3 : -0.05;
-        K.look = u < 0.8 ? up(0.5) : u < 1.45 ? theirDead : !won ? up(0.5) : t < S.WIN + 1.0 ? up(0.5) : headAt(BLK);
-        K.face = u < 0.8 ? (Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open')) : u < 1.45 ? F('wide', 'raised', 'flat') : u < 1.75 ? F('up', 'worried', 'flat') : !won ? F('up', 'raised', 'smirk') : Math.sin(t * 7) > -0.5 ? face('laugh') : face('proud', { mouth: 'grin' });
+        K.look = u < 0.8 ? [0.6, 2.4, 0.3] : u < 1.45 ? theirDead : !won ? headAt(BLK) : t < S.WIN + 1.2 ? headAt(BLK) : [-0.4, 6, 0.3];
+        K.face = u < 0.8 ? (Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open')) : u < 1.45 ? F('wide', 'raised', 'flat') : u < 1.75 ? F('side', 'raised', 'flat') : !won ? F('narrow', 'arch', 'smirk') : Math.sin(t * 7) > -0.5 ? face('laugh') : face('proud', { mouth: 'grin' });
         if (t < CUES['7-05']) { K.rise = 0.55; K.lean = -0.3; K.look = up(0.5); K.face = Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open'); }
       }
     }
@@ -330,9 +330,11 @@ function kingsState(t, st) {
       const h = handFor(id, side, t);
       if (h) { K['arm' + side] = { target: h.target, pole: [sx * 0.4, -0.8, 0] }; K.hand[side] = h.pose; }
     }
+    // dragged away: both hands out for the table's edge
+    if (OUT[id] && t >= OUT[id].pull[0] - 0.12) { const z = zOf(id); K.armL = { target: [sx * 1.12, 0.12, z - 0.2], pole: [sx * 0.4, -0.8, 0] }; K.armR = { target: [sx * 1.12, 0.12, z + 0.2], pole: [sx * 0.4, -0.8, 0] }; K.hand = { L: 'open', R: 'open' }; }
     // the fan of cards in his left hand, until he lays it down for the machine (or is dragged off with it)
     const fd = fin ? S.PLACE[id].up - 0.5 : 1e9;
-    if (t < fd && !K.armL) { K.armL = { target: [sx * 1.08, 0.36, zOf(id) - S.rzOf(id) * 0.16], pole: [sx * 0.4, -0.8, 0] }; K.hand.L = 'hold'; }
+    if (t < fd && !K.armL && S.inGame(id, t)) { K.armL = { target: [sx * 1.08, 0.36, zOf(id) - S.rzOf(id) * 0.16], pole: [sx * 0.4, -0.8, 0] }; K.hand.L = 'hold'; }
   }
 }
 
@@ -387,7 +389,7 @@ function machinesState(t, st) {
     const glow = (run ? 0.4 + 0.5 * pw : 0.03) + 0.6 * flash;
     out[id] = { show: 1, pos: m.pos, yaw: m.yaw, S: m.S, gulp: S.gulpAt(id, t), strike, key: keyAt(id, t), glow, lit, auto: S.autoOn(id, t) ? 1 : 0 };
     const pl = plugAt(id, t);
-    if (pl) out[id].cord = pl;
+    if (pl) out[id].cord = { ...pl, r: 0.026 };
     // the light out of its slot: once the lamp is its food, this is what the kings are lit by
     if (pw > 0) {
       const sp = machinePoint(m, SLOT), sx = sxOf(id), k = pw * (0.45 + 0.9 * glow) * (id === BLK ? lerp(1, 0, ease(t, S.BLK_STOP, S.BLK_STOP + 1.6)) : 1);
@@ -446,6 +448,9 @@ function cardsState(t, st) {
     if (p.by === 'hand') { if (t > p.tr - 0.35) out.push({ ...base, ...handCard(p, t) }); continue; }
     if (t >= p.tr) out.push({ ...base, ...machineCard(p, t) });
   }
+  // after the credits: the shadow that comes over the man has the shape of a card
+  if (t > EGG.shadow) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)), sc = 34;
+    out.push({ pos: [w[0] - CARD.W * sc * (1.05 - 0.75 * u * u), FLOOR_Y + 0.012, w[2] - 0.6], q: basisQ([0, 1, 0], [0.12, 0, -1]), scale: sc, face: CELL.backBlack, back: CELL.backBlack, dim: 1 }); }
   // the fans in their left hands; laid face down when the machines come out; gone with a king who is dragged off
   for (const id of ALL) {
     if (!S.inGame(id, t)) continue;
@@ -562,13 +567,13 @@ export function base(t, world) {
   if (t > SLAM && t < SLAM + 0.1) st.look.flash = 0.25 * (1 - (t - SLAM) / 0.1);
   // the light has left him: the dark over a king's place (it goes with his chair when he is dragged off)
   const dk = S.darkAt(t);
-  if (dk) { const id = dk.who, out = ENTER_DX * Math.pow(1 - S.seated(id, t), 3); st.look.shade = { at: [sxOf(id) * (1.6 + out), zOf(id)], r: [0.95, 0.85], k: 0.66 * dk.k }; }
+  if (dk) { const id = dk.who, out = ENTER_DX * Math.pow(1 - S.seated(id, t), 3); st.look.shade = { at: [sxOf(id) * (1.6 + out), zOf(id)], r: [0.95, 0.85], k: 0.66 * dk.k * (1 - 0.45 * Math.min(1, out / 1.2)) }; }
   // the last card's shadow comes over the red king
   if (t > SLAM - 1.0 && t < SLAM) { const u = (t - (SLAM - 1.0)) / 1.0; st.look.shade = { at: [-1.5, 0.1], r: [lerp(0.5, 3.4, u * u), lerp(0.7, 4.5, u * u)], k: 0.93 * clamp(u * 2.2) }; }
   if (t >= CUES.egg) {
     const Ft = EGG.foot, a = S.eggAnt(t).pos;
     if (t > Ft.in + 0.3 && t < Ft.down) st.look.shade = { at: [a[0], a[2]], r: [0.11, 0.07], k: 0.8 * ease(t, Ft.in + 0.3, Ft.hover) * (1 - ease(t, Ft.shift + 0.2, Ft.down)) };
-    st.look.p3 = { pos: [a[0], FLOOR_Y + 0.4, a[2] + 0.35], col: [1.25, 1.05, 0.75], range: 1.4 };
+    st.look.p3 = { pos: [a[0], FLOOR_Y + 0.55, a[2] + 0.45], col: [1.7, 1.4, 1.0], range: 2.4 };
     if (t > EGG.shadow) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)); st.look.shade = { at: [w[0], w[2]], r: [lerp(0.4, 7, u * u), lerp(0.5, 9, u * u)], k: 0.95 * clamp(u * 2.5) }; }
   }
   if (t >= BLACK && t < CUES['10-02']) st.look.fade = 1;

@@ -236,8 +236,8 @@ export function makeMachines() {
   const chips = { CN: makeChips(600, 'CN'), US: makeChips(600, 'US') };
   root.add(chips.CN, chips.US);
   // the epilogue: a slippered foot under a robe's hem; the same man from very far above; the floor without walls
-  const robe = celMaterial({ color: '#2a2a33', id: 20, gloss: 0.1, litBias: 0.3, shadeMul: 3 }), trim = celMaterial({ color: '#cfd2d6', id: 21, gloss: 0.3, litBias: 0.3, shadeMul: 3 });
-  const shoe = celMaterial({ color: '#8a3f2c', id: 22, gloss: 0.35, litBias: 0.4, shadeMul: 3 });
+  const robe = celMaterial({ color: '#34343f', id: 20, gloss: 0.1, litBias: 0.4, shadeMul: 3.2 }), trim = celMaterial({ color: '#ece6d6', id: 21, gloss: 0.1, litBias: 0.5, shadeMul: 3.4 });
+  const shoe = celMaterial({ color: '#4a5378', id: 22, gloss: 0.35, litBias: 0.5, shadeMul: 3.4 });
   const skin = celMaterial({ color: '#c59a78', id: 23, gloss: 0.2 });
   const foot = new THREE.Group(); foot.visible = false; root.add(foot);
   { // origin under the ball of the foot; the toe points along +z

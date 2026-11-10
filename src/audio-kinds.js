@@ -822,7 +822,7 @@ export function sfxChairBack(e, seed) {
   for (let i = 0; i < len; i++) {
     const u = i / (d * SR);
     if ((i & 63) === 0) dist.set(7500 * Math.pow(600 / 7500, far(u)), 0.6);
-    const en = smooth(u / 0.03) * (u < 1 ? 1 - 0.85 * far(u) : Math.max(0, 1 - (u - 1) * d / 0.2));
+    const en = smooth(u / 0.03) * (u < 1 ? 1 - 0.85 * far(u) : 0.15 * Math.max(0, 1 - (u - 1) * d / 0.2));
     bp.run(nz.white()); lo.run(nz.brown());
     const v = dist.run(mono[i] + bp.bp * 0.06 * speed(u) * en) + lo.lp * 0.5 * speed(u) * en, [gl, gr] = panGains(p0 + (p1 - p0) * far(u));
     S.L[i] = v * gl * Math.SQRT2; S.R[i] = v * gr * Math.SQRT2;
@@ -1463,3 +1463,193 @@ export function sfxFootDown(e, seed) {
 Object.assign(FILM_KINDS, { tak: sfxTak, slabLand: sfxSlabLand, thud: sfxThud, clockwork: sfxClockwork, rundown: sfxRundown, pat: sfxPat, chipDrop: sfxChipDrop,
   crownLift: sfxCrownLift, crownDrop: sfxCrownDrop, gulp: sfxGulp, creak: sfxCreak, burst: sfxBurst, grow: sfxGrow, cheer: sfxCheer, ringRoll: sfxRingRoll,
   cloth: sfxCloth, footDown: sfxFootDown });
+
+// ======================================================================================================================
+// 《喂》 FEED v6: four kings, the lamp, the buttons, the plug, the funnel that takes for itself.
+import { brass as brassI, section as sectionI } from './audio-inst.js';
+
+// ---- THE KINGS' VOICES. No synthetic human voice in this film: every vocal sound a king makes (a laugh, a cry, a
+// grunt, a shout, a cheer) is his own BRASS instrument played through a plunger mute, the "wah" of a talking horn:
+//   heart (the red king)   a trumpet        spade (the black king)  a trombone
+//   diamond                a cornet, higher  club                    a euphonium
+// One timbre per king, always. A syllable is a note whose pitch bends and whose plunger opens or closes.
+export const KING = {
+  heart: { inst: 'trumpet', base: 62, wah: [450, 2300], pan: -0.4 }, spade: { inst: 'trombone', base: 50, wah: [280, 1500], pan: 0.4 },
+  diamond: { inst: 'cornet', base: 69, wah: [600, 2800], pan: -0.62 }, club: { inst: 'euph', base: 57, wah: [320, 1700], pan: 0.62 },
+};
+// syl: [t, dur, semitones from his base at the start, at the end, vel, plunger open 0..1 at the start, at the end, growl]
+export function kingVoice(who, syl, seed) {
+  const K = KING[who] ?? KING.heart, end = Math.max(...syl.map((s) => s[0] + s[1])) + 0.15, n = Math.ceil(end * SR), sec = sectionI(n, 0);
+  syl.forEach(([t, d, p0, p1, v, , , gr], i) => brassI(sec, K.inst, t, d, K.base + p0, clamp(v, 0.2, 1), { n: 1, det: 0, spread: 0, lag: 0, vib: 0, att: 0.012, rel: 0.035, accent: 0.5, scoop: 0.6, bend: (tt) => (p1 - p0) * smooth(tt / d), flutter: gr ?? 0, gain: 0.45, seed: seed + i }));
+  const out = new Float32Array(n), f = new SVF(K.wah[0], 2.2), env = new Float32Array(n);
+  for (const [t, d, , , , o0, o1] of syl) { const a = Math.round(t * SR), m = Math.round((d + 0.05) * SR); for (let i = 0; i < m && a + i < n; i++) env[a + i] = Math.max(env[a + i], o0 + (o1 - o0) * Math.min(1, i / (d * SR))); }
+  let o = 0;
+  for (let i = 0; i < n; i++) { o += (env[i] - o) * 0.004; if ((i & 15) === 0) f.set(K.wah[0] * Math.pow(K.wah[1] / K.wah[0], o), 2.2); f.run((sec.L[i] + sec.R[i]) * 0.5); out[i] = f.lp * 0.9 + f.bp * 0.5; }
+  return fadeTail(out, 0.01);
+}
+// what they say
+const SAY = {
+  laugh: (t0, n = 4, top = 7) => Array.from({ length: n }, (_, i) => [t0 + i * 0.135, 0.075, top - 2 * i, top - 2 * i - 1, 0.85 - 0.08 * i, 0.2, 1, 0]),
+  whoop: (r, t0) => [[t0, 0.1, 0, 0, 0.8, 0, 0.5, 0], [t0 + 0.13, r.range(0.4, 0.6), 5, 12, 1, 0.3, 1, 0.15]],
+  fanfare: (t0) => [[t0, 0.11, 0, 0, 0.9, 0.3, 1, 0], [t0 + 0.15, 0.11, 4, 4, 0.9, 0.3, 1, 0], [t0 + 0.3, 0.55, 7, 7, 1, 0.3, 1, 0.1]],   // the tune's first three notes
+  stop: (r, t0, up = 0) => [[t0, 0.09, 7 + up, 7 + up, 0.9, 0.5, 1, 0.3], [t0 + 0.11, r.range(0.25, 0.4), 12 + up, 5 + up, 1, 1, 0.15, 0.45]],
+  cry: (t0) => [[t0, 0.42, 3, 12, 1, 0.2, 1, 0.25]],
+  grunt: (t0, deep = 0, v = 0.75) => [[t0, 0.16, -5 - deep, -9 - deep, v, 0, 0.35, 0.3]],
+};
+const endOf = (syl) => Math.max(...syl.map((s) => s[0] + s[1]));
+const thin = (x) => { const hp = new SVF(900, 0.7), lp = new SVF(2600, 0.7); for (let i = 0; i < x.length; i++) { hp.run(x[i]); x[i] = lp.run(hp.hp) * 0.2; } return x; };
+const kings = (who) => (who === 'both' ? ['heart', 'spade'] : [who ?? 'heart']);
+const voiced = (e, dur, make) => { const S = pair(dur + 0.5); kings(e.who).forEach((w, i) => { const m = make(w, i); addPan(S, e.far ? thin(m) : m, (KING[w]?.pan ?? 0) * (e.far ? 0.3 : 1)); }); return { L: S.L, R: S.R, panned: true }; };
+
+// CHUCKLE {who} — a short laugh down his horn: "wa-ha-ha"
+export function sfxChuckleB(e, seed) { return kingVoice(e.who, SAY.laugh(0.02, 3 + (seed % 2), 5), seed); }
+// SHOUT {who | 'both', dur, far} — wordless shouting ("stop!"): a short pick-up and a hard falling note, again and
+// again, more often and higher as it goes on; far: tiny and thin
+export function sfxShout(e, seed) {
+  const d = Math.max(0.4, e.dur || 1);
+  return voiced(e, d, (w, i) => { const r = new Rng(seed + 31 * i), syl = []; for (let t = 0.02 + 0.2 * i; t < d - 0.3 || !syl.length; t += r.range(0.55, 0.8) * (1 - 0.4 * t / Math.max(d, 3))) syl.push(...SAY.stop(r, t, Math.round(3 * t / Math.max(d, 3)))); return kingVoice(w, syl, seed + i); });
+}
+// CHEER {who, dur, far} — one man cheering: whoops, laughs, and the tune's first three notes as a fanfare
+export function sfxCheerB(e, seed) {
+  const d = Math.max(0.5, e.dur || 2);
+  return voiced(e, d, (w, i) => {
+    const r = new Rng(seed + 17 * i), syl = [];
+    for (let t = 0.02, q = 0; t < d - 0.5; q++) { const p = q % 3 === 0 ? SAY.whoop(r, t) : q % 3 === 1 ? SAY.fanfare(t) : SAY.laugh(t, 4, 9); syl.push(...p); t = endOf(p) + r.range(0.2, 0.45); }
+    return kingVoice(w, syl, seed + i);
+  });
+}
+
+// LAMPLEAN {who, amp} — the lamp swings over to a king: its chain creaks (iron links grinding), links clink, and the
+// light crosses the table with a low soft swoosh. Small ones (the machines' duel: amp < 0.7) are one short creak,
+// lower to the left, higher to the right: a metronome made of chain (four cached)
+const leanBank = new Map();
+export function sfxLampLean(e, seed) {
+  const amp = clamp(e.amp ?? 1, 0.1, 1), dir = isUS(e.who) ? 1 : -1, r = new Rng(seed);
+  const M = [[700, 18, 0.6], [1150, 24, 1], [1720, 28, 0.6], [2650, 30, 0.3]];
+  if (amp < 0.7) {
+    const v = ((seed % 2) + 2) % 2, key = `${SR}|${dir}|${v}`; if (leanBank.has(key)) return leanBank.get(key);
+    const k = dir > 0 ? 1.18 : 0.92, rr = new Rng(7700 + v + (dir > 0 ? 10 : 0)), out = new Float32Array(Math.ceil(0.22 * SR));
+    add(out, fadeTail(friction(0.09, { modes: M.map(([f, q, g]) => [f * k * rr.range(0.98, 1.02), q, g]), rate: (u) => 30 + 40 * Math.sin(Math.PI * u), env: (u) => Math.pow(Math.sin(Math.PI * u), 1.3), gain: 0.14, drive: 1.3, jit: 0.5 }, 7710 + v), 0.01), 1, 0);
+    chink(out, Math.round(0.07 * SR), 1100 * k * rr.range(0.95, 1.05), 0.05, rr.next() * 6, 0.7);
+    fadeTail(out, 0.02); leanBank.set(key, out); return out;
+  }
+  const S = pair(1.5), cr = friction(0.42, { modes: M.map(([f, q, g]) => [f * r.range(0.93, 1.07), q, g]), rate: (u) => 18 + 50 * Math.sin(Math.PI * u), env: (u) => Math.pow(Math.sin(Math.PI * u), 1.2), gain: 0.2, drive: 1.4, jit: 0.6 }, seed);
+  addPan(S, fadeTail(cr, 0.02), 0.2 * dir, Math.round(0.02 * SR));
+  addPan(S, fadeTail(friction(0.2, { modes: M.map(([f, q, g]) => [f * 1.1, q, g]), rate: (u) => 40 - 20 * u, env: (u) => Math.sin(Math.PI * u), gain: 0.1, drive: 1.2, jit: 0.6 }, seed + 1), 0.02), 0.4 * dir, Math.round(0.62 * SR));
+  for (let q = 0; q < 4; q++) { const g = new Float32Array(Math.round(0.14 * SR)); chink(g, 0, r.range(800, 1600), r.range(0.04, 0.08), r.next() * 6, 0.8); addPan(S, g, 0.3 * dir, Math.round(r.range(0.05, 0.8) * SR)); }
+  const nA = new Noise(seed + 2), lp = new SVF(300, 0.7), n = Math.round(0.7 * SR);   // the light crossing the table
+  for (let i = 0; i < n; i++) { const u = i / n; if ((i & 63) === 0) lp.set(180 + 420 * Math.sin(Math.PI * u), 0.7); lp.run(nA.pink()); const v = lp.lp * 1.6 * Math.pow(Math.sin(Math.PI * u), 1.5), [gl, gr] = panGains(dir * (-0.3 + 0.9 * u)); S.L[i] += v * gl; S.R[i] += v * gr; }
+  return { L: S.L, R: S.R, panned: true };
+}
+// LIGHTLEAVES {who} — the light slides off a king: the air on his side goes dull (a soft falling sweep), and he holds
+// his breath (a small intake, then nothing)
+export function sfxLightLeaves(e, seed) {
+  const out = new Float32Array(Math.ceil(1.6 * SR)), nz = new Noise(seed), bp = new SVF(1800, 1.0), n = Math.round(1.0 * SR);
+  for (let i = 0; i < n; i++) { const u = i / n; if ((i & 63) === 0) bp.set(2000 * Math.pow(0.14, u), 1.0); bp.run(nz.pink()); out[i] += bp.bp * 0.5 * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.5 * u); }
+  add(out, sfxBreathe({ who: e.who, dir: 'in' }, seed + 1), 0.6, Math.round(0.75 * SR));
+  return fadeTail(out, 0.05);
+}
+// DRAGOUT {who, dur} — a chair with a man in it yanked back across stone into the dark: the jolt, both legs scraping,
+// away and gone; his cry (his horn, rising) cut off
+export function sfxDragOut(e, seed) {
+  const d = Math.max(0.5, e.dur || 1.15), pan = KING[e.who]?.pan ?? 0, ch = sfxChairBack({ who: e.who, dur: d, pan }, seed), S = pair(ch.L.length / SR + 0.1), M = new Float32Array(Math.round(0.5 * SR));
+  for (let i = 0; i < ch.L.length; i++) { S.L[i] = ch.L[i] * 1.5; S.R[i] = ch.R[i] * 1.5; }
+  sweep(M, 0, 170, 60, 0.02, 0.07, 0.9, 0.001, 1.2); noiseBurst(M, 0, { a: 0.0005, tau: 0.015, f0: 700, q: 0.7, mode: 'lp', amp: 0.9 }, new Noise(seed + 3)); ping(M, 0, 140, 0.3, [[1, 1, 0.06], [1.9, 0.6, 0.04], [3.1, 0.4, 0.02]], 0.5);
+  addPan(S, M, pan);
+  const cry = kingVoice(e.who, SAY.cry(0.03), seed + 7), cut = Math.round(0.4 * SR), fo = Math.round(0.004 * SR);
+  for (let i = 0; i < cry.length; i++) cry[i] *= i < cut - fo ? 1 : i < cut ? (cut - i) / fo : 0;   // cut off
+  addPan(S, cry, pan, 0, 1.3);
+  return { L: S.L, R: S.R, panned: true };
+}
+// CROWNSPIN {who, dur} — a crown hits the cloth (a clang the cloth swallows), spins on its rim like a coin, faster and
+// lower as it settles, and stops with a small flat knock
+export function sfxCrownSpin(e, seed) {
+  const d = Math.max(0.6, e.dur || 1.45), out = new Float32Array(Math.ceil((d + 0.7) * SR)), r = new Rng(seed + hashW(e.who)), f = r.range(1150, 1400);
+  ping(out, 0, f, 0.2, [[1, 1, 0.3], [1.52, 0.7, 0.2], [2.41, 0.5, 0.12], [3.3, 0.3, 0.08]], r.next() * 6);
+  noiseBurst(out, 0, { a: 0.0008, tau: 0.012, f0: 600, q: 0.7, mode: 'lp', amp: 0.5 }, new Noise(seed)); noiseBurst(out, 0, { a: 0.0001, tau: 0.0015, f0: 4200, q: 0.8, amp: 0.35 }, new Noise(seed + 1));
+  for (let t = 0.14, p = 0.17, a = 0.09; t < d; t += p, p = Math.max(0.018, p * 0.885), a *= (t > 0.8 * d ? 0.8 : 0.97)) {
+    const at = Math.round(t * SR), ff = f * (1 - 0.12 * t / d) * r.range(0.995, 1.005);
+    ping(out, at, ff, a, [[1, 1, 0.1], [1.52, 0.6, 0.07], [2.41, 0.35, 0.04]], r.next() * 6);
+    noiseBurst(out, at, { a: 0.0003, tau: 0.003, f0: 1000, q: 0.7, mode: 'lp', amp: a * 1.5 }, new Noise(seed + 5 + Math.round(t * 1e4)));
+  }
+  noiseBurst(out, Math.round(d * SR), { a: 0.0005, tau: 0.008, f0: 700, q: 0.7, mode: 'lp', amp: 0.2 }, new Noise(seed + 2)); ping(out, Math.round(d * SR), f * 0.85, 0.03, [[1, 1, 0.08]], 0.4);
+  return fadeTail(out, 0.1);
+}
+// BUTTON {who, mode 'auto' | 'cancel', hard} — one push-button, one click (down, then the spring's little answer). 托管
+// ('auto'): after the click a small rising chime: it works. 取消 ('cancel'): THE SAME click, and nothing. Harder: a
+// fist comes with it (flesh, the machine's body); the click itself never changes.
+function btnClick(out, at) {
+  ping(out, at, 2350, 0.3, [[1, 1, 0.008], [1.68, 0.5, 0.005]], 0.4); ping(out, at, 520, 0.28, [[1, 1, 0.016], [2.3, 0.3, 0.009]], 1.2);
+  noiseBurst(out, at, { a: 0.0002, tau: 0.0013, f0: 4800, q: 0.9, amp: 0.6 }, new Noise(71));
+  const up = at + Math.round(0.055 * SR); ping(out, up, 2900, 0.12, [[1, 1, 0.006]], 0.2); noiseBurst(out, up, { a: 0.0001, tau: 0.0008, f0: 5600, q: 1, amp: 0.25 }, new Noise(72));
+}
+export function sfxButton(e, seed) {
+  const hard = clamp(e.hard ?? 0.5), auto = e.mode !== 'cancel', out = new Float32Array(Math.ceil((auto ? 1.4 : 0.4) * SR));
+  btnClick(out, 0);
+  if (hard > 0.35) { const h = (hard - 0.35) / 0.65; noiseBurst(out, 0, { a: 0.0008, tau: 0.012 + 0.02 * h, f0: 520, q: 0.7, mode: 'lp', amp: 1.1 * h }, new Noise(seed)); sweep(out, 0, 135, 55, 0.02, 0.05 + 0.04 * h, 0.7 * h, 0.0015, 1); ping(out, 0, 210, 0.12 * h, [[1, 1, 0.05], [2.6, 0.4, 0.03]], 0.7); }
+  if (auto) { const a = isUS(e.who) ? 88 : 93; ping(out, Math.round(0.12 * SR), mtof(a), 0.06, [[1, 1, 0.35], [2.76, 0.3, 0.16]], 0.2); ping(out, Math.round(0.27 * SR), mtof(a + 5), 0.075, [[1, 1, 0.55], [2.76, 0.3, 0.25]], 0.2); }
+  return fadeTail(out, 0.02);
+}
+// PLUGBITE {who} — a plug bites the lamp: brass teeth, a spark (a burst of crackle, an arc's buzz), the mains hum
+// swelling up out of it, the lamp's own tone sagging away
+export function sfxPlugBite(e, seed) {
+  const out = new Float32Array(Math.ceil(2.8 * SR)), r = new Rng(seed);
+  ping(out, 0, 1900, 0.22, [[1, 1, 0.03], [2.4, 0.5, 0.02]], 0.3); noiseBurst(out, 0, { a: 0.0002, tau: 0.002, f0: 3600, q: 0.8, amp: 0.5 }, new Noise(seed));
+  for (let q = 0; q < 11; q++) noiseBurst(out, Math.round(r.range(0.008, 0.16) * SR), { a: 0.0001, tau: r.range(0.0004, 0.002), f0: r.range(3500, 9000), q: 0.8, amp: r.range(0.4, 0.95), hp: 2000 }, new Noise(seed + 2 + q));
+  const dr = new Drift(seed + 1, 45), n = out.length;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, arc = Math.tanh(6 * Math.sin(TAU * 100 * t)) * 0.3 * Math.exp(-t / 0.12) * (0.4 + 0.6 * Math.abs(dr.at(t)));
+    const hum = (Math.tanh(3 * Math.sin(TAU * 50 * t)) * 0.5 + Math.tanh(4 * Math.sin(TAU * 100 * t + 0.6)) * 0.4 + Math.sin(TAU * 150 * t) * 0.2) * 0.2 * smooth(t / 0.9) * (1 - smooth((t - 1.5) / 1.2));
+    const sag = Math.sin(TAU * (700 - 420 * smooth(t / 0.8)) * t) * 0.03 * smooth(t / 0.03) * (1 - smooth(t / 0.9));
+    out[i] += arc + hum + sag;
+  }
+  return fadeTail(out, 0.05);
+}
+// SUCK {who | 'both', dur, gain} — the funnel inhaling by itself: a throat of brass drawing air, its vowel rising,
+// louder and louder, shut at the end. 'both' (7-01): the two machines eating the hall: the same, enormous
+export function sfxSuck(e, seed) {
+  const d = Math.max(0.3, e.dur || 1), both = e.who === 'both', k = both ? 0.4 : 1, S = pair(d + 0.4);
+  for (const [out, sd] of [[S.L, 1], [S.R, 2]]) {
+    const nz = new Noise(seed + sd), f1 = new SVF(300, 3), f2 = new SVF(900, 4), lo = new SVF(120, 0.7);
+    let p = 0;
+    for (let i = 0; i < out.length; i++) {
+      const t = i / SR, u = Math.min(1, t / d), en = Math.pow(u, 2.0) * (t < d ? 1 : Math.exp(-(t - d) / 0.025));
+      if ((i & 63) === 0) { const s = (1 + 2.0 * Math.pow(u, 1.2) + (sd - 1.5) * 0.06) * k; f1.set(300 * s, 3); f2.set(900 * s, 4); lo.set(100 + 300 * u, 0.7); }
+      const pk = nz.pink(); f1.run(pk); f2.run(pk * 0.6 + nz.white() * 0.4); lo.run(nz.brown());
+      p += (38 + 34 * u) / SR; p -= Math.floor(p);
+      out[i] = ((f1.bp * 1.0 + f2.bp * 0.6) * 0.6 + (both ? lo.lp * 2.6 * Math.pow(u, 1.5) + Math.sin(TAU * p) * 0.3 * u * u : lo.lp * 0.5 * u)) * en;
+    }
+  }
+  const M = new Float32Array(Math.round(0.3 * SR)); sweep(M, 0, 130 * (both ? 0.6 : 1), 50, 0.02, 0.05, both ? 0.9 : 0.35, 0.001, 0.8); addMid(S, M, Math.round(d * SR), Math.SQRT2);
+  return { L: S.L, R: S.R };
+}
+// KEYSTRAIN {dur} — a man holding a turning key: the spring's steel groaning against his hands, the ratchet forcing
+// tooth after tooth, his grunt (his horn, low), and at the end he is thrown back: a second grunt, the chair's knock
+export function sfxKeyStrain(e, seed) {
+  const d = Math.max(0.6, e.dur || 1.8), out = new Float32Array(Math.ceil((d + 0.6) * SR)), r = new Rng(seed);
+  add(out, fadeTail(friction(d, { modes: STEELM.map(([f, q, a]) => [f * 2.6, q, a]), rate: (u) => 7 + 16 * u + 6 * Math.sin(TAU * 2.3 * u), env: (u) => smooth(u / 0.1) * (0.6 + 0.4 * u) * (1 - smooth((u - 0.95) / 0.05)), gain: 0.22, drive: 1.9, jit: 0.8, jitHz: 9 }, seed), 0.01), 1, 0);
+  for (let t = 0.15; t < d; t += r.range(0.12, 0.3)) add(out, ratchetTick(0.6, Math.round(t * 10) & 1), 1.6, Math.round(t * SR));
+  add(out, kingVoice(e.who ?? 'heart', [...SAY.grunt(0, 0, 0.7), ...SAY.grunt(0.5 * d, 2, 0.8)], seed + 3), 0.7, Math.round(0.25 * SR));
+  const j = Math.round(d * SR);
+  add(out, kingVoice(e.who ?? 'heart', [[0, 0.22, -2, -10, 1, 0.6, 0, 0.3]], seed + 4), 0.9, j);
+  sweep(out, j + Math.round(0.12 * SR), 150, 60, 0.02, 0.07, 0.6, 0.0015, 1); ping(out, j + Math.round(0.12 * SR), 132, 0.25, [[1, 1, 0.06], [1.9, 0.6, 0.04], [3.07, 0.4, 0.025]], 0.8);
+  return fadeTail(out, 0.05);
+}
+// GLASSSLIDE {dur} — wire spectacles sliding out over card: a thin dry hiss of wire on paper, then they rock on
+// their rims, twice, three times, each softer, and are still
+export function sfxGlassSlide(e, seed) {
+  const d = Math.max(0.6, e.dur || 1.85), out = new Float32Array(Math.ceil((d + 0.3) * SR)), r = new Rng(seed), nz = new Noise(seed), b1 = new SVF(5200, 4), b2 = new SVF(2200, 1.2), ds = 0.5 * d, n = Math.round(ds * SR);
+  for (let i = 0; i < n; i++) { const u = i / n, w = nz.white(); b1.run(w); b2.run(w); out[i] += (b1.bp * 0.05 + b2.bp * 0.04) * smooth(u / 0.1) * Math.pow(1 - u, 0.7); }
+  for (let t = ds, p = 0.26, a = 0.05; t < d && a > 0.004; t += p, p *= 0.8, a *= 0.6) { const at = Math.round(t * SR); ping(out, at, r.range(4600, 5200), a, [[1, 1, 0.05], [1.37, 0.6, 0.035]], r.next() * 6); ping(out, at + Math.round(0.03 * SR), r.range(5800, 6500), a * 0.6, [[1, 1, 0.04]], r.next() * 6); noiseBurst(out, at, { a: 0.0002, tau: 0.001, f0: 3000, q: 1, amp: a * 1.5 }, new Noise(seed + Math.round(t * 1e4))); }
+  return fadeTail(out, 0.05);
+}
+// CHAIRBACK {who, dur} — a chair pushed slowly back over stone by the man in it: two heavy, careful pushes
+export function sfxChairPush(e, seed) {
+  const d = Math.max(0.6, e.dur || 2.3), out = new Float32Array(Math.ceil((d + 0.2) * SR)), lp = new SVF(1600, 0.6);
+  const f = friction(d, { modes: WOOD.map(([ff, q, a]) => [ff * 0.95, q, a]), rate: (u) => 8 + 16 * Math.pow(Math.abs(Math.sin(Math.PI * 2 * u)), 0.7), env: (u) => Math.pow(Math.abs(Math.sin(Math.PI * 2 * u)), 0.8) * (1 - 0.4 * u), gain: 0.2, drive: 1.6, jit: 0.6, jitHz: 11 }, seed);
+  const nz = new Noise(seed + 1), lo = new SVF(130, 0.7);
+  for (let i = 0; i < f.length; i++) { const u = i / f.length; lo.run(nz.brown()); out[i] = lp.run(f[i]) + lo.lp * 0.4 * Math.pow(Math.abs(Math.sin(Math.PI * 2 * u)), 0.8); }
+  return fadeTail(out, 0.05);
+}
+Object.assign(FILM_KINDS, { lampLean: sfxLampLean, lightLeaves: sfxLightLeaves, dragOut: sfxDragOut, crownSpin: sfxCrownSpin, button: sfxButton, plugBite: sfxPlugBite,
+  suck: sfxSuck, keyStrain: sfxKeyStrain, shout: sfxShout, cheer: sfxCheerB, chuckle: sfxChuckleB, glassSlide: sfxGlassSlide, chairBack: sfxChairPush });

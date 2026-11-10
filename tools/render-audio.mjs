@@ -72,7 +72,7 @@ writeFileSync(join(outDir, `${OUT}.wav`), encodeWav([L, R], SR));
 if (res.stems) for (const [k, b] of Object.entries(res.stems)) writeFileSync(join(outDir, `stem-${k}.wav`), encodeWav([b.L, b.R], SR));
 log(`《喂》 FEED ${DURATION.toFixed(2)} s: ${report.test ? 'TEST events (stand-in list)' : `the director's events (${events.length})`} + the score's own ambience; ${report.events} rendered`);
 log(`render: ${ms.toFixed(0)} ms  ${JSON.stringify(report.timingsMs)}`);
-{ const lb = report.limiterBlocks.slice().sort((a, b) => a[1] - b[1]).slice(0, 8); log(`limiter: deepest ${report.limiterGrDb} dB; worst 0.1 s blocks: ${lb.map(([t, g]) => `${tc(t)} ${g}`).join(', ')}; glue ${report.glueGrDb} dB; staging ref (5-01, pre-master) ${report.refLufs} LUFS, master gain ${report.masterGainDb} dB`); }
+{ const lb = report.limiterBlocks.slice().sort((a, b) => a[1] - b[1]).slice(0, 8); log(`limiter: deepest ${report.limiterGrDb} dB; worst 0.1 s blocks: ${lb.map(([t, g]) => `${tc(t)} ${g}`).join(', ')}; glue ${report.glueGrDb} dB; staging ref (7-01, pre-master) ${report.refLufs} LUFS, master gain ${report.masterGainDb} dB`); }
 let clip = 0; for (let i = 0; i < L.length; i++) if (Math.abs(L[i]) >= 0.9999 || Math.abs(R[i]) >= 0.9999) clip++;
 log(`score: ${L.length} samples = ${(L.length / SR).toFixed(3)} s  sample peak ${report.peakDb} dBFS  true peak ${report.truePeakDb} dBTP  clipped ${clip}`);
 if (Object.keys(report.unknown).length) log(`UNKNOWN event kinds (silent): ${JSON.stringify(report.unknown)}`);

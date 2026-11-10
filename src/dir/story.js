@@ -42,8 +42,8 @@ export function antAt(t) {
 // ---------------------------------------------------------------- the two who are dragged out
 // pull: the chair is yanked back into the dark; crown: his crown hits the table; still: it has stopped spinning
 export const OUT = {
-  club: { pull: [at('2-04', 0.7), at('2-04', 1.35)], crown: at('2-04', 1.25), still: at('2-04', 2.7) },
-  diamond: { pull: [at('4-04', 0.6), at('4-04', 1.25)], crown: at('4-04', 1.15), still: at('4-04', 2.6) },
+  club: { pull: [at('2-04', 0.7), at('2-04', 1.8)], crown: at('2-04', 1.5), still: at('2-04', 2.9) },
+  diamond: { pull: [at('4-04', 0.6), at('4-04', 1.7)], crown: at('4-04', 1.4), still: at('4-04', 2.8) },
 };
 // 1 at the table .. 0 gone (the `enter` of kings.js: the chair's distance out is cubic in it)
 export function seated(id, t) {
@@ -81,9 +81,9 @@ export const BLK_STOP = at('7-04', 1.7);             // the black machine starve
 export const WIN = at('7-05', 2.0);                  // the red king stands and cheers
 export const POINT = at('7-06', 0.4);                // the black king points up
 export const FINAL_TR = at('8-01', 1.2);             // the last card leaves the slot
-export const SLAM = at('8-02', 1.6);
+export const SLAM = at('8-02', 2.35);
 export const GLASSES = { t0: at('8-03', 0.35), t1: at('8-03', 1.3) };
-export const BACK = [at('8-05', 1.9), at('8-05', 4.2)];   // the black king pushes his chair back into the dark
+export const BACK = [at('8-05', 1.2), at('8-05', 3.6)];   // the black king pushes his chair back into the dark
 export const BLACK = CUES['8-06'];
 
 // ---------------------------------------------------------------- what the machines get: t = swallowed, S = size after
@@ -207,7 +207,7 @@ function buildPlays() {
   mplay(RED, at('6-08', 0.4), { fl: 0.75, at: [0, 0], yaw: -Math.PI / 2 + 0.05 });
   mplay(BLK, at('6-08', 1.85), { fl: 0.75, at: [0.06, -0.12], yaw: -Math.PI / 2 - 0.08 });
   // after the last one, as if nothing had happened: tak, tak, and once more in the black
-  for (const tr of [at('8-04', 0.7), at('8-04', 2.2), at('8-05', 1.0), at('8-05', 3.0), at('8-06', 0.6)]) mplay(RED, tr);
+  for (const tr of [at('8-04', 0.6), at('8-04', 1.8), at('8-05', 0.9), at('8-05', 2.9), at('8-06', 0.6)]) mplay(RED, tr);
   // the last one
   P.push({ who: RED, by: 'machine', final: true, tr: FINAL_TR, t: SLAM, S: MOUNT.S, cs: FINAL_CS, face: card(RED, '∞'), back: backOf(RED), glyph: 1, gcell: CELL.glyph9, at: [0, 0.3], yaw: -Math.PI / 2 });
   P.sort((a, b) => a.t - b.t);
@@ -261,11 +261,11 @@ export const lampOnAt = (t) => lerp(lerp(lerp(1, 0.5, ease(t, PLUG.heart.bite, P
 // who sits in the dark, and how deep: the light has left him
 const DARK = [
   { who: CLB, t0: R1 + 4.1, t1: OUT.club.pull[1] + 0.5 },
-  { who: RED, t0: at('3-01', 2.1), t1: TOY_FIRST + 0.7 },
+  { who: RED, t0: at('3-01', 2.1), t1: TOY_FIRST + 0.7, soft: CUES['3-04'] },
   { who: DIA, t0: BLK_FIRST + 0.7, t1: OUT.diamond.pull[1] + 0.5 },
   { who: RED, t0: RED_STOP - 0.2, t1: RED_GO + 0.6 },
 ];
-export function darkAt(t) { for (const d of DARK) if (t > d.t0 && t < d.t1) return { who: d.who, k: ease(t, d.t0, d.t0 + 0.8) * (1 - ease(t, d.t1 - 0.4, d.t1)) }; return null; }
+export function darkAt(t) { for (const d of DARK) if (t > d.t0 && t < d.t1) return { who: d.who, k: ease(t, d.t0, d.t0 + 0.8) * (1 - ease(t, d.t1 - 0.4, d.t1)) * (d.soft ? 1 - 0.55 * ease(t, d.soft - 0.3, d.soft + 0.3) : 1) }; return null; }
 
 // ---------------------------------------------------------------- after the credits: the ant on the stone floor; a foot; from above
 export const EGG = {
