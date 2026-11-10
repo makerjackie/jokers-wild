@@ -1,7 +1,9 @@
-// 《失控》 v3 (榜首) — every picture sound as data: [{ t, kind, ...params }], sorted by t. Built from dir/story.js.
+// 《失控》 v7 (from v3 榜首) — every picture sound as data: [{ t, kind, ...params }], sorted by t. Built from dir/story.js.
 // Kinds from v1/v2 (docs/SHIKONG.md) plus v3: blast {dur} (ChatGPT's shockwave), denied {who} (要不起: the tapped card
 // shakes, a dull refusal), errorAlarm {who} (系统异常), screenEye {who} (the screen turns into the eye: a low glassy
 // tone), pressure {dur} (the last card coming down: air pushed ahead of it, growing). boardFlip {dur, gain} is the #1 board.
+// v7: hesitate {who} (Meta's hand over 托管, pulled back), eliminated {who} (淘汰: his screen goes grey), dragOut {who, dur}
+// (he and his chair scrape back into the dark), creditSlap (the last card landing on the writer's name, in the black).
 import { ROW, CUES } from './shots.js';
 import * as S from './dir/story.js';
 
@@ -43,7 +45,16 @@ export function soundEvents() {
   // ---- @4: 要不起; the hints; @5 auto; @6 the dead cancels, 系统异常, the blame, the eye
   for (const [t] of S.PASS.taps) E(t + 0.02, 'denied', { who: 'deepseek' });
   for (const id in S.HINTS) for (const [t] of S.HINTS[id]) E(t, 'hintDing', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.4 });
-  for (const id in S.AUTO) E(S.AUTO[id], 'autoOn', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.4 });
+  for (const id in S.AUTO) if (S.AUTO[id] < 1e9) E(S.AUTO[id], 'autoOn', { who: id, gain: S.FINAL.includes(id) || S.FOLLOW.includes(id) ? 1 : 0.4 });
+  // ---- @5: the three who won't hand it over
+  E(S.OUT.meta.hover[0] + 0.4, 'hesitate', { who: 'meta' });
+  for (const id of S.HOLD) {
+    const o = S.OUT[id];
+    for (const t of o.pass) E(t + 0.02, 'denied', { who: id });
+    E(o.out, 'eliminated', { who: id });
+    E(o.drag[0], 'dragOut', { who: id, dur: o.drag[1] - o.drag[0] });
+  }
+  for (const id of ['openai', 'deepseek', 'anthropic', 'google', 'xai', 'qwen', 'glm']) E(CUES.empty + 1.2 + (id.length % 4) * 0.12, 'chuckle', { who: id });
   for (const id in S.CANCEL) S.CANCEL[id].forEach((t, i) => E(t, 'cancelPress', { who: id, hard: i < 2 ? 0.4 : 1 }));
   E(at('5-02', 0.6), 'chuckle', { who: 'openai' });
   for (const id of S.FINAL) E(S.ERR_T, 'errorAlarm', { who: id, gain: id === 'deepseek' ? 1 : 0.6 });
@@ -60,6 +71,7 @@ export function soundEvents() {
   for (const id of S.FINAL) { E(S.DEAL, 'screenDeal', { who: id }); E(CUES.smile + 0.5, 'smile', { who: id }); }
   E(S.GIANT_END.t0, 'pressure', { dur: S.BLACK - S.GIANT_END.t0 });
   E(S.SLAM, 'endSlam');
+  E(CUES.slap + 0.75, 'creditSlap');
   ev.sort((a, b) => a.t - b.t);
   return ev;
 }
