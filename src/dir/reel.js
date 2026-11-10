@@ -90,7 +90,7 @@ function moves() {
     add(id, 'R', 'hold', [[G.throw - 0.9, REST], [G.throw - 0.4, cordAt], [G.throw - 0.25, cordAt], [G.throw, up], [G.throw + 0.25, up], [G.throw + 0.7, REST]]);
     // shouting up at it to stop: both arms
     const wave = (dz, ph) => (t) => [sx * 1.5, 1.3 + 0.07 * Math.sin(t * 10 + ph), dz * (0.3 + 0.12 * Math.sin(t * 10 + ph + 1))];
-    const w0 = at('7-02', 1.9), w1 = id === BLK ? S.BLK_STOP + 0.2 : at('7-05', 0.8);
+    const w0 = at('7-02', 1.9), w1 = id === BLK ? S.BLK_STOP + 0.2 : at('7-05', 1.0);
     for (const [side, dz, ph] of [['R', rz, 0], ['L', -rz, 2]]) add(id, side, 'open', [[w0, REST], [w0 + 0.4, wave(dz, ph)], [w1, wave(dz, ph)], [w1 + 0.5, REST]]);
     // 取消: nothing happens. A finger, then the fist, harder and harder
     const C = S.CANCEL[id], pressAt = (t) => { let d = 9; for (const c of C) d = Math.min(d, Math.abs(t - c)); const p = machinePoint(mAt(id, t), BTN_CANCEL); return [p[0], p[1] + 0.015 + Math.min(0.13, d * 0.8), p[2]]; };
@@ -116,7 +116,7 @@ function moves() {
       add(id, S.DEAD_HAND[id], 'hold', [[g - 0.45, REST], [g, cp], [g + 0.1, cp], [r, toss], [r + 0.15, thru], [r + 0.6, REST]]);
     } else {
       const s = S.stackAt(id), sp = [s[0], 0.1, s[1]];
-      add(id, 'R', f.kind === 'chip' ? 'point' : 'hold', [[g - 0.3, REST], [g, sp], [g + 0.06, sp], [r, hopPt(id)], [r + 0.12, hopPt(id)], [r + 0.5, REST]]);
+      add(id, 'R', 'hold', [[g - 0.3, REST], [g, sp], [g + 0.06, sp], [r, hopPt(id)], [r + 0.12, hopPt(id)], [r + 0.5, REST]]);
     }
   }
   // the red king keeps the last chip: off the cloth, up his left sleeve
@@ -319,9 +319,9 @@ function kingsState(t, st) {
         }
       } else {
         const u = t - CUES['7-05'], won = t >= S.WIN, j = ease(t, S.WIN, S.WIN + 0.25), theirDead = [9, 9, 0];
-        K.rise = won ? j : u < 0.8 ? 0.55 : lerp(0.55, 0.1, ease(u, 0.8, 1.2)); K.lean = won ? lerp(-0.05, -0.52, j) : u < 0.8 ? -0.3 : -0.05;
-        K.look = u < 0.8 ? [0.6, 2.4, 0.3] : u < 1.45 ? theirDead : !won ? headAt(BLK) : t < S.WIN + 1.2 ? headAt(BLK) : [-0.4, 6, 0.3];
-        K.face = u < 0.8 ? (Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open')) : u < 1.45 ? F('wide', 'raised', 'flat') : u < 1.75 ? F('side', 'raised', 'flat') : !won ? F('narrow', 'arch', 'smirk') : Math.sin(t * 7) > -0.5 ? face('laugh') : face('proud', { mouth: 'grin' });
+        K.rise = won ? j : u < 1.0 ? 0.55 : lerp(0.55, 0.1, ease(u, 1.0, 1.4)); K.lean = won ? lerp(-0.05, -0.52, j) : u < 1.0 ? -0.3 : -0.05;
+        K.look = u < 1.0 ? [1.2, 1.5, 0.3] : u < 2.5 ? theirDead : !won ? headAt(BLK) : t < S.WIN + 1.2 ? headAt(BLK) : [-0.4, 6, 0.3];
+        K.face = u < 1.0 ? (Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open')) : u < 2.5 ? F('wide', 'raised', 'flat') : u < 2.7 ? F('side', 'raised', 'flat') : !won ? F('narrow', 'arch', 'smirk') : Math.sin(t * 7) > -0.5 ? face('laugh') : face('proud', { mouth: 'grin' });
         if (t < CUES['7-05']) { K.rise = 0.55; K.lean = -0.3; K.look = up(0.5); K.face = Math.sin(t * 6) > -0.4 ? F('wide', 'worried', 'scream') : F('wide', 'worried', 'open'); }
       }
     }
@@ -397,18 +397,18 @@ function machinesState(t, st) {
     }
   }
   // ---- chips: each king's stack; the ones in a hand; the ones falling into a funnel
-  const CS = 1.8, CH = 0.0046 * CS;
+  const CS = 2.7, CH = 0.0046 * CS;
   for (const id of FINAL) {
-    const [x, z] = S.stackAt(id), n = S.chipsLeft(id, t), kind = 'US', r = mulberry32(id === RED ? 5 : 9);
+    const [x, z] = S.stackAt(id), n = S.chipsLeft(id, t), kind = 'GOLD', r = mulberry32(id === RED ? 5 : 9);
     for (let i = 0; i < S.STACK_N; i++) {
       const c = Math.floor(i / 10), j = i % 10, jx = (r() - 0.5) * 0.004, jz = (r() - 0.5) * 0.004, ry = r() * 6.28;
       if (i >= n) continue;
-      out.chips.push({ pos: [x + jx, (j + 0.5) * CH, z + (c - 1) * 0.07 + jz], rot: [0, ry, 0], kind, s: CS });
+      out.chips.push({ pos: [x + jx, (j + 0.5) * CH, z + (c - 1) * 0.1 + jz], rot: [0, ry, 0], kind, s: CS });
     }
   }
   for (const f of S.FEEDS) {
     if (!f.n) continue;
-    const g = S.feedGrab(f), rel = S.feedRelease(f), id = f.who, kind = 'US';
+    const g = S.feedGrab(f), rel = S.feedRelease(f), id = f.who, kind = 'GOLD';
     if (t < g || t > f.t + 0.25) continue;
     const m = mAt(id, t), mouth = machinePoint(m, HOPPER);
     for (let j = 0; j < f.n; j++) {
@@ -419,8 +419,8 @@ function machinesState(t, st) {
   }
   // the chip the red king keeps: in his fingers, up his sleeve; later it comes out by itself
   { const P = S.PALM, C = S.SUCK_CHIP;
-    if (t >= P.grab && t < P.hide + 0.2) out.chips.push({ hand: { id: RED, side: 'R', off: [0, -0.04, 0], mix: ease(t, P.hide, P.hide + 0.2), to: SLEEVE }, rot: [1.2, 0.4, 0], kind: 'US', s: CS });
-    if (t >= C.out && t < C.gone) { const u = (t - C.out) / (C.gone - C.out), m = mAt(RED, t), mouth = machinePoint(m, HOPPER), p = lerp3(sleeveAt(t), mouth, u * u * (3 - 2 * u)); p[1] += 0.3 * Math.sin(Math.PI * u); out.chips.push({ pos: p, rot: [u * 9, u * 5, 1.2], kind: 'US', s: CS }); } }
+    if (t >= P.grab && t < P.hide + 0.2) out.chips.push({ hand: { id: RED, side: 'R', off: [0, -0.04, 0], mix: ease(t, P.hide, P.hide + 0.2), to: SLEEVE }, rot: [1.2, 0.4, 0], kind: 'GOLD', s: CS });
+    if (t >= C.out && t < C.gone) { const u = (t - C.out) / (C.gone - C.out), m = mAt(RED, t), mouth = machinePoint(m, HOPPER), p = lerp3(sleeveAt(t), mouth, u * u * (3 - 2 * u)); p[1] += 0.3 * Math.sin(Math.PI * u); out.chips.push({ pos: p, rot: [u * 9, u * 5, 1.2], kind: 'GOLD', s: CS }); } }
   // the hall, eaten: stone and cloth streaming up into the two funnels
   if (t > S.HALL_GONE - 0.9 && t < MOUNT.t1 + 0.3) {
     const r = mulberry32(4242);
@@ -449,7 +449,7 @@ function cardsState(t, st) {
     if (t >= p.tr) out.push({ ...base, ...machineCard(p, t) });
   }
   // after the credits: the shadow that comes over the man has the shape of a card
-  if (t > EGG.shadow) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)), sc = 34;
+  if (t > EGG.shadow && t < CUES.end) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)), sc = 34;
     out.push({ pos: [w[0] - CARD.W * sc * (1.05 - 0.75 * u * u), FLOOR_Y + 0.012, w[2] - 0.6], q: basisQ([0, 1, 0], [0.12, 0, -1]), scale: sc, face: CELL.backBlack, back: CELL.backBlack, dim: 1 }); }
   // the fans in their left hands; laid face down when the machines come out; gone with a king who is dragged off
   for (const id of ALL) {
@@ -562,7 +562,8 @@ export function base(t, world) {
   // while the lamp is the game its light is a pool, not a room: whoever it leans away from sits in the dark
   { const game = ease(t, CUES['1-07'], CUES['2-01']) * (1 - ease(t, S.PLUG.spade.bite, S.PLUG.spade.bite + 1));
     st.look.lampCone = lerp(64, 47, game); st.look.lampSoft = lerp(0.08, 0.3, game);
-    if (t < S.PLUG.heart.bite) st.look.p3 = { pos: [0, 1.5, 0.6], col: [0.2 * game, 0.18 * game, 0.17 * game], range: 6 }; }
+    const duel = ease(t, S.BLK_FIRST + 1, S.BLK_FIRST + 3);
+    if (t < S.PLUG.heart.bite) st.look.p3 = { pos: [0, 1.5, 0.6], col: [(0.2 + 0.16 * duel) * game, (0.18 + 0.14 * duel) * game, (0.17 + 0.13 * duel) * game], range: 6 }; }
   if (t > S.HALL_GONE && t < S.HALL_GONE + 0.2) st.look.flash = 0.3 * (1 - (t - S.HALL_GONE) / 0.2);
   if (t > SLAM && t < SLAM + 0.1) st.look.flash = 0.25 * (1 - (t - SLAM) / 0.1);
   // the light has left him: the dark over a king's place (it goes with his chair when he is dragged off)
@@ -573,8 +574,9 @@ export function base(t, world) {
   if (t >= CUES.egg) {
     const Ft = EGG.foot, a = S.eggAnt(t).pos;
     if (t > Ft.in + 0.3 && t < Ft.down) st.look.shade = { at: [a[0], a[2]], r: [0.11, 0.07], k: 0.8 * ease(t, Ft.in + 0.3, Ft.hover) * (1 - ease(t, Ft.shift + 0.2, Ft.down)) };
-    st.look.p3 = { pos: [a[0], FLOOR_Y + 0.55, a[2] + 0.45], col: [1.7, 1.4, 1.0], range: 2.4 };
-    if (t > EGG.shadow) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)); st.look.shade = { at: [w[0], w[2]], r: [lerp(0.4, 7, u * u), lerp(0.5, 9, u * u)], k: 0.95 * clamp(u * 2.5) }; }
+    if (t < CUES['10-04']) st.look.p3 = { pos: [a[0], FLOOR_Y + 0.55, a[2] + 0.45], col: [1.7, 1.4, 1.0], range: 2.4 };
+    // the card-shaped shadow (a black card sliding over the floor, cardsState) reaches him: he goes dark with it
+    if (t > EGG.shadow) { const w = S.eggWalker(t), u = clamp((t - EGG.shadow) / (CUES.end - EGG.shadow)); st.look.shade = { at: [w[0], w[2]], r: [0.8, 0.8], k: 0.95 * ease(u, 0.78, 0.93) }; }
   }
   if (t >= BLACK && t < CUES['10-02']) st.look.fade = 1;
   if (t >= CUES['10-02']) st.look.fade = 1 - ease(t, CUES['10-02'], CUES['10-02'] + 0.7);

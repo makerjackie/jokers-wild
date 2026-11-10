@@ -103,7 +103,7 @@ export function soundEvents() {
   E(Ft.shift, 'cloth', { dur: Ft.down - Ft.shift });
   E(Ft.down, 'footDown');
   E(Ft.lift, 'cloth', { dur: 0.7 });
-  E(S.EGG.shadow, 'pressure', { dur: CUES.end - S.EGG.shadow });
+  E(at('10-04', 1.6), 'tak', { who: 'heart', size: 30, gain: 0.35 });
   E(at('10-05', 0.4), 'tak', { who: 'heart', size: 30, gain: 0.8 });
   ev.sort((a, b) => a.t - b.t);
   return ev;

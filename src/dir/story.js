@@ -42,8 +42,8 @@ export function antAt(t) {
 // ---------------------------------------------------------------- the two who are dragged out
 // pull: the chair is yanked back into the dark; crown: his crown hits the table; still: it has stopped spinning
 export const OUT = {
-  club: { pull: [at('2-04', 0.7), at('2-04', 1.8)], crown: at('2-04', 1.5), still: at('2-04', 2.9) },
-  diamond: { pull: [at('4-04', 0.6), at('4-04', 1.7)], crown: at('4-04', 1.4), still: at('4-04', 2.8) },
+  club: { pull: [at('2-04', 0.5), at('2-04', 2.1)], crown: at('2-04', 1.3), still: at('2-04', 2.95) },
+  diamond: { pull: [at('4-04', 0.5), at('4-04', 2.0)], crown: at('4-04', 1.25), still: at('4-04', 2.85) },
 };
 // 1 at the table .. 0 gone (the `enter` of kings.js: the chair's distance out is cubic in it)
 export function seated(id, t) {
@@ -78,7 +78,7 @@ export const FLOOR_T = at('6-07', 1.6);              // (a cut) the machines now
 export const MOUNT = { t0: at('7-01', 0.5), t1: at('7-01', 4.5), S: 30 };
 export const HALL_GONE = at('7-01', 1.4);
 export const BLK_STOP = at('7-04', 1.7);             // the black machine starves
-export const WIN = at('7-05', 2.0);                  // the red king stands and cheers
+export const WIN = at('7-05', 2.95);                  // the red king stands and cheers
 export const POINT = at('7-06', 0.4);                // the black king points up
 export const FINAL_TR = at('8-01', 1.2);             // the last card leaves the slot
 export const SLAM = at('8-02', 2.35);
@@ -251,7 +251,8 @@ const lampTarget = (who) => (who ? [(-zOf(who) * 0.8) / 4.8, (sxOf(who) * 1.2) /
 export function lampSwingAt(t) {
   let T = [0, 0], v0 = [0, 0], t0 = -10;
   const val = (tt) => { const d = tt - t0, r = d <= 0 ? 1 : Math.exp(-3.0 * d) * Math.cos(5.2 * d); return [T[0] + (v0[0] - T[0]) * r, T[1] + (v0[1] - T[1]) * r]; };
-  for (const e of leaderEvents()) { if (e.t > t) break; const v = val(e.t); T = lampTarget(e.who); v0 = v; t0 = e.t; }
+  // (once two machines trade the lead twice a second the lamp only rocks between them: nobody is left in the dark for long)
+  for (const e of leaderEvents()) { if (e.t > t) break; const v = val(e.t), k = e.t > BLK_FIRST + 2 ? 0.45 : 1; T = lampTarget(e.who).map((x) => x * k); v0 = v; t0 = e.t; }
   if (t > PLUG.spade.bite) { const v = val(PLUG.spade.bite); T = [0, 0]; v0 = v; t0 = PLUG.spade.bite; }
   return val(t);
 }
@@ -272,7 +273,7 @@ export const EGG = {
   from: [2.95, 1.45], dir: [-1, 0], speed: 0.03, t0: at('10-02', -0.6),
   foot: { in: at('10-03', 0.35), hover: at('10-03', 1.15), shift: at('10-03', 2.55), down: at('10-03', 3.25), lift: at('10-03', 3.95) },
   walk: { from: [3.5, 1.9], dir: [0.8, 0.6], speed: 0.42, t0: CUES['10-04'] },
-  shadow: at('10-04', 1.5),
+  shadow: at('10-04', 99),
 };
 // the ant stops while the foot hangs over it, then goes on
 export function eggAnt(t) {

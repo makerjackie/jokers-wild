@@ -23,7 +23,7 @@ import * as THREE from 'three';
 import { celMaterial, glowMaterial, C } from './materials.js';
 import { lathe, roundBox, superEllipsoid, sectionLoft, tube } from './geom.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { makeChips } from './chips.js';
+import { makeChips, chipGeometry } from './chips.js';
 import { FLOOR_Y } from './layout.js';
 
 const K = 1 / 0.9;                         // the model is built 0.9 tall; K makes its height exactly 1
@@ -234,20 +234,24 @@ export function makeMachines() {
   for (const id in M) { M[id].root.visible = false; root.add(M[id].root); }
   // chips, fed and flying
   const chips = { CN: makeChips(600, 'CN'), US: makeChips(600, 'US') };
-  root.add(chips.CN, chips.US);
+  // what the kings feed their machines: plain bright gold chips (they must read from across the table)
+  { const gold = new THREE.InstancedMesh(chipGeometry(), celMaterial({ color: '#e8bd4e', id: 19, gloss: 0.95, litBias: 0.55, shadeMul: 3.2, emissive: '#3d2c08' }), 600); gold.frustumCulled = false; gold.count = 0; chips.GOLD = gold; }
+  root.add(chips.CN, chips.US, chips.GOLD);
   // the epilogue: a slippered foot under a robe's hem; the same man from very far above; the floor without walls
-  const robe = celMaterial({ color: '#34343f', id: 20, gloss: 0.1, litBias: 0.4, shadeMul: 3.2 }), trim = celMaterial({ color: '#ece6d6', id: 21, gloss: 0.1, litBias: 0.5, shadeMul: 3.4 });
+  const robe = celMaterial({ color: '#4b4d68', id: 20, gloss: 0.1, litBias: 0.6, shadeMul: 3.6 }), trim = celMaterial({ color: '#ece6d6', id: 21, gloss: 0.1, litBias: 0.5, shadeMul: 3.4 });
   const shoe = celMaterial({ color: '#4a5378', id: 22, gloss: 0.35, litBias: 0.5, shadeMul: 3.4 });
   const skin = celMaterial({ color: '#c59a78', id: 23, gloss: 0.2 });
   const foot = new THREE.Group(); foot.visible = false; root.add(foot);
-  { // origin under the ball of the foot; the toe points along +z
-    const sole = new THREE.Mesh(superEllipsoid(0.048, 0.02, 0.135, 2.6, 2.2, 28, 14), shoe); sole.position.set(0, 0.02, -0.055); foot.add(sole);
-    const upper = new THREE.Mesh(superEllipsoid(0.044, 0.034, 0.1, 2.2, 2, 28, 14), shoe); upper.position.set(0, 0.042, -0.03); foot.add(upper);
-    const toe = new THREE.Mesh(superEllipsoid(0.03, 0.022, 0.06, 2, 2, 20, 12), shoe); toe.position.set(0, 0.03, 0.075); toe.rotation.x = -0.35; foot.add(toe);
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.007, 8, 24).rotateX(Math.PI / 2), trim); band.position.set(0, 0.066, -0.06); foot.add(band);
-    const ankle = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.04, 0.2, 16), skin); ankle.position.set(0, 0.16, -0.085); foot.add(ankle);
-    const hem = new THREE.Mesh(lathe([[0.2, 0], [0.21, 0.012], [0.19, 0.03], [0.15, 0.5], [0.13, 0.5]], 40), robe); hem.position.set(0.05, 0.2, -0.12); foot.add(hem);
-    const hemTrim = new THREE.Mesh(new THREE.TorusGeometry(0.203, 0.011, 8, 40).rotateX(Math.PI / 2), trim); hemTrim.position.set(0.05, 0.212, -0.12); foot.add(hemTrim);
+  { // a bare foot under the hem of a king's robe. Origin under the ball of the foot; the toes point along +z
+    const fs = celMaterial({ color: '#e6b98f', id: 23, gloss: 0.25, litBias: 0.6, shadeMul: 3.4 });
+    const fur = celMaterial({ color: '#efe8d8', id: 21, gloss: 0.05, litBias: 0.6, shadeMul: 3.4 });
+    const part = (g, m, x, y, z, rx = 0) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.rotation.x = rx; foot.add(o); return o; };
+    part(superEllipsoid(0.045, 0.024, 0.115, 2.4, 2.2, 28, 14), fs, 0, 0.024, -0.062);
+    part(superEllipsoid(0.037, 0.034, 0.075, 2.2, 2, 24, 12), fs, 0, 0.05, -0.105, 0.35);
+    [[-0.034, 0.0165, 0.06], [-0.014, 0.0125, 0.064], [0.003, 0.0115, 0.06], [0.018, 0.0105, 0.054], [0.031, 0.0095, 0.046]].forEach(([x, r, z]) => part(superEllipsoid(r, r * 0.85, r * 1.5, 2, 2, 14, 10), fs, x, r * 0.85, z));
+    part(new THREE.CylinderGeometry(0.034, 0.038, 0.22, 16), fs, 0, 0.17, -0.13);
+    part(lathe([[0.2, 0], [0.215, 0.015], [0.2, 0.04], [0.15, 0.55], [0.13, 0.55]], 40), robe, 0.04, 0.24, -0.15);
+    part(new THREE.TorusGeometry(0.205, 0.024, 10, 40).rotateX(Math.PI / 2), fur, 0.04, 0.256, -0.15);
   }
   const walker = new THREE.Group(); walker.visible = false; root.add(walker);
   {
@@ -295,14 +299,14 @@ export function makeMachines() {
         cd.mesh.visible = cd.plug.visible = true; cd.plug.position.set(b[0], b[1], b[2]);
       }
     }
-    const n = { CN: 0, US: 0 };
+    const n = { CN: 0, US: 0, GOLD: 0 };
     for (const c of st.chips ?? []) {
-      const kd = c.kind === 'CN' ? 'CN' : 'US', mesh = chips[kd];
+      const kd = c.kind === 'CN' ? 'CN' : c.kind === 'GOLD' ? 'GOLD' : 'US', mesh = chips[kd];
       if (n[kd] >= 600) continue;
       e.set(...(c.rot ?? [0, 0, 0])); q.setFromEuler(e); p.set(...c.pos); s3.setScalar(c.s ?? 1);
       mesh.setMatrixAt(n[kd]++, m4.compose(p, q, s3));
     }
-    for (const kd of ['CN', 'US']) { chips[kd].count = n[kd]; chips[kd].instanceMatrix.needsUpdate = true; }
+    for (const kd of ['CN', 'US', 'GOLD']) { chips[kd].count = n[kd]; chips[kd].instanceMatrix.needsUpdate = true; }
     const f = st.foot;
     foot.visible = !!f && (f.show ?? 0) > 0;
     if (foot.visible) { foot.position.set(...f.pos); foot.rotation.set(f.pitch ?? 0, f.yaw ?? 0, f.roll ?? 0, 'YXZ'); }
