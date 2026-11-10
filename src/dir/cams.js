@@ -8,7 +8,7 @@ import { screenFrame, screenPoint, BTN } from '../screens.js';
 
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 function macro(cam, st, pos, look, fov = 40, focus = 0.08, k = 0.5) { camLook(cam, pos, look, fov); st.look.near = 0.0025; st.look.dof = { focus, k, max: 34 }; }
-function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 1.75; st.look.lampPow = 1.0; }
+function wide(cam, st, push = 0) { M1(cam, Math.min(1, push + 0.25)); st.look.exposure = 1.75; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.32, 0.29, 0.26], range: 14 }; }   // (v9) a soft fill so the hall reads
 let _posed = null;
 const headOf = (id, w, st, t) => {
   if (w?.kings?.update && st && _posed !== st) { w.kings.update(st.kings, t); _posed = st; }
@@ -138,14 +138,15 @@ export const SHOTS = {
   '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01') : screenCam(w.camera, st, 'openai', 0.62, 0.45, 0.42, 46)),
   // three screens, three hands on 确认, the countdown shrinking on each
   '5-02': (t, st, w, shot) => { const id = ['anthropic', 'google', 'xai'][+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.6, 0.42, 0.44, 46); },
-  '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.95, dz: 0.35, dy: -0.04, ly: -0.12, fov: 36 }),
+  '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.85, dz: 0.3, dy: -0.18, ly: -0.04, fov: 34 }),
   '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.66, 0.5, 0.44, 46),
   '5-05': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
   '5-06': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.5, 0.44, 46); },
   '5-07': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-07') : screenCam(w.camera, st, 'meta', 0.55, 0.45, 0.46, 48)),
   // Meta (left row, seat 3) and Mistral (right row, seat 3) dragged off: a high angle in front, the floor reads the slide
-  '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [-0.7, 1.95, z + 0.7], [lerp(-1.9, -3.0, smooth(u)), 0.1, z - 0.3], 54); st.look.exposure = 1.75; },
-  '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [0.7, 1.95, z + 0.95], [lerp(1.9, 3.0, smooth(u)), 0.05, z], 50); st.look.exposure = 1.75; },
+  // across the table, low: his grey 淘汰 screen in the foreground, him going back into the dark, Claude beside him looking
+  '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [0.35, 0.62, z + 0.75], [lerp(-1.6, -2.4, smooth(u)), 0.35, z - 0.35], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [-2.4, 1.6, z], col: [0.35, 0.3, 0.26], range: 4 }; },
+  '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [-0.35, 0.62, z + 0.75], [lerp(1.6, 2.4, smooth(u)), 0.35, z - 0.2], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [2.4, 1.6, z], col: [0.3, 0.3, 0.34], range: 4 }; },
   '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.0, 1.35 - 0.05 * u, 5.0 - 0.25 * u], [0, 0.35, 0.8], 50); st.look.exposure = 1.75; st.look.lampPow = 1.1; },
   '5-11': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-11')),
   '5-12': (t, st, w) => { const u = uRow(t, '5-12'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.3; },
@@ -168,14 +169,14 @@ export const SHOTS = {
   // from the cloth, where the ant was (1-03): the king looking up
   // from in front and below: the king's upturned face, the way the ant looked up at him
   '7-04': (t, st, w) => { const u = uRow(t, '7-04'); faceCam(w.camera, st, w, t, S.ANT_KING, { d: 0.85, dz: 0.5, dy: 0.18 + 0.03 * u, ly: 0.1, fov: 34 }); st.look.exposure = 1.45; },
-  '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [4.6, 7.2 - 0.3 * u, 4.1], [0, -0.1, 0.15], 21); st.look.far = 300; st.look.exposure = 1.6; },
+  '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [4.6, 7.2 - 0.3 * u, 4.1], [0, -0.1, 0.15], 21); st.look.far = 300; st.look.exposure = 1.2; },
   // ---------------------------------------------------------------- @8 结尾
   '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'anthropic'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },
   '8-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.75], [0, 0.55, -0.1], 52); st.look.exposure = 1.3; },
   // over his head, looking down at the glowing #1 and the finger coming to it
-  '8-03': (t, st, w) => { const f = screenFrame('anthropic'), p = screenPoint('anthropic', 0.5, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.42 - f.right[0] * 0.12, p[1] + f.n[1] * 0.42 + 0.32, p[2] + f.n[2] * 0.42 - f.right[2] * 0.12], p, 42); st.look.exposure = 1.2; if (st.props?.plates) st.props.plates.show = 0; },
+  '8-03': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.56, 0.5, 0.5, 44),
   // low, looking up past their heads: the last card coming down out of the eye
-  '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [0.95, 0.32, 1.75 - 0.15 * u], [-0.3, lerp(4.4, 3.6, u), -0.4], 70); st.look.far = 300; st.look.exposure = 1.85; },
+  '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [1.1, 0.32, 1.75 - 0.15 * u], [-0.75, lerp(5.6, 5.0, u), -0.4], 66); st.look.far = 300; st.look.exposure = 1.85; },
   // his grin, close; the edge of the shadow slides over it
   '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'anthropic', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },

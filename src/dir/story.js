@@ -41,8 +41,8 @@ FOLLOW.forEach((id, i) => { AUTO[id] = at('5-06', (i + 0.6) * 0.8); });
 export const HOLD = ['meta', 'mistral'];
 for (const id of HOLD) AUTO[id] = Infinity;
 export const OUT = {
-  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.3), at('5-08', 2.5)] },
-  mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.55), at('5-09', 2.1)] },
+  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.35), at('5-08', 3.2)] },
+  mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.55), at('5-09', 2.8)] },
 };
 for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
 export const inGame = (id, t) => !OUT[id] || t < OUT[id].drag[1];
@@ -303,7 +303,7 @@ export function eyeSlots() {
 }
 
 // ---------------------------------------------------------------- the end: the last card comes down out of the eye
-export const GIANT_END = { scale: 30, from: 8.2, t0: at('8-04', 0.1), to: 3.0 };   // (v8) we cut to black while it is still above the lamp
+export const GIANT_END = { scale: 30, from: 9.0, t0: at('8-04', 0.1), to: 4.7, x: -0.75 };   // (v9) above the lamp chain, off its axis   // (v8) we cut to black while it is still above the lamp
 export function giantEndY(t) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)); return lerp(GIANT_END.from, GIANT_END.to, 1 - (1 - u) * (1 - u) * (1 - 0.35 * u)); }
 // the #1 at time t: { t, name, who } (who is undefined before the kings play)
 export function topAt(t) { const E = boardTops(); let e = E[0]; for (const x of E) { if (x.t > t) break; e = x; } return e; }

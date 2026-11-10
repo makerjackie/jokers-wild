@@ -77,10 +77,10 @@ export const SHOT_ROWS = [
   { id: '8-03', row: '8-03', seq: 8, t0: 132.5000, t1: 134.5000, cue: 'R8', tension: 8, loud: 1 },
   { id: '8-04', row: '8-04', seq: 8, t0: 134.5000, t1: 137.1000, cue: 'R8', tension: 9, loud: 3 },
   { id: '8-05', row: '8-05', seq: 8, t0: 137.1000, t1: 138.1000, cue: 'R8', tension: 10, loud: 3 },
-  { id: '8-06', row: '8-06', seq: 8, t0: 138.1000, t1: 140.5000, cue: 'R8', tension: 10, loud: 5 },
-  { id: '9-01', row: '9-01', seq: 9, t0: 140.5000, t1: 144.5000, cue: 'R9', tension: 3, loud: 1 },
-  { id: '9-02', row: '9-02', seq: 9, t0: 144.5000, t1: 152.5000, cue: 'R9', tension: 2, loud: 1 },
-  { id: '9-03', row: '9-03', seq: 9, t0: 152.5000, t1: 155.1000, cue: 'R9', tension: 6, loud: 4 },
+  { id: '8-06', row: '8-06', seq: 8, t0: 138.1000, t1: 140.1000, cue: 'R8', tension: 10, loud: 5 },
+  { id: '9-01', row: '9-01', seq: 9, t0: 140.1000, t1: 144.1000, cue: 'R9', tension: 3, loud: 1 },
+  { id: '9-02', row: '9-02', seq: 9, t0: 144.1000, t1: 152.1000, cue: 'R9', tension: 2, loud: 1 },
+  { id: '9-03', row: '9-03', seq: 9, t0: 152.1000, t1: 155.1000, cue: 'R9', tension: 6, loud: 4 },
 ];
 export const SEQS = [
   { num: 1, name: '蚂蚁', act: '序', t0: 0.0000, t1: 11.0000 },
@@ -90,6 +90,6 @@ export const SEQS = [
   { num: 5, name: '托管', act: '二', t0: 59.6000, t1: 91.5000 },
   { num: 6, name: '底牌', act: '三', t0: 91.5000, t1: 112.3000 },
   { num: 7, name: '眼睛', act: '三', t0: 112.3000, t1: 126.7000 },
-  { num: 8, name: '结尾', act: '三', t0: 126.7000, t1: 140.5000 },
-  { num: 9, name: '片尾', act: '尾', t0: 140.5000, t1: 155.1000 },
+  { num: 8, name: '结尾', act: '三', t0: 126.7000, t1: 140.1000 },
+  { num: 9, name: '片尾', act: '尾', t0: 140.1000, t1: 155.1000 },
 ];

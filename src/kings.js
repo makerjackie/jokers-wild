@@ -1561,7 +1561,7 @@ export function makeKings(ctx = {}) {
     const k = kings[id]; k.seat.updateWorldMatrix(true, false);
     const sz = k.cur.size, r = k.cur.rise;
     const near = 0.42 * k.s * sz, fwd = near + r * Math.max(0, 1.02 - near);
-    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.31 * k.s * sz + 0.05 * r), -SEAT.Y + 0.052, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
+    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.28 * k.s * sz + 0.05 * r), -SEAT.Y + 0.052, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
     return [p.x, p.y, p.z];
   }
   const placeSeg = (mesh, a, b) => {           // orient a +y-up segment mesh from a to b (in the seat's frame)
@@ -1583,7 +1583,7 @@ export function makeKings(ctx = {}) {
     // Solve the arm, see where that puts the tip, move the hand target by the difference; three passes converge.
     if (o?.tip && o?.target) {
       const TIP = new THREE.Vector3(...o.target).applyMatrix4(seatInv);
-      const tipLen = (o.pose === 'fist' ? 0.115 : o.pose === 'open' ? 0.17 : 0.195) * k.s;
+      const tipLen = (o.pose === 'fist' ? 0.125 : o.pose === 'open' ? 0.17 : 0.195) * k.s;
       TG.copy(TIP);
       for (let it = 0; it < 3; it++) {
         const dd = tmpV2.copy(TG).sub(SH); let dl = dd.length(); const mR = (L1 + L2) * 0.998;

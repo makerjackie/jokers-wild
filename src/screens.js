@@ -142,12 +142,21 @@ export function makeScreens() {
     }
     // the countdown: a ring that drains faster each round, and the seconds
     if (s.limit > 0) {
-      const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = (t / per) % 1, cx = CW * 0.62, cy = 25;
+      const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = (t / per) % 1, cx = CW * 0.47, cy = 25;
       const hot = L < 1.2;
-      c.lineWidth = 6; c.strokeStyle = 'rgba(255,255,255,0.15)'; c.beginPath(); c.arc(cx, cy, 15, 0, Math.PI * 2); c.stroke();
-      c.strokeStyle = hot ? '#ff4a3a' : '#ffd36a'; c.beginPath(); c.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - ph)); c.stroke();
-      c.fillStyle = hot ? '#ff6a5a' : '#ffe39a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`;
+      c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.roundRect(cx - 24, 2, 300, 46, 23); c.fill();
+      c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,0.15)'; c.beginPath(); c.arc(cx, cy, 16, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = hot ? '#ff4a3a' : '#ffd36a'; c.beginPath(); c.arc(cx, cy, 16, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - ph)); c.stroke();
+      c.fillStyle = hot ? '#ff6a5a' : '#ffe39a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 34px ${SANS}`;
       c.fillText(`限时 ${L >= 1 ? Math.round(L) : L.toFixed(1)} 秒`, cx + 24, cy + 1);
+    }
+    // (v9) the mode switch, announced
+    if (s.toast) {
+      const semi = s.toast === 'semi';
+      c.fillStyle = semi ? 'rgba(20,110,70,0.95)' : 'rgba(170,110,10,0.96)'; c.fillRect(0, CH * 0.33, CW * 0.76, CH * 0.34);
+      c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `900 56px ${SANS}`; c.fillText(semi ? '已开启 半托管' : '已开启 全托管', CW * 0.38, CH * 0.45);
+      c.font = `bold 26px ${SANS}`; c.fillText(semi ? 'AI 帮你选牌 · 你只需点确认' : 'AI 直接出牌 · 不再需要你', CW * 0.38, CH * 0.58);
     }
     // 超时: too slow; the round is gone
     if (s.timeout) {

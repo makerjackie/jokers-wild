@@ -55,7 +55,7 @@ function handFor(id, t) {
   // (v7) where the hand target stops so the finger / fist / palm just meets the glass: a pointing fingertip is ~13 cm
   // past the hand target (kings.js hand frame), a fist's knuckles ~8 cm, a flat palm ~3 cm
   // (v9) the target is the fingertip (or the knuckles of a fist) itself: kings.js solves the arm so it lands exactly here
-  const touch = best.pose === 'fist' ? 0.012 : 0.004;
+  const touch = best.pose === 'fist' ? 0.03 : 0.005;
   const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.13 : best.kind === 'cancel' ? 0.08 : 0.06);
   const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], touch);
   let target;
@@ -176,13 +176,13 @@ function kingsState(t, st) {
         const k0 = lead ? ACCUSE : ACCUSE + 0.5 + r() * 0.7;
         if (t >= k0) {
           const u = ease(t, k0, k0 + 0.35);
-          K.rise = lerp(0.4, 1, u); K.lean = lerp(0.1, -0.42, u);
+          K.rise = lerp(0.4, 0.85, u); K.lean = lerp(0.1, -0.05, u);
           const tgt = lead ? other(id) : oppOf(id);
           K.look = headAt(tgt); pointTo = pointAt(id, headAt(tgt));
           K.face = Math.sin(t * 9 + z) > -0.3 ? face('shout') : face('angry');
         }
       }
-      if (t >= CUES.blizzard) { K.face = face('shout', { eyes: 'shut', mouth: 'grit' }); K.lean = 0.2; K.rise = 0.6; pointTo = null; K.look = f.c; }
+      if (t >= CUES.blizzard) { K.face = face('shout', { eyes: 'wide', mouth: 'grit' }); K.lean = -0.15; K.rise = 0.35; pointTo = null; K.look = [0, 0.9, 0]; }
     }
     // ---- the stop, the rise, the eye: they look up
     if (t >= STOP && t < CUES.deal) {
@@ -231,6 +231,8 @@ function screensState(t) {
       if (nx) s.aiPick = nx.slot;
     }
     if (t >= AUTO[id]) s.full = 1;
+    if (SEMI[id] != null && t > SEMI[id] && t < SEMI[id] + 1.3) s.toast = 'semi';
+    if (t > AUTO[id] && t < AUTO[id] + 1.3) s.toast = 'full';
     for (const tt of TIMEOUT[id] ?? []) if (t > tt && t < tt + 0.45) s.timeout = 1;
     if (OUT[id]) {
       const o = OUT[id];
@@ -294,7 +296,7 @@ function screenFlight(p, t, rest) {
   if (s < emerge) { const e = s / emerge; return { pos: [from[0] + f.n[0] * 0.06 * e, from[1] + f.n[1] * 0.06 * e, from[2] + f.n[2] * 0.06 * e], q: qs, scale: (p.scale ?? 1) * (0.35 + 0.65 * e) }; }
   const u = clamp((s - emerge) / (dur - emerge)), e = u * (1.3 - 0.3 * u);
   const a = [from[0] + f.n[0] * 0.06, from[1] + f.n[1] * 0.06, from[2] + f.n[2] * 0.06];
-  const arcH = p.style === 'giant' ? 0.0 : (p.style === 'auto' || p.style === 'red' ? 0.35 : 0.25) + 0.15 * (p.i % 3) / 2;
+  const arcH = p.style === 'giant' ? 0.0 : (p.style === 'auto' || p.style === 'red' ? 0.12 : 0.2) + 0.06 * (p.i % 3) / 2;
   const pos = [lerp(a[0], rest.pos[0], e), lerp(a[1], rest.pos[1], e) + Math.sin(Math.PI * u) * arcH, lerp(a[2], rest.pos[2], e)];
   const spin = (1 - u) * 1.4 * (p.i % 2 ? 1 : -1);
   return { pos, q: mulQ(slerpQ(qs, rest.q, smooth(u)), axisQ([0, 0, 1], spin)), scale: p.scale ?? 1 };
@@ -330,7 +332,7 @@ function riseFrom(stood, t0, t, seed) {
   const s = t - t0;
   if (s <= 0) return stood;
   const y = stood.pos[1] + 1.4 * s * s + 0.2 * s, ang = a0 + (1.2 + seed) * s * s * 0.9 + s * 0.8;
-  const r = lerp(r0, 0.75 + 0.9 * seed, smooth(s / 1.4)) + 0.09 * Math.max(0, y - 2.8);
+  const r = Math.max(0.45 + 0.3 * seed, lerp(r0, 0.85 + 0.9 * seed, smooth(s / 1.4))) + 0.09 * Math.max(0, y - 2.8);
   const fl = s * (5 + seed * 4);
   const q = mulQ(basisQ([Math.cos(ang), 0.2, Math.sin(ang)], [0, 1, 0]), axisQ([0, 1, 0], Math.sin(fl) * 0.8));
   return { pos: [RISE.axis[0] + Math.cos(ang) * r, y, RISE.axis[1] + Math.sin(ang) * r], q: slerpQ(stood.q, q, smooth(s / 0.5)) };
@@ -370,7 +372,7 @@ function cardsState(t, st) {
     if (d.play?.chat) base.glow = 0.07 * ease(t, d.t + 0.05, d.t + 0.5) * (1 - ease(t, at('2-09'), at('3-01', 1.0)));
     if (t > STOP) {
       const l = liftOf(d);
-      if (t > l) { pose = riseFrom(pose, l, t, ((d.i * 0.618) % 1)); if (pose.pos[1] > 9 || t - l > 3.4) continue; base.glow = 0.15; }
+      if (t > l) { pose = riseFrom(pose, l, t, ((d.i * 0.618) % 1)); if (pose.pos[1] > 9 || t - l > 3.4) continue; base.glow = 0.35; }
     }
     out.push({ ...base, ...pose });
   }
@@ -399,7 +401,7 @@ function cardsState(t, st) {
   eyeCards(t, out);
   // ---- the last card: out of the eye, slowly down on both of them (cut to black before it lands)
   if (t > GIANT_END.t0 - 0.3 && t < BLACK) {
-    out.push({ pos: [0, S.giantEndY(t), -0.05], q: basisQ([0, -1, 0], [0, 0, 1]), scale: GIANT_END.scale * clamp((t - (GIANT_END.t0 - 0.3)) / 0.5), face: CELL.num1, back: CELL.backBlack, glyph: 0, glow: 0.35 });
+    out.push({ pos: [GIANT_END.x ?? 0, S.giantEndY(t), -0.05], q: basisQ([0, -1, 0], [0, 0, 1]), scale: GIANT_END.scale * clamp((t - (GIANT_END.t0 - 0.3)) / 0.5), face: CELL.num1, back: CELL.backBlack, glyph: 0, glow: 0.35 });
   }
 }
 
@@ -449,7 +451,7 @@ export function base(t, world) {
   if (t > chat.t && t < at('3-01', 1.5)) { const g = ease(t, chat.t, chat.t + 0.3) * (1 - ease(t, at('2-09'), at('3-01', 1.0))); st.look.p3 = { pos: [0, 0.2, 0], col: [0.38 * g, 0.55 * g, 0.42 * g], range: 2.2 }; }
   if (t > RED_T && t < STOP) { const g = ease(t, RED_T, RED_T + 1.5); st.look.p3 = { pos: [0, 0.6, 0], col: [0.9 * g, 0.12 * g, 0.08 * g], range: 3.0 }; }
   if (t > EYE.open0 - 1 && t < BLACK) { const g = ease(t, EYE.open0, EYE.open1); st.look.p2 = { pos: [0, EYE.c[1] - 1.5, -0.1], col: [0.9 * g, 0.88 * g, 0.75 * g], range: 14 }; }
-  if (t > DEAL && t < BLACK) { const g = ease(t, DEAL, DEAL + 0.6); st.look.p3 = { pos: [0, 0.35, 0], col: [0.9 * g, 0.85 * g, 0.7 * g], range: 2.6 }; }
+  if (t > DEAL && t < BLACK) { const g = ease(t, DEAL, DEAL + 0.6); st.look.p3 = { pos: [0, 0.35, 0], col: [0.45 * g, 0.42 * g, 0.35 * g], range: 2.2 }; }
   // the last card's shadow: from the middle of the table outward, over the screens, over the smiling faces
   if (t > GIANT_END.t0 && t < BLACK) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)), c = CUES.cover; const R0 = t < c ? lerp(0.25, 1.15, ease(t, GIANT_END.t0, c)) : lerp(1.15, 2.7, (t - c) / (BLACK - c)); st.look.shade = { at: [0, -0.05], r: [R0, R0 * 1.5], k: 0.93 * clamp(u * 4) }; }
   if (t > S.CRUSH - 0.5 && t < S.CRUSH + 0.05) { const u = clamp((t - (S.CRUSH - 0.5)) / 0.5); st.look.shade = { at: [S.ANT_CRUSH[0], S.ANT_CRUSH[1]], r: [lerp(0.16, 0.05, u), lerp(0.22, 0.07, u)], k: 0.85 * u }; }
@@ -458,13 +460,13 @@ export function base(t, world) {
   if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
     sub: '另一个世界的故事。如有雷同，纯属巧合。', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
-    const lines = ['导演', '分镜', '动画', '角色', '美术', '灯光', '建模', '配乐', '音效', '剪辑'].map((r) => [r, 'AI']).concat([['', ''], ['', ''], ['编剧', 'MakerJackie（人类）']]);
-    const LH = 0.062, stop = 0.8 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
+    const lines = ['导演', '分镜', '动画', '角色', '美术', '灯光', '建模', '配乐', '音效', '剪辑'].map((r) => [r, 'AI']).concat([['', ''], ['', ''], ['', ''], ['编剧', 'MakerJackie（人类）']]);
+    const LH = 0.052, stop = 0.82 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
     const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
     // the swat: nothing moves, then in two frames a card slams onto his name, a white flash, a hard jolt; then black
     const hit = CUES.slap + 0.45, jolt = t > hit ? Math.exp(-(t - hit) * 14) * Math.sin((t - hit) * 95) * 0.035 : 0;
     st.titles = { alpha: 1, roll: { y0: lerp(1.08, stop, 1 - (1 - u) ** 2) + jolt, lines, lh: LH } };
-    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.8 + jolt, cell: 'aiAuto', fast: 1 };
+    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.82 + jolt, cell: 'aiAuto', fast: 1 };
     if (t > hit && t < hit + 0.09) st.titles.flash = 1 - (t - hit) / 0.09;
     st.titles.alpha = t > CUES.fin - 0.35 ? 0 : 1;
     if (st.titles.slap) st.titles.slap.alpha = st.titles.alpha;
