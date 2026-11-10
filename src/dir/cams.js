@@ -131,7 +131,8 @@ export const SHOTS = {
   '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [-0.7, 0.78, 1.95], [lerp(1.7, 2.3, smooth(u)), 0.5, 2.55], 46); st.look.exposure = 1.45; },
   '5-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1], z = cut === 1 ? 1.25 : 2.5, u = clamp((t - (cut === 1 ? at('5-08') : at('5-08', 1.8))) / 1.8); camLook(w.camera, [0.7, 0.78, z - 0.55], [lerp(-1.7, -2.3, smooth(u)), 0.5, z + 0.05], 46); st.look.exposure = 1.45; },
   // from the foot: three empty places; the others look, then lean back
-  '5-09': (t, st, w) => { const u = uRow(t, '5-09'); camLook(w.camera, [0.0, 1.05, -0.7 + 0.15 * u], [0, 0.4, 2.7], 52); st.look.exposure = 1.55; },
+  // from above the foot of the table: three grey 淘汰 screens at empty places; the rest look, then lean back
+  '5-09': (t, st, w) => { const u = uRow(t, '5-09'); camLook(w.camera, [0.0, 1.35 - 0.05 * u, 5.0 - 0.25 * u], [0, 0.35, 0.8], 50); st.look.exposure = 1.95; st.look.lampPow = 1.2; },
   '5-10': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-10')),
   '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.4; },
   // ---------------------------------------------------------------- @6 底牌
