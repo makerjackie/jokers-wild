@@ -31,7 +31,7 @@ function presses() {
   }
   for (const [t, slot] of PASS.taps) add('deepseek', t, slotUV(0, slot), 'point', 'tap');
   for (const id in HINTS) for (const [t] of HINTS[id]) add(id, t, BTN.hint, 'point', 'hint');
-  for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, id === 'openai' || id === 'deepseek' ? 'open' : 'point', 'auto', 0.18);
+  for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, id === 'openai' || id === 'deepseek' ? 'fist' : 'point', 'auto', 0.18);
   for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 1 + i * 2), 'point', 'tap'));
   add('meta', OUT.meta.hover[0] + 0.5, BTN.auto, 'point', 'hover', OUT.meta.hover[1] - OUT.meta.hover[0] - 0.5);
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
@@ -52,13 +52,19 @@ function handFor(id, t) {
     if (nx && pv && nx.t - pv.t < 1.4) return { target: screenPoint(id, (nx.uv[0] + pv.uv[0]) / 2, (nx.uv[1] + pv.uv[1]) / 2, 0.16), pose: 'point', fingers };
     return null;
   }
-  const up = best.kind === 'hard' || best.kind === 'auto' ? 0.24 : best.kind === 'cancel' ? 0.15 : 0.13;
-  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], best.kind === 'hover' ? 0.13 + 0.012 * Math.sin(t * 9) : 0.085);
+  // (v7) where the hand target stops so the finger / fist / palm just meets the glass: a pointing fingertip is ~13 cm
+  // past the hand target (kings.js hand frame), a fist's knuckles ~8 cm, a flat palm ~3 cm
+  const sz = KING[id].size ?? 1;
+  const touch = (best.pose === 'point' ? 0.14 : best.pose === 'fist' ? 0.095 : 0.04) * sz;
+  const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.14 : best.kind === 'cancel' ? 0.08 : 0.06);
+  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], best.kind === 'hover' ? touch + 0.05 + 0.012 * Math.sin(t * 9) : touch);
   let target;
   if (t < best.t - 0.12) target = lerp3(pathRest(id), hov, smooth((t - (best.t - 0.5)) / 0.38));
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
   else if (t < best.t + best.hold) target = on;
   else target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
+  // a flat palm slaps with its fingers along the glass (away from him), not into it
+  if (best.pose === 'open') return { target, pose: 'open', fingers: f.up, palm: [-f.n[0], -f.n[1], -f.n[2]], kind: best.kind };
   return { target, pose: best.pose, fingers, kind: best.kind };
 }
 const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.18, 0.12, f.c[2] + 0.12 * (KING[id].side === 'CN' ? 1 : -1)]; };
@@ -179,7 +185,7 @@ function kingsState(t, st) {
     // ---- the arm
     const h = handFor(id, t);
     if (pointTo) { K.armR = arm(id, pointTo); K.hand.R = 'point'; }
-    else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers }); K.hand.R = h.pose; }
+    else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.palm ? { palm: h.palm } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';
   }
 }
@@ -414,12 +420,19 @@ export function base(t, world) {
   // the last card's shadow: from the middle of the table outward, over the screens, over the smiling faces
   if (t > GIANT_END.t0 && t < BLACK) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)), c = CUES.cover; const R0 = t < c ? lerp(0.25, 1.15, ease(t, GIANT_END.t0, c)) : lerp(1.15, 2.7, (t - c) / (BLACK - c)); st.look.shade = { at: [0, -0.05], r: [R0, R0 * 1.5], k: 0.93 * clamp(u * 4) }; }
   if (t >= BLACK) st.look.fade = 1;
-  // ---- the title, then every credit, slowly; the human last
-  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
+  // ---- the title; the credits roll and stop on the writer, the one human; a card falls on his name. Black.
+  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
+    sub: '另一个世界的故事。如有雷同，纯属巧合。', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
-    const lines = ['编剧', '导演', '分镜', '动画', '角色', '美术', '灯光', '配乐', '音效', '剪辑', '调色', '程序'].map((r) => [r, 'Claude']).concat([['', ''], ['人类', 'MakerJackie']]);
-    const u = clamp((t - CUES.credits - 0.5) / (CUES.fin - CUES.credits - 3.0));
-    st.titles = { alpha: 1, roll: { y0: lerp(1.08, 0.5 - (lines.length - 1) * 0.075, u), lines } };
+    const F = 'Claude Fable 5.2', O = 'Claude Opus 5.5';
+    const lines = [['导演', F], ['分镜', F], ['动画', F], ['角色', F], ['美术', F], ['灯光', F], ['建模', `${F} · ${O}`], ['配乐', O], ['音效', O], ['剪辑', F], ['', ''], ['编剧', 'MakerJackie（人类）']];
+    const LH = 0.075, stop = 0.52 - (lines.length - 1) * LH;           // the last line comes to rest just under the middle
+    const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
+    const hit = CUES.slap + 0.75, jolt = t > hit ? Math.exp(-(t - hit) * 18) * Math.sin((t - hit) * 70) * 0.006 : 0;
+    st.titles = { alpha: 1, roll: { y0: lerp(1.08, stop, 1 - (1 - u) ** 2) + jolt, lines } };
+    if (t > CUES.slap) st.titles.slap = { u: clamp((t - CUES.slap) / 0.75), y: 0.52 + jolt, cell: 'num1' };
+    st.titles.alpha = 1 - ease(t, CUES.fin - 0.5, CUES.fin);
+    if (st.titles.slap) st.titles.slap.alpha = st.titles.alpha;
   }
   return st;
 }

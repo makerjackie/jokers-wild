@@ -12,7 +12,8 @@ import { makeScreens } from './screens.js';
 import { makeRollers } from './rollers.js';
 import { makeAnt } from './ant.js';
 import { makeMachines } from './machine.js';
-import { CARD } from './cards.js';
+import { CARD, cardAtlas } from './cards.js';
+import { CELL } from './cards-cells.js';
 import { KINGS, KING, SIDE_SIGN } from './layout.js';
 import { direct } from './director.js';
 import { shotAt } from './shots.js';
@@ -191,12 +192,23 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       if (tt.roll) {
         // the credits roll up from below: every role the same name, the human last
         const lh = H * 0.075, y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);
-        c.globalAlpha = 1; c.letterSpacing = '0px';
+        c.globalAlpha = tt.alpha ?? 1; c.letterSpacing = '0px';
         tt.roll.lines.forEach(([role, name], i) => {
           const y = y0 + i * lh; if (y < -lh || y > H + lh) return;
           c.textAlign = 'right'; c.fillStyle = '#9d9483'; c.font = `${Math.round(H * 0.03)}px "Songti SC", "SimSun", serif`; c.fillText(role, W / 2 - H * 0.03, y);
           c.textAlign = 'left'; c.fillStyle = '#efe6d2'; c.font = `${Math.round(H * 0.034)}px Georgia, "Times New Roman", serif`; c.fillText(name, W / 2 + H * 0.03, y);
         });
+      }
+      if (tt.slap) {
+        // (v7) the last card of the film: it falls out of the dark onto the last name and covers it
+        const k = tt.slap, img = cardAtlas().image, cell = CELL[k.cell] ?? CELL.num1;
+        const ACW = 256, ACH = 372, ax = (cell % 16) * ACW, ay = Math.floor(cell / 16) * ACH;
+        const ch = H * 0.5, cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
+        const cx = W / 2 + H * 0.2, cy = H * k.y + (1 - e) * -H * 0.75, sc = 1 + 0.5 * (1 - e);
+        c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate(-0.07 + 0.3 * (1 - e)); c.scale(sc, sc);
+        c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
+        c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);
+        c.restore();
       }
       if (tt.credit) { c.globalAlpha = (tt.alpha ?? 1) * 0.8; c.font = `${Math.round(H * 0.026)}px Georgia, "Times New Roman", serif`; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.fillText(tt.credit, W / 2, H * 0.86); }
       c.restore();

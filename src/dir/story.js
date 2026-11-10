@@ -105,9 +105,10 @@ const r0 = mulberry32(2026);
 function spot(t, sx, rnd) {
   // a neat pile while men play; a mound once the machines do
   const auto = clamp((t - AUTO.openai) / (STOP - AUTO.openai));
-  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.12 + 0.6 * auto;
-  const a = rnd() * Math.PI * 2, d = sig * Math.sqrt(rnd());
-  return [sx * 0.02 + Math.cos(a) * d * 1.15, 0.02 + Math.sin(a) * d];
+  // (v7) a mound, not a carpet: it stays between the screens (|x| < 0.5) and grows along the table and upward
+  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.16 + 0.34 * auto;
+  const a = rnd() * Math.PI * 2, d = t < AUTO.openai ? sig * Math.sqrt(rnd()) : sig * Math.pow(rnd(), 0.8);   // denser in the middle: a mound
+  return [sx * 0.02 + Math.max(-0.42, Math.min(0.42, Math.cos(a) * d * 0.95)), 0.02 + Math.sin(a) * d * 1.7];
 }
 export const CHAT_T = at('2-05', 1.0);       // ChatGPT lands; the shockwave
 function buildPlays() {
@@ -259,7 +260,7 @@ function buildHeapData() {
     const h = HOUSE_SLOTS[s], rr = mulberry32(400 + s * 17), f = houseFall(s);
     const dx = h.pos[0] - HOUSE_HIT[0] + 0.25, dz = h.pos[2] - HOUSE_HIT[2] + (rr() - 0.5) * 0.5, dl = Math.hypot(dx, dz) || 1;
     const go = 0.12 + rr() * 0.3 + h.pos[1] * 0.6;
-    D.push({ t: f.t1, x: h.pos[0] + (dx / dl) * go, z: HOUSE.z + (dz / dl) * go, yaw: rr() * 6.28, scale: 1, up: rr() > 0.3, face: p.face, back: p.back, play: p, house: s, air: 0.001 });
+    D.push({ t: f.t1, x: Math.min(0.62, h.pos[0] + (dx / dl) * go * 0.6), z: HOUSE.z + (dz / dl) * go, yaw: rr() * 6.28, scale: 1, up: rr() > 0.3, face: p.face, back: p.back, play: p, house: s, air: 0.001 });
   }
   pre.sort((a, b) => a.t - b.t); D.sort((a, b) => a.t - b.t);
   const r1 = buildHeap(pre).rest, r2 = buildHeap(D).rest;

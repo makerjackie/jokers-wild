@@ -27,6 +27,7 @@ function screenCam(cam, st, id, u = 0.5, v = 0.5, d = 0.36, fov = 40, side = 0.1
   camLook(cam, pos, p, fov);
   st.look.dof = { focus: d, k: 0.5, max: 10 };
   st.look.exposure = 1.25;
+  if (st.props?.plates) st.props.plates.show = 0;   // the name plate on the table edge would cover the buttons
 }
 function twoShot(cam, st, y = 0.95, z = 2.65, fov = 44) { camLook(cam, [0, y, z], [0, 0.44, 0], fov); st.look.exposure = 1.4; }
 const shake = (t, t0, amp, f = 70, decay = 10) => (t > t0 ? Math.exp(-(t - t0) * decay) * amp * Math.sin((t - t0) * f) : 0);
@@ -113,7 +114,7 @@ export const SHOTS = {
   '3-07': (t, st, w) => boardCam(w.camera, st, t, '3-07'),
   // ---------------------------------------------------------------- @4 提示
   '4-01': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.4, 0.38, 0.34, 48, 0.04),
-  '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'deepseek', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.32, 44); },
+  '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'deepseek', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.36, 44, -0.1); },
   '4-03': (t, st, w) => boardCam(w.camera, st, t, '4-03'),
   '4-04': (t, st, w) => faceCam(w.camera, st, w, t, 'openai', { d: 1.0, dz: -0.38, dy: -0.06, ly: -0.15, fov: 36 }),
   '4-05': (t, st, w) => wide(w.camera, st, 0.4 + 0.1 * uRow(t, '4-05')),
