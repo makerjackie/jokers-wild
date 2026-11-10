@@ -3207,7 +3207,7 @@ export function makeSet(ctx = {}) {
   root.add(table.top);
   const lamp = buildLamp();
   root.add(lamp.root);
-  root.add(buildThrone());
+  const throne = buildThrone(); root.add(throne);
   const boxes = { CN: buildBox('CN'), US: buildBox('US') };
   table.top.add(boxes.CN.root, boxes.US.root);
   const giants = { CN: buildGiant('CN'), US: buildGiant('US') };
@@ -3431,6 +3431,8 @@ export function makeSet(ctx = {}) {
       lamp.LU.uOn.value = Math.max(0, Math.min(1, st.lamp?.on ?? 1));
       api.lampBulb(lamp.LU.uBulbW.value);
       api.lampDir(lamp.LU.uBulbAx.value).negate();
+      // (v5) hall 0: the room and the throne are gone (the machines have outgrown them); the table and its lamp are left
+      { const hall = (st.hall ?? 1) > 0.5; room.root.visible = hall; throne.visible = hall; }
       // the ceiling (0: gone, the card king's finale): beams and lamp anchors hidden, the chains end in the dark at ~4 m
       const ceilK = clamp(st.ceiling ?? 1);
       SU.uCeil.value = ceilK;

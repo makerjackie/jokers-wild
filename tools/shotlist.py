@@ -276,7 +276,7 @@ def draw(seqs, shots):
 
     # key moments: hairline through every track, name in the header row above the tension plot
     by_id = {s.id: s for s in shots}
-    notes = [("2-05", "横空出世"), ("3-04", "出局"), ("4-03", "提示"), ("5-02", "托管"), ("6-08", "是它"), ("8-06", "啪")]
+    notes = [("2-05", "嗒"), ("3-04", "喂"), ("4-07", "犹豫"), ("5-01", "两座山"), ("6-02", "啪"), ("8-03", "他看见了")]
     for sid, text in notes:
         x = X(by_id[sid].t0)
         d.line([x, tracks["cuts"][0], x, y1], fill=BASE, width=1)
@@ -345,7 +345,7 @@ def main():
     total, nshots = shots[-1].t1, sum(s.n for s in shots)
     print(f"total {tc(total)} ({total:.2f} s), shots {nshots}, rows {len(shots)}, ASL {total / nshots:.2f} s")
     by_id = {s.id: s for s in shots}
-    for sid in ("1-05", "2-05", "3-04", "4-07", "5-02", "6-08", "8-06"):
+    for sid in ("1-05", "2-05", "3-04", "4-07", "5-01", "6-02", "8-03"):
         s = by_id[sid]
         print(f"  {sid} at {tc(s.t0)} = {100 * s.t0 / total:.0f}%")
     for q in seqs:

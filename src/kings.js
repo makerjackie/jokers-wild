@@ -24,6 +24,7 @@
 //   gripFrame: origin at the centre of the hole a 'fist' closes around (a stamp's handle goes through it), +y along the
 //              hole toward the thumb end, +z the way the knuckles face (the fingers' direction before they curl).
 //              Defined for any pose (it is where a fist's hole would be). handFrame is unchanged (the palm centre).
+//   (v5) crown: 0 hides his crown; empty: 1 draws only his chair (he is gone).
 //   st.kings[id] = { enter,                                        // 0..1 (default 1): 0 = not drawn (king and chair);
 //                                                                  //   0..1 slides in with his chair from ENTER_DX m further out
 //                                                                  //   (decelerating; he lurches forward and back over 0.8..1)
@@ -1682,6 +1683,8 @@ export function makeKings(ctx = {}) {
         if (fl <= 0.5 && k.flipped) { k.crown.plateMat.uniforms.uMap.value = logoPlate('xai'); k.flipped = false; }
         k.crown.plateG.rotation.x = -0.12 + Math.sin(Math.min(1, fl) * Math.PI) * 1.4;
       }
+      k.crown.group.visible = (s.crown ?? 1) > 0;
+      k.squash.visible = !(s.empty ?? 0);
       const ct = s.crownTilt ?? 0, CR = 0.108 * k.s;
       k.crown.group.rotation.set(-0.05, 0, ct);
       k.crown.group.position.set(-Math.sin(ct) * CR * 0.5, 0.093 * k.s + Math.abs(Math.sin(ct)) * CR * 0.22, -0.008 * k.s);

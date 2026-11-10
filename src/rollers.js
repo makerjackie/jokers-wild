@@ -9,6 +9,7 @@ export const CROWN_R = 0.1;
 export function makeRollers() {
   const root = new THREE.Group(); root.name = 'rollers';
   const gold = celMaterial({ color: '#c9a25e', id: 5, gloss: 0.85 });
+  const silver = celMaterial({ color: '#d4d6da', id: 5, gloss: 0.85 });
   const crumbMat = celMaterial({ color: '#d9a85a', id: 175, gloss: 0.1 });
   // a crown: a band (lathe), five spikes with balls; a gem in the camp colour
   const crownGeom = (() => {
@@ -29,15 +30,17 @@ export function makeRollers() {
     gem.position.set(0, 0.03, CROWN_R * 1.03); c.add(gem); c.userData.gem = gem;
     c.visible = false; root.add(c); crowns.push(c);
   }
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0095, 0.0022, 10, 28), gold); ring.visible = false; root.add(ring);
   const crumb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0022, 1), crumbMat); crumb.visible = false; root.add(crumb);
   function update(list = []) {
-    let ci = 0; crumb.visible = false; for (const c of crowns) c.visible = false;
+    let ci = 0; crumb.visible = false; ring.visible = false; for (const c of crowns) c.visible = false;
     for (const r of list) {
-      const o = r.kind === 'crumb' ? crumb : crowns[ci++];
-      if (!o) continue;
+      const o = r.kind === 'crumb' ? crumb : r.kind === 'ring' ? ring : crowns[ci++];
+      if (!o || !r.pos) continue;
       o.visible = true; o.position.set(...r.pos);
       if (r.q) o.quaternion.set(...r.q);
       o.scale.setScalar(r.scale ?? 1);
+      if (r.kind === 'crown') { const mat = r.silver ? silver : gold; if (o.userData.mat !== mat) { o.traverse((m) => { if (m.isMesh && m !== o.userData.gem) m.material = mat; }); o.userData.mat = mat; } o.userData.gem.visible = false; }
       if (r.kind === 'crown' && r.side) o.userData.gem.material.uniforms && 0;
     }
   }

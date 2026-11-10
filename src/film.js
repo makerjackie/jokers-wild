@@ -11,6 +11,7 @@ import { makeFreeCards, basisQ } from './freecards.js';
 import { makeScreens } from './screens.js';
 import { makeRollers } from './rollers.js';
 import { makeAnt } from './ant.js';
+import { makeMachines } from './machine.js';
 import { CARD } from './cards.js';
 import { KINGS, KING, SIDE_SIGN } from './layout.js';
 import { direct } from './director.js';
@@ -32,7 +33,8 @@ export function makeFilm({ scene, overlay, camera, engine }) {
   const rollers = makeRollers(ctx); scene.add(rollers.root);
   const free = makeFreeCards(ctx); scene.add(free.root);
   const ant = makeAnt(ctx); scene.add(ant.root);
-  const world = { set, props, kings, cards, fx, camera, free, screens, rollers, ant };
+  const machines = makeMachines(ctx); scene.add(machines.root);
+  const world = { set, props, kings, cards, fx, camera, free, screens, rollers, ant, machines };
   const api = {
     handFrame: (id, side) => (side === 'M' ? kings.mouthFrame(id) : kings.handFrame(id, side)), mouthFrame: (id) => kings.mouthFrame(id),
     ...(kings.bodyFrame ? { bodyFrame: (id, out) => kings.bodyFrame(id, out) } : {}),
@@ -64,6 +66,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         { const l = Math.hypot(_A.x, _A.y * 0.35, _A.z) || 1; n = [_A.x / l, (_A.y * 0.35) / l, _A.z / l]; }
         if (h.faceTo) { _A.set(h.faceTo[0] - _P.x, h.faceTo[1] - _P.y, h.faceTo[2] - _P.z).normalize(); n = [_A.x, _A.y, _A.z]; }
         up = [_Y.x * 0.4, 0.9, _Y.z * 0.4];
+        if (h.fan) { _A.set(...n); _B.set(...up).applyAxisAngle(_A.normalize(), -h.fan * 0.3); up = [_B.x, _B.y, _B.z]; _P.addScaledVector(_A, -0.004 * h.fan); _P.y -= Math.abs(h.fan) * 0.01; }
       }
       let q = basisQ(n, up);
       if (h.tremble) {
@@ -80,6 +83,17 @@ export function makeFilm({ scene, overlay, camera, engine }) {
     }
   }
 
+  // ---- small things carried in a hand: pos = the palm (+ off, world), blended toward `to` by mix (a toss)
+  function resolveCarried(list) {
+    for (const c of list ?? []) {
+      const h = c?.hand; if (!h) continue;
+      kings.handWorld(h.id, h.side, _P);
+      const o = h.off ?? [0, 0, 0];
+      let pos = [_P.x + o[0], _P.y + o[1], _P.z + o[2]];
+      if (h.mix > 0 && h.to) { const m = Math.min(1, h.mix); pos = [pos[0] + (h.to[0] - pos[0]) * m, pos[1] + (h.to[1] - pos[1]) * m, pos[2] + (h.to[2] - pos[2]) * m]; }
+      c.pos = pos;
+    }
+  }
   // ---- inertialization: when a king's hand target or look target jumps (a new action starts), carry the old value
   // into the new motion and let the difference decay (the director is re-run at the previous sub-frames).
   const ghost = { ...world, camera: new THREE.PerspectiveCamera(), lite: true };
@@ -128,8 +142,11 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       props.update(st.props, t, api);
       cards.update(st.cards, t);
       screens.update(st.screens, t);
+      const mc = st.machines ?? {};
+      resolveCarried(st.rollers); resolveCarried(mc.chips); resolveCarried([mc.heart, mc.spade]);
       rollers.update(st.rollers);
       ant.update(st.ant, t);
+      machines.update(mc, t);
       resolveHeld(st.free, t);
       if ((st.look.near ?? 0.03) > 0.01) {
         const cp = (cam ?? camera).position, R = 0.55;
