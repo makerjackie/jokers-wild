@@ -143,7 +143,7 @@ function buildPlays() {
   hand(RED, at('1-07', 2.7), 'J');
   hand(BLK, at('2-01', 0.9), 'K', { at: [0.02, 0.0], yaw: -Math.PI / 2 + 0.12, cs: 1.1 });
   // ---- the machines: one "tak", one card; in turn when both run; slower as they grow, and as they run down
-  const skip = (t) => (t > FLOOR_T - 0.6 && t < FLOOR_T + 3.0) || (t > at('5-01', 0.2) && t < at('5-01', 3.4)) || (t > FINAL_TR - 2.2 && t < SLAM + 0.9);
+  const skip = (t) => (t > FLOOR_T - 0.6 && t < FLOOR_T + 3.0) || (t > at('5-01', 0.2) && t < at('5-01', 3.4)) || t > FINAL_TR - 2.2;
   let tt = TOY_FIRST, who = RED;
   while (tt < CUES.title) {
     if (!running(who, tt)) {
@@ -161,6 +161,8 @@ function buildPlays() {
   // the first cards as big as half the table (4-06): each one throws both kings back
   mplay(RED, at('4-06', 0.45), { fl: 0.75, at: [0, 0], yaw: -Math.PI / 2 + 0.05 });
   mplay(BLK, at('4-06', 1.9), { fl: 0.75, at: [0.06, -0.12], yaw: -Math.PI / 2 - 0.08 });
+  // after it, as if nothing had happened: tak, tak (6-04), and once more in the black (6-05)
+  for (const tr of [at('6-04', 0.6), at('6-04', 2.0), at('6-05', 0.6)]) mplay(RED, tr);
   // the last one
   P.push({ who: RED, by: 'machine', final: true, tr: FINAL_TR, t: SLAM, S: MOUNT.S, cs: FINAL_CS, face: card(RED, '∞'), back: backOf(RED), glyph: 1, gcell: CELL.glyph9, at: [0, 0.3], yaw: -Math.PI / 2 });
   P.sort((a, b) => a.t - b.t);
@@ -178,7 +180,7 @@ function buildPlays() {
     else {
       const tl = 0.05 / p.cs;
       p.rest = { pos: [p.at[0], top + T / 2, p.at[1]], q: basisQ([(rnd() - 0.5) * tl, 1, (rnd() - 0.5) * tl], up) };
-      top += T * 0.8; p.top = top;
+      top += T * 0.35; p.top = top;
     }
   }
   return P;

@@ -121,10 +121,10 @@ export const SHOTS = {
     w.camera.position.y += shake(t, S.HALL_GONE, 0.12, 30, 2.5);
     st.look.far = 500; st.look.exposure = 1.6;
   },
-  '5-02': (t, st, w) => { const u = uRow(t, '5-02'); camLook(w.camera, [0.1, 0.42, 1.5], [0, 8 + u, -3], 76); st.look.far = 500; st.look.exposure = 1.5; },
+  '5-02': (t, st, w) => { const u = uRow(t, '5-02'); camLook(w.camera, [0.1, 0.58, 1.5], [0, 8 + u, -3], 76); st.look.far = 500; st.look.exposure = 1.5; },
   '5-03': (t, st, w) => fromAbove(w.camera, st, [0, 0.3, 0], 17),
   '5-04': (t, st, w) => { const u = uRow(t, '5-04'); camLook(w.camera, [-0.9, 0.55, 2.3 - 0.1 * u], lerp3([4.5, 6.0, 0], [1.9, 0.9, 0], smooth((u - 0.5) * 2.6)), lerp(66, 40, smooth((u - 0.5) * 2.6))); st.look.far = 500; st.look.exposure = 1.5; },
-  '5-05': (t, st, w) => { camLook(w.camera, [0.35, 0.5, 1.4], [-1.55, 0.98, 0], 48); st.look.exposure = 1.5; st.look.far = 500; },
+  '5-05': (t, st, w) => { camLook(w.camera, [0.35, 0.62, 1.4], [-1.55, 0.98, 0], 48); st.look.exposure = 1.5; st.look.far = 500; },
   // ---------------------------------------------------------------- @6 没看见
   '6-01': (t, st, w) => { const m = S.machineAt(RED, t); camLook(w.camera, [-1.5, 0.5, 9.0], [m.pos[0] + 7, m.S * 0.45, 0], 60); st.look.far = 500; st.look.exposure = 1.6; },
   '6-02': (t, st, w) => {

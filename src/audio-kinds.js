@@ -519,15 +519,16 @@ export const preOf = (e) => (e.kind === 'bigSlam' || e.kind === 'endSlam' ? 0.36
 // and they are the same waveforms.
 const antBank = new Map();
 export function antTick(surface, v) {
-  const s = surface === 'card' ? 1 : surface === 'wood' ? 2 : 0, key = `${SR}|${s}|${v}`;
+  const s = surface === 'card' ? 1 : surface === 'wood' ? 2 : surface === 'stone' ? 3 : 0, key = `${SR}|${s}|${v}`;
   if (antBank.has(key)) return antBank.get(key);
-  const r = new Rng(5100 + s * 37 + v), out = new Float32Array(Math.ceil(0.045 * SR)), F = [[2600, 4300], [4200, 6600], [2000, 3500]][s];
+  const r = new Rng(5100 + s * 37 + v), out = new Float32Array(Math.ceil(0.045 * SR)), F = [[2600, 4300], [4200, 6600], [2000, 3500], [3600, 6400]][s];
   for (let k = 0, t = 0; k < 3; k++, t += r.range(0.0005, 0.0024)) {
     noiseBurst(out, Math.round(t * SR), { a: 0.0001, tau: r.range(0.00022, s === 1 ? 0.0004 : 0.00055), f0: r.range(F[0], F[1]), q: 1.05, amp: (k ? 0.7 : 1) * r.range(0.6, 0.9) }, new Noise(5200 + s * 50 + v * 4 + k));
   }
   if (s === 0) { noiseBurst(out, 0, { a: 0.0005, tau: 0.0016, f0: 1300, q: 0.7, mode: 'lp', amp: 0.16 }, new Noise(5300 + v)); if (v % 3 === 0) noiseBurst(out, Math.round(0.004 * SR), { a: 0.001, tau: 0.003, f0: 5200, q: 1.4, amp: 0.05 }, new Noise(5310 + v)); }
   if (s === 1) ping(out, 0, r.range(1500, 2300), 0.04, [[1, 1, 0.009], [2.3, 0.5, 0.005]], r.next() * 6);
   if (s === 2) ping(out, 0, r.range(850, 1300), 0.06, [[1, 1, 0.005], [2.6, 0.4, 0.003]], r.next() * 6);
+  if (s === 3) ping(out, 0, r.range(2700, 3700), 0.05, [[1, 1, 0.004], [2.9, 0.4, 0.002]], r.next() * 6);   // stone: hard, a hair of ring
   fadeTail(out, 0.006); antBank.set(key, out);
   return out;
 }
@@ -1193,7 +1194,7 @@ export function sfxScreenEye(e, seed) {
 export function sfxPressure(e, seed) {
   const d = Math.max(0.5, e.dur || 3), S = pair(d + 0.05), nA = new Noise(seed), nB = new Noise(seed + 1), a = new SVF(120, 0.7), b = new SVF(125, 0.7);
   let p = 0;
-  for (let i = 0; i < S.L.length; i++) { const t = i / SR, u = Math.min(1, t / d), en = Math.pow(u, 2) * (t < d ? 1 : 0); if ((i & 63) === 0) { a.set(90 + 500 * u * u, 0.7); b.set(95 + 500 * u * u, 0.7); } a.run(nA.brown()); b.run(nB.brown()); p += (28 + 20 * u) / SR; const s = Math.sin(TAU * p) * 0.4 * en; S.L[i] = a.lp * 2.2 * en + s; S.R[i] = b.lp * 2.2 * en + s; }
+  for (let i = 0; i < S.L.length; i++) { const t = i / SR, u = Math.min(1, t / d), en = Math.pow(u, 2) * clamp((d - t) / 0.015); if ((i & 63) === 0) { a.set(90 + 500 * u * u, 0.7); b.set(95 + 500 * u * u, 0.7); } a.run(nA.brown()); b.run(nB.brown()); p += (28 + 20 * u) / SR; const s = Math.sin(TAU * p) * 0.4 * en; S.L[i] = a.lp * 2.2 * en + s; S.R[i] = b.lp * 2.2 * en + s; }
   const fo = Math.round(0.01 * SR); for (let i = 0; i < fo; i++) { S.L[S.L.length - 1 - i] *= i / fo; S.R[S.R.length - 1 - i] *= i / fo; }
   return S;
 }
@@ -1218,3 +1219,247 @@ export function sfxCrownDrag(e, seed) {
   return fadeTail(out, 0.05);
 }
 Object.assign(FILM_KINDS, { lightOff: sfxLightOff, chairBack: sfxChairBack, crownDrag: sfxCrownDrag });
+
+// ======================================================================================================================
+// 《喂》 FEED (v5): the machines. THE ONE IDEA: a machine never changes what it does, it only gets bigger. `tak` is the
+// same two-part gesture (the hammer on its bell, then the card leaving the slot) from a 0.3 m toy to a 30 m mountain:
+// every part of it (pitch, ring, the gap between hammer and card, the card's flick) is a power of the machine's height.
+import { sfxCreakT } from './audio-sfxlib.js';
+import { bubble } from './audio-dsp.js';
+
+// the bell's note: D7 on the 0.3 m toy, ~0.6 octave lower per doubling of height, always a D or an A (the tune's key);
+// the black king's machine sits a little lower than the red king's
+export function takNote(size, who) {
+  const raw = 98 - 7.2 * Math.log2(clamp(size, 0.2, 40) / 0.3) - (isUS(who) ? 2.5 : 0);
+  let best = 0, bd = 99;
+  for (let m = Math.round(raw) - 6; m <= Math.round(raw) + 6; m++) { const pc = ((m % 12) + 12) % 12; if ((pc === 2 || pc === 9) && Math.abs(m - raw) < bd) { bd = Math.abs(m - raw); best = m; } }
+  return best;
+}
+// TAK {who, size, gain} — the little hammer on its bell, and the card leaving the slot. size = the machine's height (m)
+const takCache = new Map();
+export function sfxTak(e) {
+  const size = clamp(e.size ?? 0.3, 0.2, 40), us = isUS(e.who), key = `${SR}|${size.toFixed(2)}|${us}`;
+  if (takCache.has(key)) return takCache.get(key);
+  const k = size / 0.3, f = mtof(takNote(size, e.who)), dec = 0.1 * Math.pow(k, 0.55), gap = 0.014 * Math.pow(k, 0.6), fl = 0.03 * Math.pow(k, 0.55);
+  const out = new Float32Array(Math.ceil((Math.max(dec * 1.4, gap + fl * 2) + 0.1) * SR)), sd = 8800 + Math.round(size * 100) + (us ? 5 : 0);
+  // the hammer on its bell
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0005 * Math.pow(k, 0.6), f0: 5200 / Math.pow(k, 0.5), q: 0.9, amp: 0.5 }, new Noise(sd));
+  ping(out, 0, f, 0.22, [[1, 1, dec], [2.76, 0.45, dec * 0.55], [5.4, 0.22, dec * 0.3], [8.93, 0.1, dec * 0.18]], 0.3);
+  if (k > 3) {   // a big hammer has weight: a thump under the bell
+    const w = Math.min(1, (k - 3) / 10);
+    sweep(out, 0, Math.max(60, f * 1.6), Math.max(30, f * 0.5), 0.03, 0.06 * Math.pow(k, 0.35), 0.5 * w, 0.002, 1.2);
+    noiseBurst(out, 0, { a: 0.001, tau: 0.012 * Math.pow(k, 0.35), f0: 900 / Math.pow(k, 0.3), q: 0.7, mode: 'lp', amp: 0.6 * w }, new Noise(sd + 1));
+  }
+  // the card leaving the slot: a flick (a toy) .. a long rush of air (a card the size of a field)
+  const at = Math.round(gap * SR), n = Math.round(fl * SR), nz = new Noise(sd + 2), bp = new SVF(1000, 1.3), lo = new SVF(200, 0.7), f0 = 2400 / Math.pow(k, 0.55), f1 = 5200 / Math.pow(k, 0.55);
+  for (let i = 0; i < n && at + i < out.length; i++) {
+    const u = i / n; if ((i & 15) === 0) { bp.set(f0 + (f1 - f0) * u, 1.3); lo.set(Math.max(60, f0 * 0.25), 0.7); }
+    const w = nz.white(); bp.run(w); lo.run(w);
+    out[at + i] += (bp.bp * 0.5 + lo.lp * 0.25 * Math.min(1, k / 20)) * Math.pow(Math.sin(Math.PI * u), 1.5);
+  }
+  if (at + n < out.length) noiseBurst(out, at + n, { a: 0.0001, tau: 0.0008 * Math.pow(k, 0.5), f0: 4200 / Math.pow(k, 0.5), q: 1, amp: 0.3 }, new Noise(sd + 3));
+  if (size >= 8) { const lp = new SVF(2200, 0.7); for (let i = 0; i < out.length; i++) out[i] = lp.run(out[i]); }   // heard from far below
+  const g = Math.pow(k, 0.22); for (let i = 0; i < out.length; i++) out[i] *= g;
+  fadeTail(out, 0.03); takCache.set(key, out);
+  return out;
+}
+
+// SLABLAND {who, size (card scale 1..45), far, gain} — that card landing: 1 a pat on the pile; 2-3 a thump; 6-9 a boom
+// that shakes the room (the table, the floor, things rattling); far: out on the floor a long way off: thunder
+export function sfxSlabLand(e, seed) {
+  const s = clamp(e.size ?? 1, 0.5, 60), r = new Rng(seed);
+  if (e.far) return sfxFarSlap({ size: 0.9, dist: 1.6 }, seed);
+  const out = new Float32Array(Math.ceil((0.3 + 0.38 * Math.min(s, 10)) * SR));
+  noiseBurst(out, 0, { a: 0.0005, tau: 0.007 * Math.pow(s, 0.7), f0: 1500 / Math.pow(s, 0.45) * r.range(0.92, 1.08), q: 0.7, mode: 'lp', amp: 0.6 * Math.min(1.6, Math.pow(s, 0.3)) }, new Noise(seed));
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.001 * Math.pow(s, 0.5), f0: 4000 / Math.pow(s, 0.35), q: 0.8, amp: 0.3 }, new Noise(seed + 1));
+  ping(out, 0, 300 / Math.pow(s, 0.5) * r.range(0.95, 1.05), 0.06 * Math.min(3, s), [[1, 1, 0.02 * Math.pow(s, 0.6)], [2.2, 0.4, 0.01 * Math.pow(s, 0.6)]], r.next() * 6);
+  if (s > 1.5) sweep(out, 0, 140 / Math.pow(s, 0.2), Math.max(30, 55 / Math.pow(s, 0.15)), 0.02 + 0.01 * Math.min(s, 6), 0.05 + 0.035 * Math.min(s, 10), 0.6 * Math.min(1, (s - 1) / 4), 0.0015, 1.2);
+  if (s >= 5) {
+    add(out, boom({ f0: 100, f1: 34, sweep: 0.08, tau: 0.25 + 0.05 * s, dur: Math.min(out.length / SR - 0.05, 1.2 + 0.25 * s), drive: 2.2, gain: 0.45 + 0.04 * Math.min(s, 10) }, seed + 2), 1, 0);
+    const nb = new Noise(seed + 3), lp = new SVF(70, 0.7), len = Math.min(out.length, Math.round(1.6 * SR));
+    for (let i = 0; i < len; i++) { lp.run(nb.brown()); out[i] += lp.lp * 1.2 * Math.exp(-i / (0.45 * SR)) * Math.min(1, i / 200, (len - i) / (0.3 * SR)); }
+    for (let q = 0; q < 14; q++) { const t = 0.03 + Math.pow(r.next(), 1.5) * 0.6, h = cardHit(r.int(0, 11)), at = Math.round(t * SR); for (let i = 0; i < h.length && at + i < out.length; i++) out[at + i] += h[i] * r.range(0.1, 0.3) * (1 - t); }
+  }
+  return fadeTail(out, 0.08);
+}
+
+// THUD {who, hard} — a machine set down on the table: wood under brass, its mechanism jingling; hard: the table jumps
+export function sfxThud(e, seed) {
+  const h = clamp(e.hard ?? 0.5), out = new Float32Array(Math.ceil((0.5 + 0.7 * h) * SR)), r = new Rng(seed);
+  sweep(out, 0, 150 - 30 * h, 58, 0.02, 0.05 + 0.08 * h, 0.3 + 0.6 * h, 0.0015, 1.1);
+  noiseBurst(out, 0, { a: 0.0006, tau: 0.012 + 0.015 * h, f0: 520, q: 0.7, mode: 'lp', amp: 0.5 + 0.4 * h }, new Noise(seed));
+  ping(out, 0, (132 - 20 * h) * r.range(0.97, 1.03), 0.15 + 0.2 * h, [[1, 1, 0.07], [1.9, 0.6, 0.04], [3.07, 0.4, 0.025]], r.next() * 6);
+  ping(out, Math.round(0.004 * SR), mtof(takNote(h > 0.6 ? 0.46 : 0.3, e.who)), 0.02 + 0.02 * h, [[1, 1, 0.25], [2.76, 0.4, 0.12]], 0.2);   // its bell, jarred
+  for (let q = 0; q < 4 + Math.round(6 * h); q++) noiseBurst(out, Math.round(r.range(0.01, 0.12 + 0.2 * h) * SR), { a: 0.0001, tau: 0.0006, f0: r.range(3000, 6000), q: 1.2, amp: r.range(0.05, 0.14) }, new Noise(seed + 5 + q));
+  if (h > 0.6) { const nb = new Noise(seed + 2), lp = new SVF(80, 0.7), len = Math.round(0.8 * SR); for (let i = 0; i < len && i < out.length; i++) { lp.run(nb.brown()); out[i] += lp.lp * 1.2 * Math.exp(-i / (0.25 * SR)) * Math.min(1, i / 200); } }
+  return fadeTail(out, 0.05);
+}
+
+// one tooth of the ratchet (cached by size bucket and tick / tock)
+const tickBank = new Map();
+function ratchetTick(size, v) {
+  const key = `${SR}|${size.toFixed(1)}|${v}`; if (tickBank.has(key)) return tickBank.get(key);
+  const k = size / 0.3, out = new Float32Array(Math.ceil((0.02 + 0.012 * Math.pow(k, 0.5)) * SR)), f = (v ? 2700 : 3300) / Math.pow(k, 0.6);
+  ping(out, 0, f, 0.2, [[1, 1, 0.004 * Math.pow(k, 0.5)], [2.3, 0.4, 0.002 * Math.pow(k, 0.5)]], 0.4 + v);
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0004 * Math.pow(k, 0.5), f0: 5000 / Math.pow(k, 0.5), q: 1, amp: 0.25 }, new Noise(9100 + v + Math.round(size * 10)));
+  if (k > 20) sweep(out, 0, 160, 60, 0.02, 0.05, 0.5, 0.002, 0.8);
+  fadeTail(out, 0.003); tickBank.set(key, out); return out;
+}
+// CLOCKWORK {who, dur, size} — the spring running: a quiet, even ratchet (tick-tock) and the whirr of the governor
+export function sfxClockwork(e, seed) {
+  const d = Math.max(0.3, e.dur || 2), size = e.size ?? 0.3, rate = 15 / Math.pow(size / 0.3, 0.35), out = new Float32Array(Math.ceil((d + 0.1) * SR));
+  for (let t = 0, q = 0; t < d; t += 1 / rate, q++) add(out, ratchetTick(size, q & 1), (q & 1 ? 0.7 : 1) * Math.min(1, t / 0.3, (d - t) / 0.3 + 0.1), Math.round(t * SR));
+  const nz = new Noise(seed), bp = new SVF(2600 / Math.pow(size / 0.3, 0.4), 3), n = Math.round(d * SR);
+  for (let i = 0; i < n; i++) { bp.run(nz.white()); out[i] += bp.bp * 0.012 * Math.min(1, i / 4800, (n - i) / 4800); }
+  return out;
+}
+// RUNDOWN {who, dur, size} — the spring running down: the ratchet slower and slower, sagging, a last tooth, stop.
+// size 30: the same, enormous: slow low knocks and the mechanism groaning
+export function sfxRundown(e, seed) {
+  const d = Math.max(0.5, e.dur || 2), size = e.size ?? 0.3, k = size / 0.3, r0 = 15 / Math.pow(k, 0.35), out = new Float32Array(Math.ceil((d + 0.6) * SR)), big = size > 5;
+  let ph = 0, q = 0;
+  for (let i = 0; i < Math.round(d * SR); i++) { const u = i / (d * SR); ph += r0 * Math.pow(1 - u, 1.3) / SR; if (ph >= 1) { ph -= 1; add(out, ratchetTick(size, q & 1), (0.6 + 0.4 * (1 - u)) * (big ? 2.2 : 1), i); q++; } }
+  if (big) add(out, fadeTail(friction(d, { modes: STEELM.map(([f, qq, a]) => [f * 0.6, qq, a]), rate: (u) => 3 + 16 * Math.pow(1 - u, 1.5), env: (u) => smooth(u / 0.1) * (1 - smooth((u - 0.85) / 0.15)), gain: 0.25, drive: 1.6, jit: 0.7, jitHz: 5 }, seed), 0.05), 1, 0);
+  const j = Math.round(d * SR); sweep(out, j, 180 / Math.pow(k, 0.3), 70 / Math.pow(k, 0.15), 0.02, 0.05 * Math.pow(k, 0.3), 0.3 * (big ? 2 : 1), 0.002, 0.6);   // the hammer drooping onto its rest
+  return fadeTail(out, 0.03);
+}
+// PAT {who} — a hand pats the toy: a soft palm on brass, the bell answering faintly
+export function sfxPat(e, seed) {
+  const out = new Float32Array(Math.ceil(0.3 * SR)), r = new Rng(seed);
+  noiseBurst(out, 0, { a: 0.001, tau: 0.007, f0: 900, q: 0.7, mode: 'lp', amp: 0.5 }, new Noise(seed));
+  ping(out, 0, r.range(480, 560), 0.06, [[1, 1, 0.02], [2.4, 0.4, 0.01]], r.next() * 6);
+  ping(out, Math.round(0.003 * SR), mtof(takNote(0.3, e.who)), 0.012, [[1, 1, 0.2]], 0.1);
+  return fadeTail(out, 0.03);
+}
+// CHIPDROP {who, n} — n chips into the brass funnel: each a clay clink on brass, the funnel ringing, a rattle down its
+// throat. n = 1: "ding, d-d-dng"; n = 10: a cascade
+export function sfxChipDrop(e, seed) {
+  const n = clamp(e.n ?? 1, 1, 30), out = new Float32Array(Math.ceil((0.7 + 0.04 * n) * SR)), r = new Rng(seed), fun = r.range(700, 860);
+  const chip = (t, a) => { const at = Math.round(t * SR); ping(out, at, r.range(3000, 4800), 0.12 * a, [[1, 1, 0.03], [2.6, 0.5, 0.015]], r.next() * 6); noiseBurst(out, at, { a: 0.0001, tau: 0.0007, f0: 5500, q: 1, amp: 0.25 * a }, new Noise(seed + Math.round(t * 1e4))); ping(out, at, fun, 0.035 * a, [[1, 1, 0.3], [2.32, 0.5, 0.18], [3.9, 0.25, 0.1]], r.next() * 6); };
+  for (let i = 0, t = 0; i < n; i++, t += r.range(0.02, 0.05)) { chip(t, r.range(0.6, 1)); for (let b = 1, tb = t + 0.07, a = 0.5; b <= 3; b++, tb += 0.05 / b + 0.02, a *= 0.55) chip(tb, a * (n > 1 ? 0.5 : 1)); }
+  return fadeTail(out, 0.05);
+}
+// CROWNLIFT {who} — a crown picked up off the table: a small ring of gold, a hair of scrape
+export function sfxCrownLift(e, seed) {
+  const out = new Float32Array(Math.ceil(0.9 * SR)), r = new Rng(seed), nz = new Noise(seed), bp = new SVF(4200, 1.5), m = Math.round(0.07 * SR);
+  for (let i = 0; i < m; i++) { bp.run(nz.white()); out[i] += bp.bp * 0.04 * Math.sin(Math.PI * i / m); }
+  ping(out, Math.round(0.05 * SR), r.range(1550, 1750), 0.05, [[1, 1, 0.55], [1.52, 0.6, 0.4], [2.41, 0.4, 0.22], [3.3, 0.2, 0.12]], r.next() * 6);
+  return fadeTail(out, 0.05);
+}
+// CROWNDROP {who} — a crown into the funnel: a clang (gold on brass), the funnel ringing, it rattles down
+export function sfxCrownDrop(e, seed) {
+  const out = new Float32Array(Math.ceil(1.4 * SR)), r = new Rng(seed);
+  ping(out, 0, r.range(1050, 1200), 0.22, [[1, 1, 0.8], [1.52, 0.7, 0.55], [2.41, 0.5, 0.3], [3.3, 0.3, 0.18], [4.7, 0.15, 0.1]], r.next() * 6);
+  ping(out, 0, r.range(500, 560), 0.18, [[1, 1, 0.6], [2.32, 0.5, 0.35], [3.9, 0.25, 0.2]], r.next() * 6);
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.002, f0: 4500, q: 0.8, amp: 0.6 }, new Noise(seed));
+  for (let q = 0, t = 0.09, a = 0.5; q < 5; q++, t += 0.06 + 0.02 * q, a *= 0.6) { const at = Math.round(t * SR); ping(out, at, r.range(900, 1500), 0.1 * a, [[1, 1, 0.15], [2.4, 0.4, 0.08]], r.next() * 6); noiseBurst(out, at, { a: 0.0001, tau: 0.001, f0: 3500, q: 1, amp: 0.3 * a }, new Noise(seed + 3 + q)); }
+  return fadeTail(out, 0.08);
+}
+// GULP {who, size} — the swallow (a throat closing and opening: "glp"), then the swell: metal stretching, air drawn in
+// as it grows. Bigger machines swallow lower and longer.
+export function sfxGulp(e, seed) {
+  const size = clamp(e.size ?? 0.5, 0.2, 40), k = size / 0.3, f0 = 300 / Math.pow(k, 0.45), d1 = 0.07 * Math.pow(k, 0.3), d2 = 0.11 * Math.pow(k, 0.3), sw = 0.45 + 0.3 * Math.pow(k, 0.4);
+  const out = new Float32Array(Math.ceil((d1 + d2 + sw + 0.3) * SR)), body = new SVF(f0 * 2.2, 3), nz = new Noise(seed), n = Math.round((d1 + d2) * SR);
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, f = t < d1 ? f0 * (1 - 0.45 * t / d1) : f0 * (0.55 + 0.4 * smooth((t - d1) / d2)); p += f / SR; p -= Math.floor(p);
+    const en = Math.sin(Math.PI * Math.min(1, t / (d1 + d2))) * (t < d1 ? 1 - 0.5 * (t / d1) * (t / d1) : 0.5 + 0.5 * Math.sin(Math.PI * (t - d1) / d2));
+    body.run(Math.sin(TAU * p) + 0.3 * Math.sin(2 * TAU * p) + nz.pink() * 0.3);
+    out[i] += (Math.sin(TAU * p) * 0.5 + body.bp * 0.25) * en * 0.5;
+  }
+  bubble(out, Math.round(d1 * SR), f0 * 1.8, 0.2, 0.1);
+  // the swell
+  const a0 = n, m = Math.round(sw * SR), nz2 = new Noise(seed + 1), lp = new SVF(300, 0.8);
+  for (let i = 0; i < m; i++) { const u = i / m; if ((i & 63) === 0) lp.set((250 + 900 * u) / Math.pow(k, 0.35), 0.8); lp.run(nz2.pink()); out[a0 + i] += lp.lp * 1.2 * Math.pow(Math.sin(Math.PI * u), 1.3); }
+  add(out, fadeTail(friction(sw, { modes: STEELM.map(([f, q, a]) => [f * 2.4 / Math.pow(k, 0.35), q * 0.5, a]), rate: (u) => 30 + 60 * u, env: (u) => Math.pow(Math.sin(Math.PI * u), 1.2), gain: 0.12, drive: 1.4, jit: 0.7 }, seed + 2), 0.03), 1, a0);
+  const g = Math.pow(k, 0.3); for (let i = 0; i < out.length; i++) out[i] *= g;
+  return fadeTail(out, 0.05);
+}
+// CREAK {dur} — the table groaning under the machines (big wood, slow stick-slip)
+export function sfxCreak(e, seed) { return sfxCreakT({ ...e, size: 0.9 }, seed); }
+// BURST {dur} — the hall breaks: a deep crack, stone raining, timbers splitting, the air rushing out
+export function sfxBurst(e, seed) {
+  const d = Math.max(1, e.dur || 2.4), S = pair(d + 2.2), r = new Rng(seed), M = new Float32Array(S.L.length);
+  add(M, boom({ f0: 120, f1: 30, sweep: 0.12, tau: 1.1, dur: Math.min(d + 1.8, 4), drive: 2.6, gain: 0.85 }, seed), 1, 0);
+  noiseBurst(M, 0, { a: 0.0003, tau: 0.03, f0: 2200, q: 0.5, amp: 0.9, hp: 300 }, new Noise(seed + 1));
+  addMid(S, M, 0, Math.SQRT2);
+  for (let t = 0.02; t < d + 0.8;) {   // stone
+    const g = new Float32Array(Math.round(0.25 * SR)), a = r.range(0.15, 0.6) * Math.exp(-t / (0.8 * d));
+    ping(g, 0, r.range(140, 900), a * 0.4, [[1, 1, r.range(0.02, 0.08)], [1.7, 0.6, 0.03], [2.9, 0.4, 0.02]], r.next() * 6);
+    noiseBurst(g, 0, { a: 0.0005, tau: r.range(0.006, 0.02), f0: r.range(400, 1600), q: 0.7, mode: 'lp', amp: a }, new Noise(seed + 10 + Math.round(t * 1e4)));
+    addPan(S, g, r.range(-0.95, 0.95), Math.round(t * SR));
+    t += -Math.log(1 - r.next() * 0.999) / (70 * Math.exp(-t / (0.5 * d)) + 6);
+  }
+  for (let q = 0; q < 7; q++) {   // timber
+    const t = r.range(0.05, d), cr = friction(r.range(0.15, 0.35), { modes: WOOD.map(([f, qq, a]) => [f * r.range(0.8, 1.6), qq, a]), rate: (u) => 40 + 100 * u, env: (u) => Math.pow(Math.sin(Math.PI * u), 0.8), gain: 0.25, drive: 2, jit: 0.8 }, seed + 50 + q);
+    noiseBurst(cr, cr.length - Math.round(0.03 * SR), { a: 0.0001, tau: 0.004, f0: 2800, q: 0.6, amp: 0.7 }, new Noise(seed + 60 + q));
+    addPan(S, fadeTail(cr, 0.005), r.range(-0.8, 0.8), Math.round(t * SR));
+  }
+  const nA = new Noise(seed + 2), nB = new Noise(seed + 3), a = new SVF(500, 0.7), b = new SVF(520, 0.7);   // air and dust
+  for (let i = 0; i < S.L.length; i++) { const t = i / SR, en = smooth(t / 0.15) * Math.exp(-t / (0.7 * d)); if ((i & 63) === 0) { const f = 300 + 2200 * Math.exp(-t / 0.6); a.set(f, 0.7); b.set(f * 1.06, 0.7); } a.run(nA.pink()); b.run(nB.pink()); S.L[i] += a.lp * 0.8 * en; S.R[i] += b.lp * 0.8 * en; }
+  fadeTail(S.L, 0.3); fadeTail(S.R, 0.3);
+  return S;
+}
+// GROW {dur} — two machines growing into mountains: the ground rumbling up, iron groaning lower and lower, stone trickling
+export function sfxGrow(e, seed) {
+  const d = Math.max(1, e.dur || 3.8), S = pair(d + 1.0), r = new Rng(seed);
+  for (const [out, sd, side] of [[S.L, 1, 0.9], [S.R, 2, 1.1]]) {
+    const nb = new Noise(seed + sd), lp = new SVF(60, 0.7);
+    for (let i = 0; i < out.length; i++) { const t = i / SR, u = Math.min(1, t / d); if ((i & 127) === 0) lp.set(50 + 60 * u, 0.7); lp.run(nb.brown()); out[i] += lp.lp * 2.4 * Math.pow(u, 1.5) * (t < d ? 1 : Math.exp(-(t - d) / 0.4)); }
+    const gr = friction(d, { modes: STEELM.map(([f, q, a]) => [f * side * 0.9, q, a]), rate: (u) => 30 - 22 * u, env: (u) => smooth(u / 0.2) * (0.5 + 0.5 * u) * (1 - smooth((u - 0.92) / 0.08)), gain: 0.22, drive: 1.8, jit: 0.7, jitHz: 6 }, seed + 10 + sd);
+    for (let i = 0; i < gr.length && i < out.length; i++) out[i] += gr[i];
+  }
+  for (let t = 0.2; t < d; t += r.range(0.02, 0.12)) { const g = new Float32Array(Math.round(0.02 * SR)); noiseBurst(g, 0, { a: 0.0003, tau: r.range(0.002, 0.006), f0: r.range(500, 2400), q: 0.8, mode: 'lp', amp: r.range(0.05, 0.2) * (t / d) }, new Noise(seed + 100 + Math.round(t * 1e4))); addPan(S, g, r.range(-0.95, 0.95), Math.round(t * SR)); }
+  fadeTail(S.L, 0.2); fadeTail(S.R, 0.2);
+  return S;
+}
+// CHEER {who | 'both', dur, far} — wordless cheering: open-mouthed whoops ("waah!", "haa-ha!") and short laughs, a man's
+// voice; 'both': two of them, left and right; far: very small and thin, heard from high above
+export function sfxCheer(e, seed) {
+  const d = Math.max(0.5, e.dur || 2), S = pair(d + 0.3), far = !!e.far, voices = e.who === 'both' ? [['heart', -0.4], ['spade', 0.4]] : [[e.who, 0]];
+  voices.forEach(([who, pan], vi) => {
+    const r = new Rng(seed + 17 * vi + hashW(who)), base = 150 * (0.92 + 0.2 * ((hashW(who) % 5) / 4)), mono = new Float32Array(S.L.length);
+    const F1 = new SVF(760, 5), F2 = new SVF(1150, 7), F3 = new SVF(2500, 8), air = new SVF(3800, 0.8), nz = new Noise(seed + vi);
+    let t = r.range(0.02, 0.2), p = 0;
+    while (t < d - 0.25) {
+      const laugh = r.next() < 0.35, len = laugh ? r.range(0.5, 0.8) : r.range(0.45, 0.85), a0 = Math.round(t * SR), n = Math.min(Math.round(len * SR), mono.length - a0), peak = r.range(1.5, 2.1);
+      for (let i = 0; i < n; i++) {
+        const u = i / n, f = base * (1 + (peak - 1) * Math.sin(Math.PI * Math.min(1, u * 1.25)) * (laugh ? 0.6 : 1)) * (1 - 0.15 * u); p += f / SR; p -= Math.floor(p);
+        let x = 0; for (let h = 1; h <= 14; h++) x += Math.sin(TAU * h * p) / Math.pow(h, 1.05);
+        const en = laugh ? Math.pow(Math.abs(Math.sin(Math.PI * 5.2 * u * len)), 1.5) * (1 - 0.6 * u) : Math.pow(Math.sin(Math.PI * u), 0.6);
+        const w = nz.white(); F1.run(x); F2.run(x); F3.run(x); air.run(w);
+        mono[a0 + i] += (F1.bp * 0.5 + F2.bp * 0.35 + F3.bp * 0.12 + air.bp * 0.05) * en * 0.22;
+      }
+      t += len + r.range(0.1, 0.4);
+    }
+    if (far) { const hp = new SVF(900, 0.7), lp = new SVF(2600, 0.7); for (let i = 0; i < mono.length; i++) { hp.run(mono[i]); mono[i] = lp.run(hp.hp) * 0.25; } }
+    addPan(S, fadeTail(mono, 0.03), pan * (far ? 0.3 : 1), 0);
+  });
+  return S;
+}
+// RINGROLL {dur} — a gold ring rolling out on card, then spinning down like a coin: faster and faster, and flat
+export function sfxRingRoll(e, seed) {
+  const d = Math.max(0.8, e.dur || 2.2), out = new Float32Array(Math.ceil((d + 0.6) * SR)), r = new Rng(seed), f = r.range(3900, 4500), dr = 0.4 * d;
+  const nz = new Noise(seed), b1 = new SVF(f, 12), b2 = new SVF(f * 1.47, 14), n = Math.round(dr * SR);
+  for (let i = 0; i < n; i++) { const u = i / n, w = nz.white(); b1.run(w); b2.run(w); out[i] += (b1.bp * 0.05 + b2.bp * 0.03) * smooth(u / 0.1) * (0.6 + 0.4 * Math.abs(Math.sin(TAU * (16 - 6 * u) * i / SR))); }
+  for (let t = dr, p = 0.15, a = 0.07; t < d && p > 0.012; t += p, p *= 0.87, a *= 0.94) { ping(out, Math.round(t * SR), f * r.range(0.99, 1.01), a, [[1, 1, 0.12], [1.47, 0.6, 0.08], [2.6, 0.3, 0.04]], r.next() * 6); noiseBurst(out, Math.round(t * SR), { a: 0.0002, tau: 0.002, f0: 1800, q: 0.8, mode: 'lp', amp: a * 0.8 }, new Noise(seed + Math.round(t * 1e4))); }
+  noiseBurst(out, Math.round(d * SR), { a: 0.0005, tau: 0.004, f0: 1500, q: 0.7, mode: 'lp', amp: 0.08 }, new Noise(seed + 2));
+  return fadeTail(out, 0.1);
+}
+// CLOTH {dur} — a robe's hem moving: a soft swish of heavy cloth
+export function sfxCloth(e, seed) {
+  const d = Math.max(0.2, e.dur || 0.7), out = new Float32Array(Math.ceil((d + 0.05) * SR)), nz = new Noise(seed), bp = new SVF(1400, 0.8), lo = new SVF(500, 0.7), n = Math.round(d * SR), dr = new Drift(seed + 1, 9);
+  for (let i = 0; i < n; i++) { const u = i / n; if ((i & 63) === 0) bp.set(1000 + 1400 * Math.sin(Math.PI * u), 0.8); const w = nz.pink(); bp.run(w); lo.run(w); out[i] = (bp.bp * 0.5 + lo.lp * 0.25) * Math.pow(Math.sin(Math.PI * u), 1.4) * (0.7 + 0.3 * dr.at(i / SR)) * 0.5; }
+  return out;
+}
+// FOOTDOWN — a slippered foot set down very gently on stone: the softest pad, a grain of grit
+export function sfxFootDown(e, seed) {
+  const out = new Float32Array(Math.ceil(0.35 * SR)), r = new Rng(seed);
+  noiseBurst(out, 0, { a: 0.012, tau: 0.045, f0: 260, q: 0.7, mode: 'lp', amp: 0.5 }, new Noise(seed));
+  sweep(out, 0, 85, 50, 0.03, 0.06, 0.12, 0.01, 0);
+  for (let q = 0; q < 3; q++) noiseBurst(out, Math.round(r.range(0.01, 0.07) * SR), { a: 0.0001, tau: 0.0005, f0: r.range(3000, 5500), q: 1.2, amp: r.range(0.02, 0.05) }, new Noise(seed + 2 + q));
+  return fadeTail(out, 0.05);
+}
+Object.assign(FILM_KINDS, { tak: sfxTak, slabLand: sfxSlabLand, thud: sfxThud, clockwork: sfxClockwork, rundown: sfxRundown, pat: sfxPat, chipDrop: sfxChipDrop,
+  crownLift: sfxCrownLift, crownDrop: sfxCrownDrop, gulp: sfxGulp, creak: sfxCreak, burst: sfxBurst, grow: sfxGrow, cheer: sfxCheer, ringRoll: sfxRingRoll,
+  cloth: sfxCloth, footDown: sfxFootDown });

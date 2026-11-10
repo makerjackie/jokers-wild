@@ -46,7 +46,7 @@ v5 的规矩：
 
 ## 代码
 
-- `docs/script/shots.txt`：镜头表，43 行、52 个镜头、1:59.1。改完运行 `python -X utf8 tools/shotlist.py`。
+- `docs/script/shots.txt`：镜头表，43 行、52 个镜头、2:00.1。改完运行 `python -X utf8 tools/shotlist.py`。
 - `src/dir/story.js`：故事数据（喂食时间表、机器大小、每一张牌）。
 - `src/dir/reel.js`：每一刻的世界状态（王、机器、牌、筹码、王冠、蚂蚁、脚）。
 - `src/dir/cams.js`：每个镜头的机位。
