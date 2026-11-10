@@ -9,12 +9,12 @@
 
 export const BRAND = {
   openai: '#101010', google: '#3186ff', anthropic: '#d97757', xai: '#0b0b0d', meta: '#0866ff',
-  deepseek: '#4d6bfe', qwen: '#082dff', kimi: '#16161c', glm: '#2d2d2d', doubao: '#1e37fc', mistral: '#fa500f',
+  deepseek: '#2a72e0', qwen: '#5a44d6', kimi: '#a8611f', glm: '#3a4766', doubao: '#cf3036', mistral: '#fa500f',
   nvidia: '#76b900', joker: '#b8232f',
 };
 export const WORDS = {
   openai: 'OpenAI', google: 'Gemini', anthropic: 'Claude', xai: 'xAI', meta: 'Meta',
-  deepseek: 'deepseek', qwen: 'Qwen', kimi: 'Kimi', glm: 'Z.ai', doubao: '豆包', mistral: 'Mistral', nvidia: 'NVIDIA',
+  deepseek: '大肥鱼', qwen: '万问', kimi: '月饼', glm: '智普普', doubao: '豆沙包', mistral: 'Mistral', nvidia: 'NVIDIA',
   spacexai: 'SpaceXAI', spade: 'SPADES', heart: 'HEARTS', diamond: 'DIAMONDS', club: 'CLUBS',
 };
 const FONT = '"Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif';
@@ -136,70 +136,121 @@ function meta(c) {
   c.closePath(); c.stroke();
 }
 
-// ---- DeepSeek: a blue whale with its tail curled up over its back
-function deepseek(c, col) {
-  c.fillStyle = col;
-  c.beginPath();
-  c.moveTo(-0.47, 0.06);                                  // nose
-  c.bezierCurveTo(-0.46, -0.14, -0.26, -0.24, -0.06, -0.2); // forehead
-  c.bezierCurveTo(0.1, -0.17, 0.2, -0.1, 0.26, -0.15);    // back
-  c.bezierCurveTo(0.3, -0.19, 0.3, -0.28, 0.26, -0.34);   // tail stock rising
-  c.bezierCurveTo(0.33, -0.36, 0.42, -0.42, 0.47, -0.37); // upper fluke
-  c.bezierCurveTo(0.43, -0.32, 0.4, -0.3, 0.37, -0.29);
-  c.bezierCurveTo(0.45, -0.24, 0.47, -0.17, 0.45, -0.12); // lower fluke
-  c.bezierCurveTo(0.41, -0.18, 0.37, -0.2, 0.34, -0.2);
-  c.bezierCurveTo(0.36, 0.02, 0.24, 0.24, -0.02, 0.27);   // belly
-  c.bezierCurveTo(-0.22, 0.29, -0.4, 0.24, -0.47, 0.06);
-  c.closePath(); c.fill();
-  // white belly line and eye knocked out
-  c.save();
-  c.globalCompositeOperation = 'destination-out';
-  c.lineWidth = 0.045; c.lineCap = 'round';
-  c.beginPath(); c.moveTo(-0.38, 0.1); c.bezierCurveTo(-0.24, 0.2, -0.02, 0.2, 0.16, 0.08); c.stroke();
-  c.beginPath(); c.arc(-0.27, -0.06, 0.042, 0, Math.PI * 2); c.fill();
+// ---- The five domestic kings are played by fictional parody brands (nothing drawn names a real company).
+// Each mark is full colour by default; when a caller passes opts.color (e.g. white on a dark crown plate)
+// it draws a one-colour version with its details knocked out, so it still reads.
+function lin(c, x0, y0, x1, y1, stops) { const g = c.createLinearGradient(x0, y0, x1, y1); stops.forEach((s, i) => g.addColorStop(i / (stops.length - 1), s)); return g; }
+function knock(c, draw) { c.save(); c.globalCompositeOperation = 'destination-out'; draw(); c.restore(); }
+function fillSoft(c, fill, w) { c.fillStyle = fill; c.strokeStyle = fill; c.lineWidth = w; c.lineJoin = 'round'; c.fill(); c.stroke(); }
+
+// 大肥鱼 FatFish: a round, almost ball-shaped blue fish, a stubby forked tail, a fin tuft and one big eye
+function fatFish(c, col) {
+  const fill = col ?? lin(c, 0, -0.34, 0, 0.34, ['#2c6fe0', '#4f9cff', '#8cc8ff']);
+  c.save(); c.translate(-0.02, 0.02);
+  // tail
+  c.beginPath(); c.moveTo(0.16, -0.05); c.quadraticCurveTo(0.33, -0.16, 0.45, -0.27); c.quadraticCurveTo(0.43, -0.08, 0.36, 0.0);
+  c.quadraticCurveTo(0.43, 0.08, 0.45, 0.27); c.quadraticCurveTo(0.33, 0.16, 0.16, 0.05); c.closePath(); fillSoft(c, col ?? '#2c6fe0', 0.06);
+  // fin tuft on top
+  c.beginPath(); c.moveTo(-0.2, -0.22); c.quadraticCurveTo(-0.12, -0.44, 0.07, -0.37); c.quadraticCurveTo(0.04, -0.3, 0.08, -0.24); c.closePath(); fillSoft(c, col ?? '#2c6fe0', 0.05);
+  // the ball body
+  c.beginPath(); c.ellipse(-0.08, 0.0, 0.34, 0.32, 0, 0, Math.PI * 2); c.fillStyle = fill; c.fill();
+  // eye, smile
+  const ex = -0.2, ey = -0.07;
+  if (col) {
+    knock(c, () => { c.beginPath(); c.arc(ex, ey, 0.115, 0, Math.PI * 2); c.fill(); c.lineWidth = 0.04; c.lineCap = 'round'; c.beginPath(); c.arc(-0.27, 0.1, 0.07, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke(); });
+    c.fillStyle = col; c.beginPath(); c.arc(ex - 0.03, ey + 0.015, 0.06, 0, Math.PI * 2); c.fill();
+  } else {
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(ex, ey, 0.115, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#0d1d44'; c.beginPath(); c.arc(ex - 0.03, ey + 0.015, 0.065, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(ex - 0.05, ey - 0.012, 0.022, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#0d1d44'; c.lineWidth = 0.035; c.lineCap = 'round';
+    c.beginPath(); c.arc(-0.27, 0.1, 0.07, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke();
+    c.fillStyle = 'rgba(255,120,150,0.55)'; c.beginPath(); c.ellipse(-0.06, 0.1, 0.06, 0.04, 0, 0, Math.PI * 2); c.fill();
+  }
   c.restore();
 }
 
-// ---- Qwen: three hooked bands folded into a hexagonal knot, purple gradient
-function qwen(c) {
-  const g = c.createLinearGradient(-0.4, -0.4, 0.4, 0.4);
-  g.addColorStop(0, '#6a5cf0'); g.addColorStop(1, '#8a62ea');
-  c.strokeStyle = g; c.lineWidth = 0.13; c.lineJoin = 'round'; c.lineCap = 'butt';
-  const R = 0.38, V = (i) => { const a = (i / 6) * Math.PI * 2 - Math.PI / 2; return [Math.cos(a) * R, Math.sin(a) * R]; };
-  for (let k = 0; k < 3; k++) {
-    const a = V(2 * k), b = V(2 * k + 1), d = V(2 * k + 2), e = V(2 * k + 3);
-    const st = [a[0] + (e[0] - a[0]) * 0.45, a[1] + (e[1] - a[1]) * 0.45];
-    c.beginPath(); c.moveTo(st[0], st[1]); c.lineTo(a[0], a[1]); c.lineTo(b[0], b[1]);
-    c.lineTo(b[0] + (d[0] - b[0]) * 0.75, b[1] + (d[1] - b[1]) * 0.75); c.stroke();
+// 万问: a fat question mark built from four blocks and a square dot, indigo -> violet
+function wanWen(c, col) {
+  c.save(); c.translate(0, -0.015);
+  c.strokeStyle = col ?? lin(c, -0.3, -0.4, 0.3, 0.3, ['#3b3fe0', '#6a4ae6', '#9a55e8']);
+  c.lineWidth = 0.18; c.lineCap = 'round'; c.lineJoin = 'round';
+  const cy = -0.17, R = 0.19;
+  c.beginPath(); c.arc(0, cy, R, Math.PI, Math.PI * 2.2); c.quadraticCurveTo(0.0, 0.0, 0.0, 0.12); c.stroke();
+  knock(c, () => {
+    c.lineWidth = 0.045; c.lineCap = 'butt';
+    for (const a of [1.36, 1.72, 2.08]) { const t = a * Math.PI; c.beginPath(); c.moveTo(Math.cos(t) * 0.05, cy + Math.sin(t) * 0.05); c.lineTo(Math.cos(t) * 0.4, cy + Math.sin(t) * 0.4); c.stroke(); }
+  });
+  c.fillStyle = col ?? '#9a55e8'; roundRect(c, -0.095, 0.25, 0.19, 0.19, 0.05); c.fill();
+  c.restore();
+}
+
+// 月饼: a fluted round mooncake with a stamped flower, one bite taken out (the filling shows at the bite)
+function mooncake(c, col) {
+  const N = 12, R = 0.44, a = 0.05;
+  const cake = () => { c.beginPath(); for (let i = 0; i <= 288; i++) { const t = (i / 288) * Math.PI * 2, r = R - a + a * Math.abs(Math.cos((N * t) / 2)); c.lineTo(Math.cos(t) * r, Math.sin(t) * r); } c.closePath(); };
+  const BITE = [[0.33, -0.33, 0.18], [0.4, -0.14, 0.11], [0.14, -0.4, 0.11]];
+  const bite = (k) => { c.beginPath(); for (const [x, y, r] of BITE) { c.moveTo(x + r + k, y); c.arc(x, y, r + k, 0, Math.PI * 2); } };
+  const petals = () => { c.beginPath(); for (let k = 0; k < 4; k++) { const t = (k * Math.PI) / 2 + Math.PI / 4; c.ellipse(Math.cos(t) * 0.1, Math.sin(t) * 0.1, 0.095, 0.05, t, 0, Math.PI * 2); c.closePath(); } };
+  if (col) {
+    cake(); c.fillStyle = col; c.fill();
+    knock(c, () => { c.lineWidth = 0.035; c.beginPath(); c.arc(0, 0, 0.28, 0, Math.PI * 2); c.stroke(); petals(); c.fill(); bite(0); c.fill(); });
+    return;
   }
+  cake(); c.fillStyle = '#c27630'; c.fill();
+  c.beginPath(); c.arc(0, 0, 0.34, 0, Math.PI * 2); c.fillStyle = lin(c, -0.2, -0.3, 0.2, 0.3, ['#f2c27a', '#dd9a4c']); c.fill();
+  c.strokeStyle = '#a65d22'; c.lineWidth = 0.035; c.beginPath(); c.arc(0, 0, 0.27, 0, Math.PI * 2); c.stroke();
+  petals(); c.fillStyle = '#b8682a'; c.fill();
+  c.beginPath(); c.arc(0, 0, 0.035, 0, Math.PI * 2); c.fillStyle = '#f2c27a'; c.fill();
+  // the bite: a lotus-paste rim of filling, then the hole
+  c.save(); cake(); c.clip(); bite(0.045); c.fillStyle = '#6e3a1e'; c.fill(); c.restore();
+  knock(c, () => { bite(0); c.fill(); });
 }
 
-// ---- Kimi: a dark tile with a white K and a blue dot
-function kimi(c, col) {
-  c.fillStyle = col === '#ffffff' ? '#ffffff' : '#16161c';
+// 智普普: a sleepy slate tile with a stacked "Zzz", big to small, drifting up
+function zzz(c, col) {
+  c.fillStyle = col ?? lin(c, 0, -0.44, 0, 0.44, ['#56688e', '#2e3953']);
   roundRect(c, -0.44, -0.44, 0.88, 0.88, 0.2); c.fill();
-  c.fillStyle = col === '#ffffff' ? '#16161c' : '#ffffff';
-  c.fillRect(-0.22, -0.25, 0.11, 0.5);
-  poly(c, [[-0.13, 0.03], [0.1, -0.25], [0.24, -0.25], [-0.02, 0.06]]); c.fill();
-  poly(c, [[-0.07, 0.0], [0.03, -0.06], [0.25, 0.25], [0.11, 0.25]]); c.fill();
-  c.fillStyle = '#3a8bff';
-  c.beginPath(); c.arc(0.26, -0.27, 0.065, 0, Math.PI * 2); c.fill();
+  const Z = (x, y, s, w) => { c.lineWidth = w; c.beginPath(); c.moveTo(x - s / 2, y - s / 2); c.lineTo(x + s / 2, y - s / 2); c.lineTo(x - s / 2, y + s / 2); c.lineTo(x + s / 2, y + s / 2); c.stroke(); };
+  const all = () => { c.lineCap = 'round'; c.lineJoin = 'round'; Z(-0.15, 0.15, 0.27, 0.1); Z(0.17, -0.1, 0.16, 0.07); Z(0.32, -0.31, 0.09, 0.05); };
+  if (col) knock(c, all); else { c.strokeStyle = '#f2f5fc'; all(); }
 }
 
-// ---- Zhipu GLM: a blue tile with a bold geometric Z
-function glm(c, col) {
-  c.fillStyle = col;
+// 豆沙包: a white steamed bun with a pleated top and one red-bean dot, on a red tile
+function bun(c, col) {
+  c.fillStyle = col ?? lin(c, 0, -0.44, 0, 0.44, ['#e8473f', '#c52a31']);
   roundRect(c, -0.44, -0.44, 0.88, 0.88, 0.2); c.fill();
-  c.fillStyle = '#ffffff';
-  poly(c, [[-0.24, -0.25], [0.25, -0.25], [0.25, -0.13], [-0.06, 0.13], [0.25, 0.13], [0.25, 0.25], [-0.25, 0.25], [-0.25, 0.13], [0.06, -0.13], [-0.24, -0.13]]);
-  c.fill();
-  c.beginPath(); c.arc(0.0, 0.0, 0.0, 0, 0); c.fill();
+  const shape = () => {
+    c.beginPath(); c.moveTo(0, -0.25);
+    c.bezierCurveTo(0.25, -0.25, 0.39, -0.07, 0.37, 0.1); c.bezierCurveTo(0.36, 0.22, 0.29, 0.26, 0.18, 0.26);
+    c.lineTo(-0.18, 0.26); c.bezierCurveTo(-0.29, 0.26, -0.36, 0.22, -0.37, 0.1); c.bezierCurveTo(-0.39, -0.07, -0.25, -0.25, 0, -0.25);
+    c.closePath();
+  };
+  // pleats swirl out from the pinch like a pinwheel
+  const DOT = [0, -0.14];
+  const pleats = () => {
+    c.lineWidth = 0.032; c.lineCap = 'round';
+    for (let k = 0; k < 6; k++) {
+      const t = (k / 6) * Math.PI * 2 - Math.PI / 2, u = t + 0.9, r0 = 0.07, r1 = 0.17;
+      c.beginPath(); c.moveTo(DOT[0] + Math.cos(t) * r0, DOT[1] + Math.sin(t) * r0 * 0.7);
+      c.quadraticCurveTo(DOT[0] + Math.cos(t + 0.45) * r1, DOT[1] + Math.sin(t + 0.45) * r1 * 0.7, DOT[0] + Math.cos(u) * r1 * 1.05, DOT[1] + Math.sin(u) * r1 * 0.75);
+      c.stroke();
+    }
+  };
+  const dot = () => { c.beginPath(); c.arc(DOT[0], DOT[1], 0.065, 0, Math.PI * 2); c.fill(); };
+  if (col) {
+    knock(c, () => { shape(); c.fill(); });
+    c.strokeStyle = col; c.fillStyle = col; pleats(); dot();
+    return;
+  }
+  c.save(); c.translate(0, 0.035); shape(); c.fillStyle = 'rgba(90,0,10,0.35)'; c.fill(); c.restore();
+  shape(); c.fillStyle = lin(c, 0, -0.25, 0, 0.26, ['#ffffff', '#fdf8ee', '#ecdcc0']); c.fill();
+  c.strokeStyle = '#d9c6a6'; pleats();
+  c.fillStyle = '#d42f35'; dot();
 }
-
 // ---- precise marks from published path data (see docs/research/ai-race-timeline.md §9). Each draws in a
 // unit box centred on the origin ([-0.5, 0.5]), like the hand-built marks above.
 const CLAUDE_D = 'm19.6 66.5 19.7-11 .3-1-.3-.5h-1l-3.3-.2-11.2-.3L14 53l-9.5-.5-2.4-.5L0 49l.2-1.5 2-1.3 2.9.2 6.3.5 9.5.6 6.9.4L38 49.1h1.6l.2-.7-.5-.4-.4-.4L29 41l-10.6-7-5.6-4.1-3-2-1.5-2-.6-4.2 2.7-3 3.7.3.9.2 3.7 2.9 8 6.1L37 36l1.5 1.2.6-.4.1-.3-.7-1.1L33 25l-6-10.4-2.7-4.3-.7-2.6c-.3-1-.4-2-.4-3l3-4.2L28 0l4.2.6L33.8 2l2.6 6 4.1 9.3L47 29.9l2 3.8 1 3.4.3 1h.7v-.5l.5-7.2 1-8.7 1-11.2.3-3.2 1.6-3.8 3-2L61 2.6l2 2.9-.3 1.8-1.1 7.7L59 27.1l-1.5 8.2h.9l1-1.1 4.1-5.4 6.9-8.6 3-3.5L77 13l2.3-1.8h4.3l3.1 4.7-1.4 4.9-4.4 5.6-3.7 4.7-5.3 7.1-3.2 5.7.3.4h.7l12-2.6 6.4-1.1 7.6-1.3 3.5 1.6.4 1.6-1.4 3.4-8.2 2-9.6 2-14.3 3.3-.2.1.2.3 6.4.6 2.8.2h6.8l12.6 1 3.3 2 1.9 2.7-.3 2-5.1 2.6-6.8-1.6-16-3.8-5.4-1.3h-.8v.4l4.6 4.5 8.3 7.5L89 80.1l.5 2.4-1.3 2-1.4-.2-9.2-7-3.6-3-8-6.8h-.5v.7l1.8 2.7 9.8 14.7.5 4.5-.7 1.4-2.6 1-2.7-.6-5.8-8-6-9-4.7-8.2-.5.4-2.9 30.2-1.3 1.5-3 1.2-2.5-2-1.4-3 1.4-6.2 1.6-8 1.3-6.4 1.2-7.9.7-2.6v-.2H49L43 72l-9 12.3-7.2 7.6-1.7.7-3-1.5.3-2.8L24 86l10-12.8 6-7.9 4-4.6-.1-.5h-.3L17.2 77.4l-4.7.6-2-2 .2-3 1-1 8-5.5Z';
-const DEEPSEEK_D = 'M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z';
 function pathMark(c, d, box, col) { c.save(); c.translate(-0.5, -0.5); c.scale(1 / box, 1 / box); c.fillStyle = col; c.fill(new Path2D(d), 'evenodd'); c.restore(); }
 function polys100(c, list, col) { c.save(); c.translate(-0.5, -0.5); c.scale(0.01, 0.01); c.fillStyle = col; for (const pts of list) { poly(c, pts); c.fill(); } c.restore(); }
 function geminiStar(c) {
@@ -217,33 +268,10 @@ function xaiMark(c, col) {
   polys100(c, [[[4.94, 35.35], [50.21, 100], [70.33, 100], [25.06, 35.35]], [[4.92, 100], [25.05, 100], [35.11, 85.63], [25.05, 71.26]],
     [[95.08, 0], [74.94, 0], [40.15, 49.69], [50.22, 64.07]], [[78.58, 100], [95.08, 100], [95.08, 7.19], [78.58, 30.74]]], col);
 }
-function qwenBlocks(c, col) {
-  c.save(); c.translate(-0.5, -0.5); c.scale(0.01, 0.01); c.fillStyle = col;
-  const B = [[38.1, 0], [51.7, 0], [58.5, 11.75], [85.65, 11.75], [92.45, 23.5], [85.65, 35.3], [31.3, 35.3], [24.5, 23.5]];
-  for (let k = 0; k < 3; k++) { c.save(); c.translate(50, 50); c.rotate((k * 2 * Math.PI) / 3); c.translate(-50, -50); poly(c, B); c.fill(); c.restore(); }
-  c.restore();
-}
-function zaiZ(c) {
-  c.save(); c.translate(-0.5, -0.5); c.scale(0.01, 0.01);
-  c.fillStyle = '#2d2d2d'; roundRect(c, 5, 5, 90, 90, 13.3); c.fill();
-  c.fillStyle = '#ffffff';
-  for (const pts of [[[20.5, 23.7], [51.6, 23.7], [47.2, 29.8], [44.2, 31.4], [20.6, 31.4]], [[81, 23.7], [56.2, 23.7], [19, 76.4], [43.8, 76.4]],
-    [[48.4, 76.4], [52.8, 70.2], [55.8, 68.6], [79.4, 68.6], [79.4, 76.4]]]) { poly(c, pts); c.fill(); }
-  c.restore();
-}
 function mistralM(c) {
   const rows = [[[1, 5], '#ffd800'], [[1, 2, 4, 5], '#ffaf00'], [[1, 2, 3, 4, 5], '#ff8205'], [[1, 3, 5], '#fa500f'], [[0, 1, 2, 4, 5, 6], '#e10500']];
   const s = 1 / 7;
   rows.forEach(([cols, col], r) => { c.fillStyle = col; for (const k of cols) c.fillRect(-0.5 + k * s, -0.5 + 0.1429 + r * s, s + 0.002, s + 0.002); });
-}
-function doubaoBean(c) {
-  // Doubao's model mark: a rounded bean of three colour blocks around a white window (approximation)
-  c.save(); c.scale(0.92, 0.92);
-  c.fillStyle = '#a569ff'; c.beginPath(); c.ellipse(0, -0.12, 0.42, 0.3, 0, Math.PI, 0); c.closePath(); c.fill();
-  c.fillStyle = '#1e37fc'; c.beginPath(); c.ellipse(-0.06, 0.06, 0.4, 0.36, 0.35, Math.PI * 0.45, Math.PI * 1.25); c.closePath(); c.fill();
-  c.fillStyle = '#37e1be'; c.beginPath(); c.ellipse(0.12, 0.08, 0.32, 0.3, -0.3, -Math.PI * 0.3, Math.PI * 0.55); c.closePath(); c.fill();
-  c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0.02, 0.02, 0.17, 0.13, 0.2, 0, Math.PI * 2); c.fill();
-  c.restore();
 }
 function nvidiaEye(c) {
   c.save(); c.translate(-0.5, -0.5); c.scale(0.01, 0.01);
@@ -287,11 +315,11 @@ export function drawLogo(ctx, id, x, y, size, opts = {}) {
     case 'anthropic': pathMark(c, CLAUDE_D, 100, opts.color ?? '#d97757'); break;
     case 'xai': xaiMark(c, col); break;
     case 'meta': meta(c); break;
-    case 'deepseek': pathMark(c, DEEPSEEK_D, 24, opts.color ?? '#4d6bfe'); break;
-    case 'qwen': qwenBlocks(c, opts.color ?? '#082dff'); break;
-    case 'kimi': kimi(c, opts.color ?? '#16161c'); break;
-    case 'glm': zaiZ(c); break;
-    case 'doubao': doubaoBean(c); break;
+    case 'deepseek': fatFish(c, opts.color); break;
+    case 'qwen': wanWen(c, opts.color); break;
+    case 'kimi': mooncake(c, opts.color); break;
+    case 'glm': zzz(c, opts.color); break;
+    case 'doubao': bun(c, opts.color); break;
     case 'mistral': mistralM(c); break;
     case 'nvidia': nvidiaEye(c); break;
     case 'joker': joker(c); break;
