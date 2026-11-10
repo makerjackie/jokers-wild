@@ -36,7 +36,7 @@ const AC = [S.ANT_CRUSH[0], 0.002, S.ANT_CRUSH[1]];
 // the #1 board, high at the head of the table: a slow push in on its bottom rows
 function boardCam(cam, st, t, row, o = {}) {
   const u = uRow(t, row);
-  camLook(cam, [o.x ?? 0.06, 4.6, lerp(-1.75, -2.0, smooth(u))], [0, 4.6, -4.9], o.fov ?? 40);
+  camLook(cam, [o.x ?? 0.06, 4.95, lerp(-1.55, -1.85, smooth(u))], [0, 5.12, -4.9], o.fov ?? 44);
   st.look.exposure = 1.5; st.look.far = 60;
 }
 const HOUSE_C = [S.HOUSE.x, 0.13, S.HOUSE.z];
@@ -44,19 +44,20 @@ const HOUSE_C = [S.HOUSE.x, 0.13, S.HOUSE.z];
 export const SHOTS = {
   // ---------------------------------------------------------------- @1 蚂蚁
   '1-01': (t, st, w) => { macro(w.camera, st, [0.02, 0.01, 0.42], [0.06, 0.004, 0.34], 30, 0.1); st.look.fade = 1; },
+  // side on, at its height: an ant holding up a crumb bigger than its head, walking
   '1-02': (t, st, w) => {
-    const a = antP(t);
-    const pos = [a[0] + 0.012, 0.0095, a[2] + 0.07];
-    macro(w.camera, st, pos, [a[0] + 0.006, a[1] + 0.004, a[2]], 30, dist(pos, a), 3.0);
-    st.look.fade = 1 - ease(t, at('1-02'), at('1-02', 1.0)); st.look.exposure = 1.25;
+    const a = antP(t), d = S.antAt(t).dir ?? [0.8, -0.6], u = uRow(t, '1-02');
+    const pos = [a[0] + d[1] * -0.055 + d[0] * (0.012 - 0.01 * u), 0.0085, a[2] + d[0] * 0.055 + d[1] * (0.012 - 0.01 * u)];
+    macro(w.camera, st, pos, [a[0] + d[0] * 0.004, a[1] + 0.0045, a[2] + d[1] * 0.004], 32, dist(pos, a), 1.2);
+    st.look.fade = 1 - ease(t, at('1-02'), at('1-02', 0.5)); st.look.exposure = 1.45;
   },
   // behind it, low, looking up: the giant at his screen
   '1-03': (t, st, w) => {
     const u = uRow(t, '1-03'), a = antP(t), d = S.antAt(t).dir ?? [0.8, -0.6];
-    const pos = [a[0] - d[0] * 0.036 + 0.004, 0.0075, a[2] - d[1] * 0.036 + 0.012];
+    const pos = [a[0] - d[0] * 0.04 + 0.004, 0.0085, a[2] - d[1] * 0.04 + 0.012];
     const h = headOf(S.ANT_KING, w, st, t);
-    macro(w.camera, st, pos, lerp3([a[0] + 0.12, 0.03, a[2] - 0.02], [h[0], h[1] - 0.05, h[2]], smooth(u * 1.4)), 62, dist(pos, a), 1.0);
-    st.look.exposure = 1.3;
+    macro(w.camera, st, pos, lerp3([a[0] + 0.1, 0.02, a[2] - 0.02], [h[0] - 0.1, h[1] - 0.12, h[2] + 0.1], smooth(u * 1.6)), 56, lerp(dist(pos, a), dist(pos, h), smooth((u - 0.15) * 2.5)), lerp(1.0, 0.18, smooth((u - 0.15) * 2.5)));
+    st.look.exposure = 1.45;
   },
   // his eyes: down on the table, a speck carrying a speck
   '1-04': (t, st, w) => {
@@ -117,11 +118,21 @@ export const SHOTS = {
   '4-04': (t, st, w) => faceCam(w.camera, st, w, t, 'openai', { d: 1.0, dz: -0.38, dy: -0.06, ly: -0.15, fov: 36 }),
   '4-05': (t, st, w) => wide(w.camera, st, 0.4 + 0.1 * uRow(t, '4-05')),
   // ---------------------------------------------------------------- @5 托管
-  '5-01': (t, st, w) => screenCam(w.camera, st, 'openai', 0.7, 0.48, 0.38, 44),
+  '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01', { fov: 44 }) : screenCam(w.camera, st, 'openai', 0.7, 0.48, 0.38, 44)),
   '5-02': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
   '5-03': (t, st, w) => faceCam(w.camera, st, w, t, 'deepseek', { d: 1.0, dz: 0.4, dy: -0.06, ly: -0.15, fov: 36 }),
-  '5-04': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-04')),
-  '5-05': (t, st, w) => { const u = uRow(t, '5-05'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.4; },
+  // one hand after another slaps 托管 (one cut each)
+  '5-04': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.74, 0.46, 0.4, 46, 0.02); },
+  // Meta: his hand hangs over 托管, and comes back; he plays a card himself
+  '5-05': (t, st, w) => screenCam(w.camera, st, 'meta', 0.62, 0.45, 0.55, 50, 0.12),
+  '5-06': (t, st, w) => screenCam(w.camera, st, 'meta', 0.42, 0.42, 0.42, 48, 0.08),
+  // from across the table: he goes back into the dark with his chair, reaching for it
+  '5-07': (t, st, w) => { const u = uRow(t, '5-07'); camLook(w.camera, [-0.7, 0.78, 1.95], [lerp(1.7, 2.3, smooth(u)), 0.5, 2.55], 46); st.look.exposure = 1.45; },
+  '5-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1], z = cut === 1 ? 1.25 : 2.5, u = clamp((t - (cut === 1 ? at('5-08') : at('5-08', 1.8))) / 1.8); camLook(w.camera, [0.7, 0.78, z - 0.55], [lerp(-1.7, -2.3, smooth(u)), 0.5, z + 0.05], 46); st.look.exposure = 1.45; },
+  // from the foot: three empty places; the others look, then lean back
+  '5-09': (t, st, w) => { const u = uRow(t, '5-09'); camLook(w.camera, [0.0, 1.05, -0.7 + 0.15 * u], [0, 0.4, 2.7], 52); st.look.exposure = 1.55; },
+  '5-10': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-10')),
+  '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.4; },
   // ---------------------------------------------------------------- @6 底牌
   '6-01': (t, st, w) => screenCam(w.camera, st, 'deepseek', 0.4, 0.6, 0.44, 44),
   '6-02': (t, st, w) => boardCam(w.camera, st, t, '6-02'),
@@ -153,7 +164,8 @@ export const SHOTS = {
   // his grin, close; the edge of the shadow slides over it
   '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'deepseek', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
-  '8-07': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
-  '8-08': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
+  '9-01': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
+  '9-02': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
+  '9-03': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },
 };
 void clamp; void BTN; void HOUSE_C; void screenFrame; void screenPoint; void macro;

@@ -642,9 +642,11 @@ export function makeAnt(ctx = {}) {
       // ---- the crumb: in front of the head, rear wall between the mandible tips; knocked askew it rolls and slides sideways
       crumbG.visible = cr > 0.01;
       const R = CRUMB_HALF[2];
-      crumbG.position.set(0.75 * Math.sin(tilt), -0.3 - 0.25 * Math.abs(Math.sin(tilt)), 3.75 + R * 0.86 * cr);
+      // (v7) crumbSize: a bigger crumb than the ant (it reads at a glance); crumbLift: held up in front of the head
+      const csz = st.crumbSize ?? 1, clift = st.crumbLift ?? 0;
+      crumbG.position.set(0.75 * Math.sin(tilt), -0.3 - 0.25 * Math.abs(Math.sin(tilt)) + clift * R * csz, 3.75 + R * 0.86 * cr * csz - clift * R * 0.4);
       crumbG.rotation.set(0, 0.25 * Math.sin(tilt), tilt);
-      crumbG.scale.setScalar(Math.max(0.001, cr));
+      crumbG.scale.setScalar(Math.max(0.001, cr * csz));
 
       // ---- antennae
       for (const A of ants) {

@@ -2,7 +2,7 @@
 // A logo token like '{openai}' (or a glyph token '{g3}') occupies one cell.
 export const BOARD_CHARS =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#·:：%×.-/+ ' +
-  '♠♥♦♣∞人类要不起服务器繁忙批准托管倍数开源第一国产最强通义千问豆包智谱率';
+  '♠♥♦♣∞人类要不起服务器繁忙批准托管倍数开源第一国产最强通义千问豆包智谱率大肥鱼万月饼普沙';
 export const BOARD_LOGOS = ['openai', 'anthropic', 'google', 'xai', 'meta', 'deepseek', 'qwen', 'kimi', 'glm', 'doubao', 'mistral', 'joker'];
 // unreadable machine glyphs (the date and names turn into these after the takeover): '{g0}'..'{g15}'
 export const BOARD_GLYPHS = 16;

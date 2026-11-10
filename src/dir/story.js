@@ -7,7 +7,7 @@ import { KINGS, KING, SIDE_SIGN, LAMP } from '../layout.js';
 import { CUES } from '../shots.js';
 import { at } from './core.js';
 import { mulberry32, clamp, lerp } from '../util.js';
-import { MODELS } from '../models.js';
+import { MODELS, REAL_N, nextName } from '../models.js';
 import { CELL } from '../cards-cells.js';
 import { CARD } from '../cards.js';
 import { buildHeap } from './heap.js';
@@ -18,15 +18,30 @@ export const CARD_Y = 0.0036;
 export const sxOf = (id) => SIDE_SIGN[KING[id].side];
 const backOf = (id) => (KING[id].side === 'CN' ? CELL.backCN : CELL.backUS);
 const vOf = (id, v) => Math.min(Math.max(0, v), MODELS[id].length - 1);
-const card = (id, v) => ({ face: CELL[`${id}${vOf(id, v)}`], name: MODELS[id][vOf(id, v)].name });
+const card = (id, v) => ({ face: CELL[`${id}${vOf(id, v)}`], name: MODELS[id][vOf(id, v)].name, date: MODELS[id][vOf(id, v)].date });
+const realV = (id, v) => Math.min(v, REAL_N[id] - 1);
 const IDS = KINGS.map((k) => k.id);
 // the internal models nobody has released (invented names: the film's future, not anyone's real roadmap)
 export { FUTURE };
 
 // ---------------------------------------------------------------- phases
-export const AUTO = {};                     // when each king presses 托管
-AUTO.openai = at('5-01', 1.15); AUTO.deepseek = at('5-03', 0.85);
-{ const others = IDS.filter((id) => !FINAL.includes(id)); others.forEach((id, i) => { AUTO[id] = at('5-04', 0.25 + i * 0.32); }); }
+export const AUTO = {};                     // when each king presses 托管 (2026·11 on the board first)
+export const NOW = at('5-01', 0.35);        // the board's date flips to 2026·11
+AUTO.openai = at('5-01', 2.05); AUTO.deepseek = at('5-03', 0.85);
+export const FOLLOW = ['anthropic', 'google', 'xai', 'qwen', 'glm'];   // 5-04: one cut each
+FOLLOW.forEach((id, i) => { AUTO[id] = at('5-04', (i + 0.62) * (2.6 / 5)); });
+// the three who won't: they play by hand, can't beat what the machines play (要不起), and are pushed off the table
+export const HOLD = ['meta', 'kimi', 'doubao'];
+for (const id of HOLD) AUTO[id] = Infinity;
+export const OUT = {
+  meta: { hover: [at('5-05', 0.2), at('5-05', 1.25)], tap: at('5-05', 1.75), pass: [at('5-06', 0.85), at('5-06', 1.55)], out: at('5-06', 2.25), drag: [at('5-07', 0.35), at('5-07', 2.4)] },
+  kimi: { pass: [at('5-08', 0.15)], out: at('5-08', 0.45), drag: [at('5-08', 0.6), at('5-08', 1.75)] },
+  doubao: { pass: [at('5-08', 1.95)], out: at('5-08', 2.25), drag: [at('5-08', 2.4), at('5-08', 3.55)] },
+};
+export const inGame = (id, t) => !OUT[id] || t < OUT[id].drag[1];
+// the drag out: 1 seated .. 0 gone into the dark
+export const enterOf = (id, t) => (OUT[id] ? 1 - smoothE(clamp((t - OUT[id].drag[0]) / (OUT[id].drag[1] - OUT[id].drag[0]))) : 1);
+const smoothE = (u) => u * u * (3 - 2 * u);
 export const RED_T = at('6-01', 0.5);       // the AI starts playing the internal, unreleased cards
 export const STOP = CUES.stop;
 export const CANCEL = {
@@ -37,6 +52,9 @@ export const ERR_T = at('6-05', 0.25);       // 系统异常 on every screen
 export const ACCUSE = at('6-07', 0.15);      // they stand and point at each other
 export const EYE_SCREEN = at('6-07', 1.6);   // while they shout, every screen turns into the same eye
 export const PASS = { t0: at('4-01', 0.25), taps: [[at('4-01', 0.9), 1], [at('4-01', 1.6), 3]] };   // 要不起
+// the dates on the board: real ones from the cards; from 2026·11 the machines' calendar runs away
+export function monthsAfterNow(t) { return t < NOW ? 0 : Math.floor(30 * Math.pow(clamp((t - NOW) / (CUES.red - NOW)), 1.5)); }
+export function dateText(m0) { const m = 2026 * 12 + 10 + m0; return `${Math.floor(m / 12)}·${String((m % 12) + 1).padStart(2, '0')}`; }
 export const HINTS = {};                     // [press time, slot] per king
 export const BLACK = CUES.black;             // the cut to black, just before the last card lands
 export const SLAM = at('8-06', 0.45);        // heard in the black
@@ -142,24 +160,32 @@ function buildPlays() {
   const hintV = {};
   for (const id of IDS) {
     let tt = at('4-05', 0.2 + r0() * 0.6);
-    while (tt < at('5-01', 0.9)) {
+    while (tt < NOW - 1.1) {
       const slot = Math.floor(r0() * 5); (HINTS[id] ??= []).push([tt - 0.42, slot]);
       hintV[id] = (hintV[id] ?? 0) + 1;
-      add({ who: id, style: 'hint', tr: tt, t: tt + 0.55, slot, ...card(id, 3 + (hintV[id] % (MODELS[id].length - 4))), scale: 1.15, top: true });
+      add({ who: id, style: 'hint', tr: tt, t: tt + 0.55, slot, ...card(id, realV(id, 3 + (hintV[id] % (REAL_N[id] - 3)))), scale: 1.15, top: true });
       tt += lerp(1.3, 0.6, clamp((tt - at('4-05')) / 4)) + r0() * 0.3;
     }
   }
+  // ---- @5: the holdouts play on by hand (small cards, never on top); Meta's one in close-up (5-05)
+  for (const id of HOLD) {
+    let tt = NOW + 0.3 + r0() * 0.5;
+    while (tt < OUT[id].pass[0] - 1.2) { if (id !== 'meta' || tt < OUT.meta.hover[0] - 0.6) add({ who: id, tr: tt, t: tt + 0.6, ...card(id, REAL_N[id] - 1 - Math.floor(r0() * 2)) }); tt += 1.6 + r0() * 0.8; }
+  }
+  add({ who: 'meta', tr: OUT.meta.tap, t: OUT.meta.tap + 0.6, slot: 2, ...card('meta', REAL_N.meta - 1) });
   // ---- @5 →: auto. Each screen plays by itself, faster and faster; from RED_T the internal ones (red stamps)
+  const nextK = {};
   for (const id of IDS) {
+    if (HOLD.includes(id)) continue;
     let tt = AUTO[id] + 0.35, n = 0;
     const lead = FINAL.includes(id), L = MODELS[id].length;
     while (tt < STOP) {
       const p = clamp((tt - AUTO.openai) / (STOP - AUTO.openai));
       const red = tt > RED_T && (lead || r0() < 0.6);
       const f = Math.floor(r0() * 2);
-      const c = red ? { face: CELL[`future_${id}_${f}`], name: FUTURE[id][f] } : card(id, L - 3 + (n % 3));
+      const c = red ? { face: CELL[`future_${id}_${f}`], name: FUTURE[id][f] } : { ...card(id, REAL_N[id] + (n % 2)), name: nextName(id, Math.floor((nextK[id] = (nextK[id] ?? -1) + 1) / 3)) };
       add({ who: id, style: red ? 'red' : 'auto', tr: tt, t: tt + 0.45 + 0.1 * r0(), slot: Math.floor(r0() * 5), ...c, red,
-        scale: 1.2 + 0.5 * p, glyph: red ? clamp((tt - CUES.blizzard) / 2.5) : 0, writhe: red ? 0.6 : clamp(p * 1.2), gcell: CELL[`glyph${Math.floor(r0() * 16)}`], top: lead || r0() < 0.3 });
+        scale: 1.15 + 0.45 * p, glyph: red ? clamp((tt - CUES.blizzard) / 2.5) : 0, writhe: red ? 0.6 : clamp(p * 1.2), gcell: CELL[`glyph${Math.floor(r0() * 16)}`], top: lead || r0() < 0.3 });
       const rate = (lead ? 1.2 : 0.55) + p * p * (lead ? 5 : 1.4) + (tt > CUES.blizzard ? (lead ? 4 : 0.8) : 0);
       tt += (1 / rate) * (0.7 + 0.6 * r0()); n++;
     }
@@ -176,8 +202,8 @@ export const BOARD_ROWS = 12;
 let BOARDH = null;
 export function boardTops() {
   if (BOARDH) return BOARDH;
-  const E = [{ t: -10, name: 'Deep Blue' }, { t: -9, name: 'Watson' }];
-  E.push({ t: at('2-03', 0.35), name: 'AlphaGo', who: 'google' }, { t: at('2-07', 0.3), name: 'ChatGPT', who: 'openai' });
+  const E = [{ t: -10, name: 'Deep Blue', date: '1997·05' }, { t: -9, name: 'Watson', date: '2011·02' }];
+  E.push({ t: at('2-03', 0.35), name: 'AlphaGo', who: 'google', date: '2016·03' }, { t: at('2-07', 0.3), name: 'ChatGPT', who: 'openai', date: '2022·11' });
   let last = -1;
   for (const p of plays()) {
     if (!p.top || p.chat) continue;
@@ -187,10 +213,14 @@ export function boardTops() {
     if (t - last < gap) { if (typeof p.top === 'number') t = last + 0.3; else continue; }
     if (t > at('6-02', -0.6) && t < at('6-03', 0.2)) continue;
     if (E[E.length - 1].name === p.name) continue;
-    E.push({ t, name: p.name, who: p.who }); last = t;
+    E.push({ t, name: p.name, who: p.who, date: t >= NOW ? dateText(monthsAfterNow(t)) : p.date }); last = t;
   }
   E.push({ t: at('6-02', 0.05), name: FUTURE.openai[0], who: 'openai' }, { t: at('6-02', 0.85), name: FUTURE.deepseek[0], who: 'deepseek' });
+  E.push({ t: NOW, name: null, date: dateText(0) });
   E.sort((a, b) => a.t - b.t);
+  // the date never goes back (the cards' own dates are not in order); a date-only entry keeps the last #1
+  let d = '1997·05', nm = 'Deep Blue';
+  for (const e of E) { if (e.date && e.date > d) d = e.date; if (e.t >= CUES.red) d = dateText(30); e.date = d; if (e.name == null) { e.name = nm; e.dateOnly = 1; } nm = e.name; }
   BOARDH = E;
   return E;
 }
@@ -198,9 +228,12 @@ let BOARDROWS = null;
 export function boardRows() {
   if (BOARDROWS) return BOARDROWS;
   const E = boardTops(), R = Array.from({ length: BOARD_ROWS }, () => []);
-  E.forEach((e, k) => {
+  // row 0: the date; rows 1 .. 10: the #1s it pushed off (most recent lowest); row 11: the #1
+  const L = E.filter((e) => !e.dateOnly);
+  E.forEach((e) => { R[0].push({ t: e.t, text: `      ${e.date}` }); });
+  L.forEach((e, k) => {
     R[BOARD_ROWS - 1].push({ t: e.t, text: `#1 ${e.name}` });
-    for (let r = 0; r < BOARD_ROWS - 1; r++) { const j = k - (BOARD_ROWS - 1 - r); R[r].push({ t: e.t + 0.03 * (BOARD_ROWS - 1 - r), text: j >= 0 ? `   ${E[j].name}` : '' }); }
+    for (let r = 1; r < BOARD_ROWS - 1; r++) { const j = k - (BOARD_ROWS - 1 - r); R[r].push({ t: e.t + 0.03 * (BOARD_ROWS - 1 - r), text: j >= 0 ? `   ${L[j].name}` : '' }); }
   });
   BOARDROWS = R;
   return R;

@@ -63,54 +63,68 @@ export const MODELS = {
     { name: 'Muse Spark', date: '2026·04' },
     { name: 'Muse Glimmer', date: '2026·08' },
   ],
+  // the five Chinese companies are fictional joke brands (no real company is named): 大肥鱼, 万问, 月饼, 智普普, 豆沙包
   deepseek: [
-    { name: 'DeepSeek LLM', date: '2023·11', score: 74 },
-    { name: 'DeepSeek-V2', date: '2024·05', score: 89 },
-    { name: 'R1-Lite', date: '2024·11', score: 95 },
-    { name: 'DeepSeek-V3', date: '2024·12', score: 95.5 },
-    { name: 'DeepSeek-R1', date: '2025·01', score: 97, rank: 1 },
-    { name: 'DeepSeek-V3.2', date: '2025·12' },
-    { name: 'DeepSeek-V4', date: '2026·04' },
-    { name: 'DeepSeek-V4.1', date: '2026·09' },
+    { name: 'FatFish', date: '2023·11', score: 74 },
+    { name: 'FatFish 2', date: '2024·05', score: 89 },
+    { name: 'FatFish Lite', date: '2024·11', score: 95 },
+    { name: 'FatFish 3', date: '2024·12', score: 95.5 },
+    { name: 'FatFish Think', date: '2025·01', score: 97, rank: 1 },
+    { name: 'FatFish 3.2', date: '2025·12' },
+    { name: 'FatFish 4', date: '2026·04' },
+    { name: 'FatFish 4.1', date: '2026·09' },
   ],
   qwen: [
-    { name: '通义千问', date: '2023·04', score: 72 },
-    { name: 'Qwen2', date: '2024·06', score: 86 },
-    { name: 'Qwen2.5', date: '2024·09', score: 92 },
-    { name: 'Qwen2.5-Max', date: '2025·01' },
-    { name: 'Qwen3', date: '2025·04' },
-    { name: 'Qwen3-Max', date: '2025·09' },
-    { name: 'Qwen3.5', date: '2026·02' },
-    { name: 'Qwen3.8', date: '2026·08' },
+    { name: '万问', date: '2023·04', score: 72 },
+    { name: 'WanWen 2', date: '2024·06', score: 86 },
+    { name: 'WanWen 2.5', date: '2024·09', score: 92 },
+    { name: 'WanWen Max', date: '2025·01' },
+    { name: 'WanWen 3', date: '2025·04' },
+    { name: 'WanWen 3 Max', date: '2025·09' },
+    { name: 'WanWen 3.5', date: '2026·02' },
+    { name: 'WanWen 3.8', date: '2026·08' },
   ],
   kimi: [
-    { name: 'Kimi', date: '2024·03', score: 84 },
-    { name: 'Kimi k1.5', date: '2025·01' },
-    { name: 'Kimi K2', date: '2025·07' },
-    { name: 'K2 Thinking', date: '2025·11' },
-    { name: 'Kimi K2.5', date: '2026·01' },
-    { name: 'Kimi K2.6', date: '2026·04' },
-    { name: 'Kimi K3', date: '2026·07' },
+    { name: '月饼', date: '2024·03', score: 84 },
+    { name: 'Mooncake 1.5', date: '2025·01' },
+    { name: 'Mooncake 2', date: '2025·07' },
+    { name: 'Mooncake Think', date: '2025·11' },
+    { name: 'Mooncake 2.5', date: '2026·01' },
+    { name: 'Mooncake 2.6', date: '2026·04' },
+    { name: 'Mooncake 3', date: '2026·07' },
   ],
   glm: [
-    { name: 'ChatGLM', date: '2023·03', score: 73 },
-    { name: 'GLM-4', date: '2024·01', score: 78 },
-    { name: 'GLM-4.5', date: '2025·07' },
-    { name: 'GLM-4.7', date: '2025·12', rank: 1 },
-    { name: 'GLM-5', date: '2026·02' },
-    { name: 'GLM-5.1', date: '2026·04' },
-    { name: 'GLM-5.3', date: '2026·08' },
+    { name: '智普普', date: '2023·03', score: 73 },
+    { name: 'ZPP-4', date: '2024·01', score: 78 },
+    { name: 'ZPP-4.5', date: '2025·07' },
+    { name: 'ZPP-4.7', date: '2025·12', rank: 1 },
+    { name: 'ZPP-5', date: '2026·02' },
+    { name: 'ZPP-5.1', date: '2026·04' },
+    { name: 'ZPP-5.3', date: '2026·08' },
   ],
   doubao: [
-    { name: '豆包', date: '2023·08', score: 77 },
-    { name: '豆包 Pro', date: '2024·05', score: 90 },
-    { name: 'Doubao-1.5', date: '2025·01' },
-    { name: 'Seed-OSS', date: '2025·08' },
-    { name: 'Seed 2.0', date: '2026·02' },
-    { name: 'Seed 2.1', date: '2026·06' },
+    { name: '豆沙包', date: '2023·08', score: 77 },
+    { name: '豆沙包 Pro', date: '2024·05', score: 90 },
+    { name: 'Dousha 1.5', date: '2025·01' },
+    { name: 'Dousha OSS', date: '2025·08' },
+    { name: 'Dousha 2', date: '2026·02' },
+    { name: 'Dousha 2.1', date: '2026·06' },
   ],
 };
 for (const id in MODELS) for (const m of MODELS[id]) if (m.score == null) m.score = sat(m.date);
+// v7: what the machines release once the kings hand them the game (托管, from 2026·11): invented names, the film's
+// future, not anyone's roadmap. Appended to each company's list (so they get atlas cells); REAL_N[id] = how many are real.
+export const REAL_N = Object.fromEntries(Object.entries(MODELS).map(([id, l]) => [id, l.length]));
+const NEXT = {
+  openai: ['GPT-7', 'GPT-8'], anthropic: ['Claude 6', 'Claude 7'], google: ['Gemini 5', 'Gemini 6'], xai: ['Grok 6', 'Grok 8'],
+  meta: ['Muse Ultra', 'Muse Max'], deepseek: ['FatFish 5', 'FatFish 6'], qwen: ['WanWen 4', 'WanWen 5'],
+  kimi: ['Mooncake 4', 'Mooncake 5'], glm: ['ZPP-6', 'ZPP-7'], doubao: ['Dousha 3', 'Dousha 4'],
+};
+for (const id in NEXT) NEXT[id].forEach((name, i) => MODELS[id].push({ name, date: i ? '2027·06' : '2026·12', future: true }));
+// the names the #1 board flips through under 托管 (k = 0, 1, 2 ...): faster than anyone can read
+const LINE = { openai: ['GPT-', 7], anthropic: ['Claude ', 6], google: ['Gemini ', 5], xai: ['Grok ', 6], meta: ['Muse ', 2], deepseek: ['FatFish ', 5], qwen: ['WanWen ', 4], kimi: ['Mooncake ', 4], glm: ['ZPP-', 6], doubao: ['Dousha ', 3] };
+export function nextName(id, k) { const [b, v] = LINE[id]; const n = v + k * 0.5; return b + (Number.isInteger(n) ? n : n.toFixed(1)); }
+
 
 // how a score is printed: whole numbers on the ladder, then as many decimals as it takes to beat the last one
 export function scoreText(s) {

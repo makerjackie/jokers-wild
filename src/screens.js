@@ -4,7 +4,7 @@
 //   v = 0 at the top edge); SCREEN = { W, H, TILT }; BTN.{hint, auto, cancel} = [u, v]; slotUV(row, i) = [u, v]
 //   st.screens[id] = { on 0..1, hand: [cell...], hidden: n, red: [i...] (hidden slots edged red), flipped: n (hidden cards
 //     already turned up and played), hi: i | -1 (the hint's card), tap: i | -1 (the card leaving), press: 'hint'|'auto'|
-//     'cancel'|null (a finger on it), auto: 0|1, deal: cell | null (a card dealt to him), glow }
+//     'cancel'|null (a finger on it), auto: 0|1, deal: cell | null (a card dealt to him), glow, out (淘汰), hoverAuto (托管 blinks, inviting) }
 import * as THREE from 'three';
 import { celMaterial, glowMaterial } from './materials.js';
 import { KINGS, KING, SEAT, SIDE_SIGN, CAMP } from './layout.js';
@@ -94,7 +94,7 @@ export function makeScreens() {
       c.font = `bold 15px ${SANS}`; c.fillText(en, x + w / 2, y + h * 0.78);
     };
     btn('hint', '提示', 'HINT', s.press === 'hint' || (s.hi ?? -1) >= 0);
-    btn('auto', s.auto ? '托管中' : '托管', 'AUTO', !!s.auto && Math.sin(t * 7) > -0.3);
+    btn('auto', s.auto ? '托管中' : '托管', 'AUTO', (!!s.auto && Math.sin(t * 7) > -0.3) || (!!s.hoverAuto && Math.sin(t * 5) > 0));
     btn('cancel', '取消托管', 'CANCEL', false);
     // 系统异常: the cancel did nothing
     if (s.error) {
@@ -102,7 +102,7 @@ export function makeScreens() {
       c.fillStyle = `rgba(120,8,6,${0.88 * k})`; c.fillRect(0, CH * 0.3, CW, CH * 0.4);
       c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW - 12, CH * 0.4 - 12);
       c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 64px ${SANS}`; c.fillText('系统异常', CW / 2, CH * 0.46); c.font = `bold 22px ${SANS}`; c.fillText('SYSTEM ERROR', CW / 2, CH * 0.6);
+      c.font = `900 50px ${SANS}`; c.fillText('⚠ 您正遭受对方攻击', CW / 2, CH * 0.45); c.font = `bold 22px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW / 2, CH * 0.6);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);

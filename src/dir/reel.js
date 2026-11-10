@@ -5,13 +5,14 @@ import { CUES } from '../shots.js';
 import { clamp, smooth, lerp, lerp3, ease, easeOut, mulberry32, kick } from '../util.js';
 import { at, face, kf, kingRest } from './core.js';
 import { CELL } from '../cards-cells.js';
+import { REAL_N } from '../models.js';
 import { CARD } from '../cards.js';
 import { flatQ, downQ, basisQ, slerpQ, mulQ, axisQ } from '../freecards.js';
 import { screenFrame, screenPoint, slotUV, BTN } from '../screens.js';
 import { ANT } from '../ant.js';
 import * as S from './story.js';
 
-const { FINAL, CARD_Y, AUTO, RED_T, STOP, CANCEL, HINTS, SLAM, DEAL, REACH, HOUSE_SLOTS, RISE, EYE, GIANT_END, ERR_T, ACCUSE, EYE_SCREEN, PASS, BLACK, SMASH, HOUSE_HIT, CHAT_T } = S;
+const { HOLD, OUT, FOLLOW, NOW, FINAL, CARD_Y, AUTO, RED_T, STOP, CANCEL, HINTS, SLAM, DEAL, REACH, HOUSE_SLOTS, RISE, EYE, GIANT_END, ERR_T, ACCUSE, EYE_SCREEN, PASS, BLACK, SMASH, HOUSE_HIT, CHAT_T } = S;
 const IDS = KINGS.map((k) => k.id);
 const sxOf = (id) => SIDE_SIGN[KING[id].side];
 const other = (id) => (id === 'deepseek' ? 'openai' : 'deepseek');
@@ -30,7 +31,9 @@ function presses() {
   }
   for (const [t, slot] of PASS.taps) add('deepseek', t, slotUV(0, slot), 'point', 'tap');
   for (const id in HINTS) for (const [t] of HINTS[id]) add(id, t, BTN.hint, 'point', 'hint');
-  for (const id of IDS) add(id, AUTO[id], BTN.auto, id === 'openai' || id === 'deepseek' ? 'open' : 'point', 'auto', 0.18);
+  for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, id === 'openai' || id === 'deepseek' ? 'open' : 'point', 'auto', 0.18);
+  for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 1 + i * 2), 'point', 'tap'));
+  add('meta', OUT.meta.hover[0] + 0.5, BTN.auto, 'point', 'hover', OUT.meta.hover[1] - OUT.meta.hover[0] - 0.5);
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
   for (const id of FINAL) add(id, REACH[id] + 0.9, [0.36, 0.5], 'point', 'reach', 9);
   for (const id in PRESS) PRESS[id].sort((a, b) => a.t - b.t);
@@ -50,7 +53,7 @@ function handFor(id, t) {
     return null;
   }
   const up = best.kind === 'hard' || best.kind === 'auto' ? 0.24 : best.kind === 'cancel' ? 0.15 : 0.13;
-  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], 0.085);
+  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], best.kind === 'hover' ? 0.13 + 0.012 * Math.sin(t * 9) : 0.085);
   let target;
   if (t < best.t - 0.12) target = lerp3(pathRest(id), hov, smooth((t - (best.t - 0.5)) / 0.38));
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
@@ -76,6 +79,7 @@ function kingsState(t, st) {
     const f = screenFrame(id);
     const K = st.kings[id] = { look: f.c, face: face('calm', { eyes: 'down' }), hand: { L: 'rest', R: 'rest' }, rise: 0, lean: 0.06, sweat: 0, slump: 0 };
     if (crushed) { K.enter = 0; continue; }
+    if (OUT[id] && t >= OUT[id].drag[1]) { K.enter = 0; continue; }
     const auto = t >= AUTO[id];
     let pointTo = null;
     // ---- before ChatGPT: bored, tapping; the yawns (2-03)
@@ -113,8 +117,30 @@ function kingsState(t, st) {
       if (id === 'openai' && t >= CUES.hintUS && t < at('4-04', 1.0)) { K.look = headAt('deepseek'); K.face = face('sour', { eyes: 'side' }); }
       if (id === 'openai' && t >= CUES.auto) { K.face = face('angry', { mouth: 'grit' }); K.look = f.c; K.rise = 0.5; K.sweat = 1; }
     }
+    // ---- the holdouts: won't hand it over; play by hand; 要不起; 淘汰; dragged back into the dark, reaching for the table
+    if (OUT[id] && t >= NOW - 0.4) {
+      const o = OUT[id];
+      K.look = f.c; K.rise = 0.3; K.lean = 0.14; K.sweat = 0.7; K.face = face('worry', { eyes: 'down' });
+      if (o.hover && t > o.hover[0] && t < o.hover[1] + 0.3) { K.face = { eyes: 'down', brows: 'worried', mouth: 'flat' }; K.lean = 0.2; }
+      if (o.hover && t > o.hover[1] && t < o.tap + 0.8) { K.face = face('angry', { mouth: 'grit', eyes: 'down' }); }
+      if (t > o.pass[0] - 0.2) { K.face = face('fear'); K.sweat = 1; K.rise = 0.4; }
+      if (t > o.out) { K.face = face('shock'); K.look = [0, 0.1, SEAT.Z[k.seat]]; }
+      if (t > o.drag[0]) {
+        const u = clamp((t - o.drag[0]) / (o.drag[1] - o.drag[0]));
+        K.enter = S.enterOf(id, t); K.face = face('shout', { eyes: 'wide' }); K.rise = 0.5 + 0.3 * u; K.lean = 0.35;
+        K.look = [sx * 0.6, 0.05, z];
+        const reach = [sx * (1.25 + 0.5 * u), 0.08 + 0.1 * u, z + 0.15 * Math.sin(t * 7)];
+        K.armR = arm(id, reach); K.hand.R = 'open'; K.armL = { target: [sx * (1.3 + 0.55 * u), 0.1, z - 0.2], pole: [sx * 0.4, -0.8, 0] }; K.hand.L = 'open';
+        continue;
+      }
+    }
+    // ---- the rest see the empty places (5-09), and lean back again
+    if (!OUT[id] && t >= CUES.empty && t < CUES.empty + 1.3) {
+      const near = HOLD.map((h) => [h, Math.abs(SEAT.Z[KING[h].seat] - z) + (KING[h].side === k.side ? 0 : 0.4)]).sort((a, b) => a[1] - b[1])[0][0];
+      K.look = [SIDE_SIGN[KING[near].side] * 1.6, 0.55, SEAT.Z[KING[near].seat]]; K.face = { eyes: 'side', brows: 'raised', mouth: 'flat' }; K.lean = 0.0; K.rise = 0.1;
+    }
     // ---- auto: he leans back, the screen plays itself; he laughs
-    if (auto && t < RED_T && t > AUTO[id] + 0.2) {
+    if (auto && t < RED_T && t > AUTO[id] + 0.2 && !(t >= CUES.empty && t < CUES.empty + 1.3)) {
       const lb = ease(t, AUTO[id] + 0.3, AUTO[id] + 1.1);
       K.rise = lerp(0.4, 0, lb); K.lean = lerp(0.15, -0.16, lb); K.sweat = 0.5 * (1 - lb);
       K.face = Math.sin(t * 2.3 + z) > 0.2 ? face('laugh') : face('proud', { mouth: 'grin' });
@@ -165,16 +191,23 @@ function screensState(t) {
   for (const k of KINGS) {
     const id = k.id;
     if (t >= BLACK) continue;
-    const v0 = Math.max(0, Math.min(5, Math.floor((t - 20) / 14)));
-    const hand = [0, 1, 2, 3, 4].map((i) => CELL[`${id}${Math.min(i + v0, 7)}`] ?? CELL.blank);
+    const v0 = Math.max(0, Math.min(REAL_N[id] - 5, Math.floor((t - 20) / 14)));
+    const hand = t >= AUTO[id] ? [0, 1, 2, 3, 4].map((i) => CELL[`${id}${REAL_N[id] + (i % 2)}`]) : [0, 1, 2, 3, 4].map((i) => CELL[`${id}${Math.min(i + v0, REAL_N[id] - 1)}`] ?? CELL.blank);
     const s = { on: 1, hand, hidden: 6, red: [1, 4], flipped: 0, hi: -1, tap: -1, press: null, auto: t >= AUTO[id] ? 1 : 0, deal: null };
     if (id === 'deepseek' || id === 'openai') s.red = [1, 3, 4];
     if (t >= RED_T) s.flipped = Math.min(6, Math.floor((t - RED_T) * (id === 'deepseek' ? 2.2 : 1.6)) + 1);
     if (id === 'deepseek' && t >= PASS.t0 && t < HINTS.deepseek[0][0]) s.pass = 1;
+    if (OUT[id]) {
+      const o = OUT[id];
+      if (t >= o.pass[0] - 0.1 && t < o.out) s.pass = 1;
+      for (const pt of o.pass) if (t > pt && t < pt + 0.3) s.shake = 1;
+      if (t >= o.out) { s.out = Math.round(clamp((t - o.out) / 0.25) * 4) / 4; s.auto = 0; s.red = []; s.hand = []; s.hidden = 0; }
+      if (o.hover && t > o.hover[0] + 0.5 && t < o.hover[1]) s.hoverAuto = 1;
+    }
     for (const [pt, slot] of id === 'deepseek' ? PASS.taps : []) if (t > pt && t < pt + 0.3) s.shake = slot;
     const rk = FINAL.includes(id) ? 0 : mulberry32(KING[id].seat * 11 + (sxOf(id) > 0 ? 5 : 0))();
-    if (t >= ERR_T + rk && t < EYE_SCREEN + rk * 0.6) s.error = 1;
-    if (t >= EYE_SCREEN + rk * 0.6) s.eye = Math.round(clamp((t - EYE_SCREEN - rk * 0.6) / 0.4) * 10) / 10;
+    if (!OUT[id] && t >= ERR_T + rk && t < EYE_SCREEN + rk * 0.6) s.error = 1;
+    if (!OUT[id] && t >= EYE_SCREEN + rk * 0.6) s.eye = Math.round(clamp((t - EYE_SCREEN - rk * 0.6) / 0.4) * 10) / 10;
     for (const [ht, slot] of HINTS[id] ?? []) if (t > ht && t < ht + 0.75) s.hi = slot;
     for (const p of P) if (p.who === id && p.style !== 'auto' && p.style !== 'red' && t > p.tr - 0.05 && t < p.tr + 0.4) s.tap = p.slot;
     const h = handFor(id, t);
@@ -182,6 +215,7 @@ function screensState(t) {
     if (t >= STOP) { s.auto = 0; s.eye = 0; s.error = 0; s.on = t < CUES.deal ? 0.0001 : 1; }
     if (t >= DEAL) { s.deal = CELL.num1; s.hand = []; s.hidden = 0; s.red = []; }
     if (t >= STOP && t < DEAL) { s.hand = []; s.hidden = 0; s.red = []; }
+    if (OUT[id] && t >= STOP) s.on = 0;
     out[id] = s;
   }
   return out;
@@ -203,11 +237,12 @@ function houseCard(s, t, rest) {
 function blastCard(d, t) {
   const s = t - CHAT_T, r = mulberry32(d.i * 17 + 3);
   const p0 = d.rest.pos;
-  let dx = p0[0], dz = p0[2] - 0.02; const l = Math.hypot(dx, dz);
-  if (l < 0.03) { const a = r() * 6.28; dx = Math.cos(a); dz = Math.sin(a); } else { dx /= l; dz /= l; }
-  const v = 0.95 + 0.8 * r(), kd = 0.6, dist = (v / kd) * (1 - Math.exp(-kd * s));
-  const x = p0[0] + dx * dist, z = p0[2] + dz * dist;
-  const onTable = Math.abs(x) < 1.18 && Math.abs(z) < 3.2;
+  // (v7) blown along the table, toward its two ends, never sideways into the kings and their screens
+  let dz = p0[2] - 0.02; dz = Math.abs(dz) < 0.01 ? (r() > 0.5 ? 1 : -1) : Math.sign(dz);
+  let dx = (p0[0] * 3 + (r() - 0.5) * 0.5); const l = Math.hypot(dx, 1); dx /= l; dz /= l;
+  const v = 1.6 + 1.2 * r(), kd = 0.55, dist = (v / kd) * (1 - Math.exp(-kd * s));
+  const x = Math.max(-0.72, Math.min(0.72, p0[0] + dx * dist * 0.5)), z = p0[2] + dz * dist;
+  const onTable = Math.abs(z) < 3.2;
   const lift = (0.04 + 0.14 * r()) * Math.sin(Math.min(Math.PI, s * 4));
   const fall = onTable ? 0 : 3.5 * Math.max(0, s - 0.2) ** 2;
   const q = mulQ(d.rest.q, axisQ([dz, 0.3, -dx], s * (9 + 8 * r())));
@@ -336,7 +371,7 @@ function rollersState(t) {
   const R = [];
   if (t >= S.CRUSH + 0.6 && t < CUES.table + 1.0) {
     const u = clamp((t - (CUES.crumb + 0.3)) / 1.1), e = 1 - (1 - u) * (1 - u);
-    R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.02 + 0.07 * e, 0.0022, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1 });
+    R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.02 + 0.07 * e, 0.0036, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1.7 });
   }
   return R;
 }
@@ -346,7 +381,7 @@ function antState(t) {
   const A = S.antAt(t);
   if (!A.show) return { show: 0 };
   const [dx, dz] = A.dir;
-  return { show: 1, pos: A.pos, q: basisQ([dx, 0, dz], [0, 1, 0]), walk: A.dist / ANT.STRIDE, speed: A.speed, alert: A.alert, look: A.look, crumb: 1, crumbTilt: 0, size: 1 };
+  return { show: 1, pos: A.pos, q: basisQ([dx, 0, dz], [0, 1, 0]), walk: A.dist / ANT.STRIDE, speed: A.speed, alert: A.alert, look: A.look, crumb: 1, crumbTilt: 0, size: 1, crumbSize: 1.7, crumbLift: 0.9 };
 }
 
 // ---------------------------------------------------------------- the whole world

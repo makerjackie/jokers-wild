@@ -867,7 +867,7 @@ function logoPlate(id, variant) {
     x.fillText('SPACEX', 128, 112); x.font = 'bold 30px "Helvetica Neue", Arial, sans-serif'; x.fillText('AI', 128, 152);
     x.strokeStyle = '#f2f2f2'; x.lineWidth = 4; x.beginPath(); x.arc(150, 118, 70, -2.4, -0.6); x.stroke();
   } else {
-    const light = ['openai', 'xai', 'kimi'].includes(id) && !['spade', 'club', 'heart', 'diamond'].includes(id);
+    const light = ['openai', 'xai'].includes(id) && !['spade', 'club', 'heart', 'diamond'].includes(id);
     drawLogo(x, id, 128, 128, 170, light ? { color: '#f2f2f2' } : {});
   }
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.NoColorSpace; tx.anisotropy = 8; tx.generateMipmaps = true;
