@@ -1731,17 +1731,56 @@ export function sfxAttackAlarm(e, seed) {
   }
   return fadeTail(out, 0.1);
 }
-// CREDITSLAP — the very last sound: one card slapped down on the writer's name in a dead-silent black, close and dry
-// (no room): the card's breath of air, the palm's "pak", the crack, the table's short thump. Nothing after it.
+// CREDITSLAP (v8) — the last sound, a mosquito swat: in two frames a palm slams the card flat on the desk right at the
+// lens. No whoosh before it, no room, no tail: a hard sharp crack (skin and card), the desk's short low thump under it,
+// driven dense so it lands about as loud as the end slam, but tight (gone in a quarter second)
 export function sfxCreditSlap(e, seed) {
-  const pre = 0.05, at = Math.round(pre * SR), out = new Float32Array(Math.ceil((pre + 0.5) * SR)), r = new Rng(seed);
-  { const nz = new Noise(seed + 5), bp = new SVF(1500, 1.0); for (let i = 0; i < at; i++) { const u = i / at; bp.run(nz.white()); out[i] += bp.bp * 0.07 * u * u; } }
-  noiseBurst(out, at, { a: 0.0004, tau: 0.011, f0: 1150, q: 0.7, mode: 'lp', amp: 0.95 }, new Noise(seed + 1));
-  noiseBurst(out, at, { a: 0.0001, tau: 0.0018, f0: 4300, q: 0.8, amp: 0.75 }, new Noise(seed + 2));
-  noiseBurst(out, at, { a: 0.0001, tau: 0.0006, f0: 8000, q: 0.9, amp: 0.3 }, new Noise(seed + 3));
-  ping(out, at, r.range(195, 215), 0.2, [[1, 1, 0.045], [2.15, 0.45, 0.022], [3.4, 0.2, 0.011]], 0.7);
-  sweep(out, at, 130, 55, 0.02, 0.08, 0.6, 0.0015, 0.9);
-  fadeTail(out, 0.12); out.pre = pre;
+  const out = new Float32Array(Math.ceil(0.3 * SR)), r = new Rng(seed);
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.012, f0: 3200, q: 0.55, amp: 4.0, hp: 700 }, new Noise(seed + 2));          // the crack
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0007, f0: 7500, q: 0.8, amp: 1.2 }, new Noise(seed + 3));                  // the edge
+  noiseBurst(out, 0, { a: 0.0003, tau: 0.02, f0: 2200, q: 0.7, mode: 'lp', amp: 3.0 }, new Noise(seed + 1));         // the palm
+  ping(out, 0, r.range(215, 235), 0.3, [[1, 1, 0.035], [2.2, 0.45, 0.018], [3.5, 0.2, 0.009]], 0.7);                 // the desk top
+  sweep(out, 0, 170, 75, 0.01, 0.025, 0.5, 0.0008, 1.4);                                                             // the thump
+  // driven hard (dense, loud for its peak), then shut: nothing rings past ~0.1 s
+  for (let i = 0; i < out.length; i++) { const t = i / SR; out[i] = Math.tanh(out[i] * 5) / Math.tanh(5) * (t < 0.04 ? 1 : Math.exp(-(t - 0.04) / 0.02)); }
+  fadeTail(out, 0.06);
   return out;
 }
-Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle });
+// BOARDFLIP (v8: the AI 智力排行榜, a big digital screen) — no flaps: a soft UI tick and a short airy slide (the rows
+// moving up and down); e.chime (prepareEvents: the #1 changed hands): a bright little glass chime on top (A6 then E7,
+// the AI's fifth). e.dateOnly (only the year·month changed): the tick alone.
+// e.big (the board fills the frame): the whole table of rows reshuffles: five slides cascading across the screen.
+export function sfxBoardTick(e, seed) {
+  const r = new Rng(seed), d = 0.16, nS = e.big && !e.dateOnly ? 5 : e.dateOnly ? 0 : 1, len = (e.chime ? 0.9 : 0.3) + (nS - 1) * 0.045, S = pair(len);
+  const tick = new Float32Array(Math.round(0.06 * SR));
+  noiseBurst(tick, 0, { a: 0.0001, tau: 0.0009, f0: 3000 * r.range(0.95, 1.05), q: 1.2, amp: 0.4 }, new Noise(seed));
+  ping(tick, 0, 1320 * r.range(0.98, 1.02), 0.06, [[1, 1, 0.018], [2.01, 0.3, 0.01]], 0.2);
+  addMid(S, tick, 0, 1);
+  for (let k = 0; k < nS; k++) {
+    const nz = new Noise(seed + 1 + 7 * k), bp = new SVF(1500, 1.4), j = Math.round((0.012 + 0.045 * k) * SR), n = Math.round(d * SR), g = new Float32Array(n + Math.round(0.03 * SR)), f0 = 1400 * (1 + 0.12 * k);
+    for (let i = 0; i < n; i++) { const u = i / n; if ((i & 31) === 0) bp.set(f0 + 2600 * u, 1.4); bp.run(nz.white()); g[i] = bp.bp * 0.13 * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.4 * u); }
+    noiseBurst(g, n, { a: 0.0001, tau: 0.0007, f0: 4200, q: 1.2, amp: 0.18 }, new Noise(seed + 2 + 7 * k));   // the row settling
+    addPan(S, g, nS > 1 ? -0.6 + 0.3 * k : 0, j, nS > 1 ? 0.85 : 1);
+  }
+  if (e.chime) {
+    const c = new Float32Array(Math.round(0.8 * SR)), j = Math.round((0.09 + 0.045 * (nS > 1 ? nS - 1 : 0)) * SR);
+    ping(c, 0, mtof(93), 0.09, [[1, 1, 0.45], [2.0, 0.15, 0.2], [3.0, 0.06, 0.1]], 0.1); ping(c, Math.round(0.07 * SR), mtof(100), 0.07, [[1, 1, 0.4], [2.0, 0.12, 0.18]], 0.4);
+    addMid(S, c, j, nS > 1 ? 1.4 : 1);
+  }
+  fadeTail(S.L, 0.04); fadeTail(S.R, 0.04);
+  return S;
+}
+// COUNTUP {dur} (the score's own, 5-06's leaderboard insert) — the auto scores racing up: a soft digital ticker,
+// faster and faster and a little higher, a short bright blip as they pass "人类 100" (two thirds in), then on
+export function sfxCountUp(e, seed) {
+  const d = Math.max(0.4, e.dur || 1.6), out = new Float32Array(Math.ceil((d + 0.6) * SR)), r = new Rng(seed);
+  for (let t = 0.02, k = 0; t < d; k++) {
+    const u = t / d, f = 2200 + 1400 * u;
+    noiseBurst(out, Math.round(t * SR), { a: 0.0001, tau: 0.0005, f0: f * r.range(0.97, 1.03), q: 1.6, amp: 0.16 + 0.1 * u }, new Noise(seed + k));
+    ping(out, Math.round(t * SR), 880 * Math.pow(2, Math.round(12 * u) / 12), 0.02, [[1, 1, 0.012]], 0.2);
+    t += 0.075 * (1 - 0.6 * u);
+  }
+  const j = Math.round(0.66 * d * SR); ping(out, j, mtof(93), 0.08, [[1, 1, 0.3], [2, 0.2, 0.12]], 0.1); ping(out, j, mtof(100), 0.05, [[1, 1, 0.25]], 0.5);
+  return fadeTail(out, 0.05);
+}
+Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle, boardFlip: sfxBoardTick, countUp: sfxCountUp });

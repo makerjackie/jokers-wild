@@ -12,6 +12,7 @@
 import { SR, TAU, Noise, Drift, SVF, Rng, panGains, smooth, clamp, put, BLOCK, drive } from './audio-dsp.js';
 import { SFX_KINDS as V12_KINDS, SFX_GEN as V12_GEN } from './audio-sfxlib.js';
 import { V3_KINDS, FILM_KINDS, FILM_GEN, SCORE_KINDS, isUS, preOf } from './audio-kinds.js';
+import { boardTops } from './dir/story.js';
 
 export const SFX_KINDS = { ...V12_KINDS, ...V3_KINDS, ...SCORE_KINDS, ...FILM_KINDS };
 export const SFX_GEN = { ...V12_GEN, ...FILM_GEN };
@@ -33,9 +34,9 @@ export const MIX = {
   screenTap: [0.35, 0.06, 's'], hintDing: [0.8, 0.25, 's'], autoOn: [0.7, 0.15, 's'], autoPlay: [0.4, 0.12, 's'], cancelPress: [0.7, 0.08, 's'],
   screenDeal: [0.5, 0.3, 's'], crumbRoll: [0.6, 0.05, 's'], crownRoll: [0.22, 0.3, 's'], endSlam: [1.1, 0.32, 'b'],
   // v3 (榜首)
-  blast: [2.4, 0.3, 'b'], denied: [0.7, 0.06, 's'], errorAlarm: [1.6, 0.15, 's'], screenEye: [0.4, 0.3, 'b'], pressure: [0.6, 0.2, 'b'], boardFlip: [0.5, 0.1, 's'],
+  blast: [2.4, 0.3, 'b'], denied: [0.7, 0.06, 's'], errorAlarm: [1.6, 0.15, 's'], screenEye: [0.4, 0.3, 'b'], pressure: [0.5, 0.2, 'b'], boardFlip: [0.5, 0.1, 's'],
   // v7: the holdouts (the chairs go into the dark: the big room), the last card (dry: no room at all)
-  hesitate: [0.9, 0.06, 's'], eliminated: [0.6, 0.12, 's'], dragOut: [1.0, 0.3, 'b'], creditSlap: [3.2, 0, 's'],
+  hesitate: [0.9, 0.06, 's'], eliminated: [0.6, 0.12, 's'], dragOut: [1.0, 0.3, 'b'], creditSlap: [1.4, 0, 's'], countUp: [2.0, 0.1, 's'],
 };
 const mixOf = (k) => MIX[k] ?? [1, 0.15, 's'];
 // the ant's-eye impacts go to the big room (the hall far away)
@@ -59,7 +60,9 @@ export const SCENE = {
 };
 // whole rows pulled back, all kinds but a few: { row: [dB, [kinds kept]] }. 5-05 .. 5-09: we are with the holdouts; the
 // auto game goes on behind them, far
-const HOLD_KEEP = ['hesitate', 'denied', 'eliminated', 'dragOut', 'screenTap', 'chuckle'];
+const HOLD_KEEP = ['hesitate', 'denied', 'eliminated', 'dragOut', 'screenTap', 'chuckle', 'countUp'];
+// the rows where the leaderboard fills the frame: its moves there are the whole board reshuffling (a cascade of slides)
+const BOARD_SHOTS = ['2-03', '2-07', '3-04', '3-07', '4-03', '6-02'];
 export const HUSH = { '5-05': [-9, HOLD_KEEP], '5-06': [-10, HOLD_KEEP], '5-07': [-10, HOLD_KEEP], '5-08': [-10, HOLD_KEEP], '5-09': [-13, HOLD_KEEP] };
 // CHOKES: at these film times every effect that started earlier is cut (8 ms), except the kinds kept
 export function chokes(C) { return [[C.crumb, new Set(['crumbRoll', 'antStep'])], [C.stop, new Set()], [C.black, new Set(['endSlam'])]]; }
@@ -87,6 +90,8 @@ export function levels(C, ROW) {
   const A = [];
   // the machine's dense stream under the music, the red cards louder as they take over
   A.push(['autoPlay', [[C.red, 0], [C.blizzard, 3]]]);
+  // the leaderboard under 托管: the moves come in bursts, far back
+  A.push(['boardFlip', [[C.auto + 1.5, 0], [C.auto + 3, -7]]]);
   // the giant card's ring pulled back under the board's flip (3-07)
   A.push(['bigSlam', [[C.boardBig - 0.3, 0], [C.boardBig + 0.4, -7]]], ['lampSwing', [[C.boardBig - 0.3, 0], [C.boardBig + 0.4, -5]], C.big, C.boardBig]);
   return A;
@@ -157,6 +162,16 @@ export function prepareEvents(events, C, ROW) {
     L.forEach((e, j) => { if (g[j] < 1) { e.gain *= g[j]; n++; } });
     if (n) notes.push(`${kind}: ${n} of ${L.length} thinned in bursts`);
   }
+  // the leaderboard (v8): every boardFlip is a new #1; the story's list says whose. A chime when the #1 changes hands
+  // (not when he beats himself, nor when only the date turns)
+  { const tops = boardTops().filter((b) => b.t > 0); let prev = null, nC = 0;
+    for (const e of out.filter((x) => x.kind === 'boardFlip').sort((a, b) => a.t - b.t)) {
+      const b = tops.find((x) => Math.abs(x.t - e.t) < 0.02);
+      if (b?.dateOnly) { e.dateOnly = true; continue; }
+      e.chime = !b || b.who !== prev; if (b) prev = b.who; if (e.chime) nC++;
+      if (BOARD_SHOTS.some((id) => ROW[id] && e.t >= ROW[id].t0 && e.t < ROW[id].t1)) e.big = true;
+    }
+    notes.push(`leaderboard: ${nC} chimes (the #1 changing hands) of ${out.filter((x) => x.kind === 'boardFlip').length} moves`); }
   // the ChatGPT card (2-03): its weight in the hall
   for (const e of out) if (e.kind === 'cardSlap' && e.t >= C.chat && e.t < C.blast) e.group = 'b';
   // the lazy game heard from the ant (before 1-07): far up the table, through the wood
@@ -193,6 +208,9 @@ export function scoreEvents(C, ROW, events) {
   if (!has('cardToss', ROW['1-02'].t0, ROW['1-05'].t0)) [[1.2, 'glm', 0.6], [3.1, 'xai', 0.5]].map(([k, w, g]) => [ROW['1-02'].t0 + k, w, g]).concat([[ROW['1-03'].t0 + 1.5, 'google', 0.55]]).forEach(([t, w, g]) => ev(t, 'cardToss', { who: w, pov: 'ant', gain: g, size: 0.8 }));
   // 1-07: a king yawning far down the table, the lazy game going on
   if (!has('yawn')) ev(ROW['1-07'].t0 + 1.9, 'yawn', { who: 'kimi', pan: -0.55, gain: 0.9 });
+  // 5-06's leaderboard insert (v8): the auto scores counting up past "人类 100", Meta stuck at 93
+  const ins = ROW['5-06']?.cuts?.length > 1 ? ROW['5-06'].cuts[0] : null;
+  if (ins && !has('countUp')) ev(ins.t0 + 0.08, 'countUp', { dur: ins.t1 - ins.t0 - 0.12 });
   return E;
 }
 export const END_COPY = 3.0;   // seconds of the opening's steps replayed before the black
@@ -233,7 +251,7 @@ export function testEvents(C, ROW, SHOT) {
   ['openai', 'deepseek', 'anthropic', 'google', 'xai', 'qwen', 'glm'].forEach((w, i) => ev(i === 0 ? at('5-01', 2.0) : i === 1 ? at('5-03', 0.8) : at('5-04', 0.3 + 0.52 * (i - 2)), 'autoOn', { who: w }));
   for (let t = at('5-02', 0.1), i = 0; t < C.red; t += 0.3, i++) ev(t, 'cardSlap', { who: i % 2 ? 'openai' : 'deepseek', gain: 0.7 });
   ev(at('5-05', 0.6), 'hesitate', { who: 'meta' }); ev(at('5-06', 2.2), 'eliminated', { who: 'meta' }); ev(at('5-07', 0.3), 'dragOut', { who: 'meta', dur: 2 });
-  ev(C.stop, 'stop'); ev(at('8-06', 0.45), 'endSlam'); ev(at('9-03', 0.75), 'creditSlap');
+  ev(C.stop, 'stop'); ev(at('8-06', 0.45), 'endSlam'); ev(at('9-03', 1.1), 'creditSlap');
   return E.sort((a, b) => a.t - b.t);
 }
 

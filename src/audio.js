@@ -39,9 +39,9 @@ function seedOf(e) {
   return h % 999983;
 }
 const stopOf = (events, C = CUES) => (events.find((e) => e.kind === 'stop') ?? { t: C.stop }).t;
-// the last card on the writer's name (9-03): its time and its pre-roll (the card's breath of air)
-export const creditSlapOf = (events, C = CUES) => (events.find((e) => e.kind === 'creditSlap') ?? { t: C.slap + 0.75 }).t;
-export const CREDIT_PRE = 0.05, CREDIT_LEN = 0.55;
+// the last card on the writer's name (9-03, the swat): its time, no pre-roll, a quarter second long
+export const creditSlapOf = (events, C = CUES) => (events.find((e) => e.kind === 'creditSlap') ?? { t: C.slap + 1.1 }).t;
+export const CREDIT_PRE = 0, CREDIT_LEN = 0.3;
 // the hard gates: true digital silence (every bus, the hum too): the cut (7-01); the title's first breath in the black
 // (9-01, until the music box comes in); 9-03 before the last card and after it, to the end
 export function gates(C = CUES, events = []) {

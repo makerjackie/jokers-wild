@@ -20,7 +20,7 @@ import { registerHooks } from 'node:module';
 
 let SE_BROKEN = null;
 try { await import('../src/sound-events.js'); } catch (e) { SE_BROKEN = e.message; }
-if (SE_BROKEN) registerHooks({ resolve(spec, ctx, next) { if (/sound-events\.js$/.test(spec)) return { url: 'data:text/javascript,export function soundEvents(){return []}', shortCircuit: true }; return next(spec, ctx); } });
+if (SE_BROKEN) registerHooks({ resolve(spec, ctx, next) { if (/sound-events\.js$/.test(spec)) return { url: 'data:text/javascript,export function soundEvents(){return []}', shortCircuit: true }; if (/dir\/story\.js$/.test(spec)) return { url: 'data:text/javascript,export function boardTops(){return []}', shortCircuit: true }; return next(spec, ctx); } });
 const { renderScore, renderScoreAsync, encodeWav } = await import('../src/audio.js');
 const { SHOTS, ROW, CUES, DURATION, SEQS } = await import('../src/shots.js');
 const { soundEvents } = await import('../src/sound-events.js');

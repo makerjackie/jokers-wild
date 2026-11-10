@@ -287,7 +287,10 @@ export const SCORE = {
   R5(k, C, ROW, ev, cue, X) {
     const E = X.events, gaps = [], T0 = 50, TRI = [2, 6, 9];
     const ons = ev('autoOn', C.auto - 0.5, C.holdout), tOn = ons[0]?.t ?? C.auto + 2.0;
-    const tDS = (ons.find((e) => e.who === 'deepseek') ?? { t: C.autoCN + 0.85 }).t;
+    const tDS = (ons.find((e) => e.t >= C.autoCN - 0.2 && e.t < C.autoAll - 0.05) ?? { t: C.autoCN + 0.85 }).t;   // 5-03's hand (混沌)
+    // v8: 5-06 opens on the leaderboard (the auto scores racing past 人类 100): the smug march plays on through that insert,
+    // and the cold starts on Meta's screen (the row's second cut)
+    const tCold = ROW['5-06']?.cuts?.[1]?.t0 ?? C.pass, ins = (t) => smooth((t - C.pass) / 0.15);
     const five = ons.filter((e) => e.t >= C.autoAll - 0.05);
     const p = five.length > 1 ? clamp((five[five.length - 1].t - five[0].t) / (five.length - 1), 0.4, 0.7) : 0.52, a0 = five[0]?.t ?? C.autoAll + 0.3;
     const hes = ev('hesitate', C.holdout - 0.5, C.pass)[0], tH = hes ? hes.t : C.holdout + 0.6;
@@ -307,17 +310,17 @@ export const SCORE = {
     k.ST(tOn + 0.08, 2.1, [50, 57, 62, 66, 69, 74], 0.65, { n: 6, att: 0.2, rel: 0.8, swell: (u) => 1 - 0.6 * u, gain: 0.045, bright: 3, maxCut: 3500, vib: 5 });
     // ---- the smug march on the five hands' beat (back-filled to after the slam), the theme's downbeat on the first hand
     const kS = Math.ceil((tOn + 0.95 - a0) / p), B = [];
-    for (let q = kS; a0 + q * p < C.pass - 0.05; q++) B.push({ t: a0 + q * p, slap: false });
+    for (let q = kS; a0 + q * p < tCold - 0.05; q++) B.push({ t: a0 + q * p, slap: false });
     const pos0 = ((kS % 8) + 8) % 8, bars = B.map((_, i) => Math.floor((pos0 + i) / 4));
     const inFive = (t) => five.length && t > a0 - 0.08 && t < a0 + (five.length - 0.5) * p;
     const lay = (t) => {
-      const ds = smooth((t - tDS) / 0.5), al = smooth((t - C.autoAll) / 0.5), ho = smooth((t - C.holdout) / 0.4), f = 1 - ho;
+      const ds = smooth((t - tDS) / 0.5), al = smooth((t - C.autoAll) / 0.5), ho = smooth((t - C.holdout) / 0.4) * (1 - 0.8 * ins(t)), f = 1 - ho;
       const m = 1 - 0.4 * al;
       return { tuba: 0.9 * m * (1 - 0.75 * ho), pzBass: 0.6 * (1 - 0.5 * ho), pzPah: 0.8 * m * (1 - 0.6 * ho), hnMel: inFive(t) ? 0 : 0.9 * m * f, trPah: (0.3 + 0.5 * ds) * m * f, stMel: 0.3 * ds * m * f,
         tpMel: inFive(t) ? 0 : 0.4 * al * f, snare: (0.2 + 0.4 * al) * f, bd: (0.35 + 0.35 * al) * f, timp: 0.3 * al * f };
     };
     march(k, B, { tonic: T0, mode: 'maj', trAt: () => 0, bars, pos0, lay, vel: (t) => 0.78 + 0.08 * smooth((t - C.autoAll) / 1) });
-    // DeepSeek's slam (5-03): a grudging low stab on his side
+    // 5-03's slam (混沌): a grudging low stab on his side
     k.BR('trombone', tDS, 0.35, [50, 54, 57], 0.9, { n: 3, accent: 1, att: 0.005, rel: 0.12, gain: 0.12, pan: -0.3 });
     k.BR('tuba', tDS, 0.35, 38, 0.9, { accent: 1, att: 0.006, rel: 0.12, gain: 0.25 });
     k.DRUM(tDS, 0.8, { f: 46, ring: 0.5, gain: 0.55, pan: -0.3 }); k.TIMP(tDS, 38, 0.8, 0.8, { gain: 0.45 });
@@ -335,7 +338,7 @@ export const SCORE = {
     const dH = clamp(C.pass - tH - 0.35, 0.8, 1.8);
     k.BR('horn', tH, dH, 67, 0.5, { att: 0.45, rel: 0.5, vib: 2.5, swell: (u) => Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.1)), 0.7), bend: (tt) => -0.45 * smooth((tt - 0.6 * dH) / (0.4 * dH)), gain: 0.13, pan: 0.35, scoop: 0 });
     // ---- 5-06 .. 5-08: cold
-    const tP = C.pass, out0 = outs[0]?.t ?? tP + 2.2;
+    const tP = tCold, out0 = outs[0]?.t ?? tP + 2.2;
     for (let t = tP + 0.12; t < out0 - 0.15; t += 0.74) { k.TIMP(t, 38, 0.5, 0.6, { gain: 0.3 }); k.TIMP(t + 0.23, 38, 0.33, 0.5, { gain: 0.22 }); }
     k.ST(tP, lastDrag + 0.4 - tP, [81, 88], 0.4, { n: 3, att: 0.9, rel: 1.0, vib: 0, pont: 0.7, gain: 0.022, bright: 1.6, maxCut: 9000 });
     k.ORG(tP + 0.3, lastDrag - tP, [26, 33], (t) => 0.6 * smooth((t - tP) / 1.5), { reg: { sub: 0.8, p8: 1 }, att: 1.0, rel: 0.9, gain: 0.05, chiff: 0 });
@@ -362,7 +365,7 @@ export const SCORE = {
     k.SHEP(C.mountain, C.red + 0.6, (t) => 0.3 + 0.6 * smooth((t - C.mountain) / 2.6), (t) => smooth((t - C.mountain) / 1.5) * (1 - smooth((t - C.red) / 0.6)), { gain: 0.04 * LV.ai, centre: 650 });
     cue(tOn, `R5: 托管 = the release (D major tutti), the smug theme in major on the hands' beat (${B.length} beats, ${p.toFixed(2)} s), ${five.length} stabs`);
     cue(tH, 'R5: 5-05 the hesitant horn (G over D)');
-    cue(C.pass, `R5: 5-06 cold: heartbeat, ${outs.length} x 淘汰 (E-flat), ${drags.length} chairs falling into the dark`);
+    cue(tCold, `R5: 5-06 (on Meta's screen) cold: heartbeat, ${outs.length} x 淘汰 (E-flat), ${drags.length} chairs falling into the dark`);
     cue(B2[0]?.t ?? C.allAuto, `R5: 5-10 the flock: ${nA} beats major climbing, then ${B2.length - nA} beats with the third gone; drones, riser`);
     return gaps;
   },
