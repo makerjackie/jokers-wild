@@ -27,13 +27,13 @@ function presses() {
   const add = (id, t, uv, pose = 'point', kind = 'tap', hold = 0.08) => (PRESS[id] ??= []).push({ t, uv, pose, kind, hold });
   for (const p of S.plays()) {
     if (p.style === 'auto' || p.style === 'red') continue;
-    add(p.who, p.tr - 0.04, p.style === 'semi' ? BTN.confirm : slotUV(0, p.slot), 'point', p.style === 'giant' || p.style === 'smash' ? 'hard' : p.style === 'semi' ? 'confirm' : 'tap');
+    add(p.who, p.tr - 0.04, slotUV(0, p.slot), 'point', p.style === 'giant' || p.style === 'smash' ? 'hard' : 'tap');
   }
   for (const [t, slot] of PASS.taps) add(FINAL[0], t, slotUV(0, slot), 'point', 'tap');
-  for (const id in SEMI) add(id, SEMI[id], BTN.semi, 'point', 'semi', 0.12);
+  for (const id in SEMI) add(id, SEMI[id], BTN.hint, 'point', 'hint', 0.12);
   for (const id in HINTS) for (const [t] of HINTS[id]) add(id, t, BTN.hint, 'point', 'hint');
   for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, FINAL.includes(id) ? 'fist' : 'point', 'auto', 0.18);
-  for (const id of HOLD) OUT[id].pass.forEach((t) => add(id, t, BTN.confirm, 'point', 'confirm'));   // too late: 超时
+  for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 3 + i), 'point', 'tap'));   // too late: 超时
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
   for (const id of FINAL) add(id, REACH[id] + 0.9, [0.56, 0.5], 'point', 'reach', 9);
   for (const id in PRESS) PRESS[id].sort((a, b) => a.t - b.t);
@@ -74,7 +74,7 @@ const oppOf = (id) => KINGS.find((k) => k.side !== KING[id].side && k.seat === K
 function pointAt(id, target) {
   // the right arm out at the one he blames
   const h = headAt(id), d = [target[0] - h[0], 0, target[2] - h[2]], l = Math.hypot(d[0], d[2]) || 1;
-  return [h[0] + (d[0] / l) * 0.5, h[1] + 0.2, h[2] + (d[2] / l) * 0.5];   // (v8) up over the mound, not into it
+  return [h[0] + (d[0] / l) * 1.4, h[1] + 0.12, h[2] + (d[2] / l) * 1.4];   // (v10) out of reach on purpose: the arm goes straight and the finger points at him
 }
 function kingsState(t, st) {
   const crushed = t >= SLAM;
@@ -115,7 +115,7 @@ function kingsState(t, st) {
       // the house of cards: the US gloat; R1 hits it; mouths open
       if (sx > 0 && t > at('3-02') && t < SMASH.hit) { K.look = HOUSE_HIT; K.face = face('proud', { mouth: 'smirk', eyes: 'narrow' }); }
       if (sx > 0 && t >= SMASH.hit && t < CUES.big) { K.look = HOUSE_HIT; K.face = face('shock'); K.lean = -0.08; }
-      if (id === 'google' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
+      if (id === 'glm' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
       // stuck under GPT-4.5: 要不起, the sweat, the hint, the grin
       if (id === FINAL[0] && t >= CUES.stuck && t < CUES.win + 0.3) { K.face = { eyes: 'down', brows: 'worried', mouth: 'flat' }; K.sweat = 1; K.look = f.c; K.rise = 0.1; K.lean = 0.02; }
       if (id === FINAL[0] && t >= CUES.win + 0.3 && t < CUES.hintUS + 0.4) { K.face = face('proud', { mouth: 'grin' }); K.look = headAt('openai'); }
@@ -199,7 +199,7 @@ function kingsState(t, st) {
     }
     // ---- the arm
     const h = handFor(id, t);
-    if (pointTo) { K.armR = arm(id, pointTo); K.hand.R = 'point'; }
+    if (pointTo) { K.armR = { target: pointTo, pole: [0, -1, 0] }; K.hand.R = 'point'; }
     else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.tip ? { tip: 1, pose: h.pose } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';
     // hands off: leaning back on 托管, both hands in the lap (until the red cards make them grab for the screen again)
@@ -231,7 +231,6 @@ function screensState(t) {
       if (nx) s.aiPick = nx.slot;
     }
     if (t >= AUTO[id]) s.full = 1;
-    if (SEMI[id] != null && t > SEMI[id] && t < SEMI[id] + 1.3) s.toast = 'semi';
     if (t > AUTO[id] && t < AUTO[id] + 1.3) s.toast = 'full';
     for (const tt of TIMEOUT[id] ?? []) if (t > tt && t < tt + 0.45) s.timeout = 1;
     if (OUT[id]) {

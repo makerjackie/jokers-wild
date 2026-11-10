@@ -119,7 +119,7 @@ export const SHOTS = {
   // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
   '3-03': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
-    if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -0.3], [-1.05, 0.12, -1.2], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside Gemini's screen: the card leaves it
+    if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -1.55], [-1.05, 0.12, -2.45], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
     if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
     camLook(w.camera, [0.02 + shake(t, S.SMASH.hit, 0.01), 0.22 + shake(t, S.SMASH.hit, 0.008, 60), 0.6], [0.36, 0.14, -0.62], 50); st.look.exposure = 1.4;
   },

@@ -30,13 +30,15 @@ export { FUTURE };
 // no confirmation at all. Whoever still confirms by hand times out (超时) and is out (淘汰).
 export const LIMIT0 = at('5-01', 0.9), LIMIT1 = at('5-04', 0.3);
 export function limitAt(t) { if (t < LIMIT0) return 0; return 10 * Math.pow(0.3 / 10, clamp((t - LIMIT0) / (LIMIT1 - LIMIT0))); }
-export const SEMI = { openai: at('5-01', 1.75), anthropic: at('5-02', 0.35), google: at('5-02', 1.25), xai: at('5-02', 2.15), meta: at('5-02', 2.3), mistral: at('5-02', 2.4) };
+// SEMI: from here every round he presses AI 提示 and taps the card it lights (the 'rubber stamp')
+export const SEMI = { openai: at('5-01', 1.75), anthropic: at('5-02', 0.35), google: at('5-02', 1.25), xai: at('5-02', 2.15), meta: at('5-02', 2.3), mistral: at('5-02', 2.4), glm: at('5-02', 2.45) };
 export const AUTO = {};                     // when each king slams 全托管
 export const NOW = at('5-04', 1.05);        // the board's date flips to 2026·11
 export const TIMEOUT = { openai: [at('5-04', 0.5)] };   // his one 超时, the moment he gives up confirming
 AUTO.openai = at('5-04', 1.6);
 export const FOLLOW = ['anthropic', 'google', 'xai'];   // 5-06: one cut each
 FOLLOW.forEach((id, i) => { AUTO[id] = at('5-06', (i + 0.6) * 0.8); });
+AUTO.glm = at('5-06', 1.9);
 // the two who won't: they keep confirming by hand, time out, and are pushed off the table
 export const HOLD = ['meta', 'mistral'];
 for (const id of HOLD) AUTO[id] = Infinity;
@@ -139,7 +141,7 @@ function buildPlays() {
   add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old2, name: 'AlphaGo', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
   add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 0, at: [0, 0.02], yaw: -Math.PI / 2 });
   // ---- @3: the race. Each landing that claims #1 flips the board. US cards build the house; CN cards go to the pile
-  const US = ['openai', 'xai', 'mistral'], CN = ['anthropic', 'google', 'meta'];   // the right row builds the house
+  const US = ['openai', 'xai', 'mistral'], CN = ['anthropic', 'google', 'meta', 'glm'];   // the right row builds the house
   const montage = [   // [who, v, tap time] — 3-01 cut 1 / 5 show the taps, cuts 2 / 6 the landings, cuts 3 / 7 the board
     ['openai', 1, at('3-01', 0.55), at('3-01', 1.55)], ['xai', 0, at('3-01', 2.55)], ['google', 1, at('3-01', 2.8)],
     ['anthropic', 1, at('3-01', 3.5), at('3-01', 4.15)], ['mistral', 1, at('3-01', 4.35)],
@@ -156,9 +158,9 @@ function buildPlays() {
     const v = usTops[s] ? usV[who]++ : 1 + Math.floor(s / 10);
     add({ who, t, ...card(who, v), dest: 'house', top: !!usTops[s] });
   }
-  for (let s = 0; s < 7; s++) { const who = CN[s % 3]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
-  // Gemini 2.5 Pro out of Gemini's screen, straight into OpenAI's house
-  add({ who: 'google', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('google', 4), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
+  for (let s = 0; s < 7; s++) { const who = CN[s % 4]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
+  // FatFish-R1 out of 大肥鱼's screen, straight into OpenAI's house
+  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
@@ -369,7 +371,7 @@ export function leaderAt(t) {
     const pi = prev.order.indexOf(id), d = cur.data[id], pd = prev.data[id];
     const score = pd && Number.isFinite(d.score) && Number.isFinite(pd.score) ? lerp(pd.score, d.score, clamp(u * 1.6)) : d.score;
     const mover = pi > i && cur.order[i] === cur.order.find((x, j) => prev.order.indexOf(x) - j === Math.max(...cur.order.map((y, jj) => prev.order.indexOf(y) - jj)));
-    return { who: id, model: d.model, score, y: pi < 0 || !mover ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: t >= RED_T ? clamp((t - RED_T) / 3) : 0 };
+    return { who: id, model: d.model, score, y: pi < 0 || !mover ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: 0 };
   });
   const top = cur.order[0], prevTop = prev.order[0];
   return { rows, date: topAt(t).date, flash: top !== prevTop ? (1 - u) : 0, red: t >= RED_T ? 1 : 0 };
