@@ -14,8 +14,10 @@ import { musicBox } from './audio-voices.js';
 const pair = (sec) => ({ L: new Float32Array(Math.ceil(sec * SR)), R: new Float32Array(Math.ceil(sec * SR)) });
 const addPan = (S, mono, pan, at = 0, g = 1) => { const [gl, gr] = panGains(pan); for (let i = Math.max(0, -at); i < mono.length && at + i < S.L.length; i++) { S.L[at + i] += mono[i] * gl * g; S.R[at + i] += mono[i] * gr * g; } };
 const addMid = (S, mono, at = 0, g = 1) => { for (let i = Math.max(0, -at); i < mono.length && at + i < S.L.length; i++) { const v = mono[i] * g * Math.SQRT1_2; S.L[at + i] += v; S.R[at + i] += v; } };
-const US_SIDE = new Set(['US', 'openai', 'anthropic', 'google', 'xai', 'meta', 'spade', 'club']);
-export const isUS = (who) => US_SIDE.has(who);
+// the right row (cool light, x > 0) from the cast table in layout.js; 'US' / 'spade' / 'club' kept for the older reels' kinds
+import { KING as CAST } from './layout.js';
+const RIGHT = new Set(['US', 'spade', 'club']);
+export const isUS = (who) => RIGHT.has(who) || CAST[who]?.side === 'US';
 const fadeIn = (b, sec = 0.002) => { const n = Math.min(b.length, Math.round(sec * SR)); for (let i = 0; i < n; i++) b[i] *= i / n; return b; };
 // a stable small integer from a string (who -> timbre variant)
 const hashWho = (s) => { let h = 7; for (const c of String(s ?? '')) h = (h * 31 + c.charCodeAt(0)) % 9973; return h; };
@@ -1093,6 +1095,8 @@ export function sfxScreenTap(e, seed) {
   noiseBurst(out, 0, { a: 0.0003, tau: 0.003, f0: 1100 * r.range(0.9, 1.1), q: 0.8, mode: 'lp', amp: 0.5 }, new Noise(seed));
   noiseBurst(out, 0, { a: 0.0001, tau: 0.0006, f0: 4200, q: 1, amp: 0.2 }, new Noise(seed + 1));
   ping(out, Math.round(0.004 * SR), 1760 * (isUS(e.who) ? 1.06 : 1), 0.035, [[1, 1, 0.025], [2, 0.3, 0.012]], 0.2);
+  // v9 (e.confirm, 半托管's "✓ 确认出牌"): the rubber stamp: the same fingertip and a tiny soft "ack" a fifth up
+  if (e.confirm) ping(out, Math.round(0.018 * SR), 2637 * (isUS(e.who) ? 1.0 : 0.94), 0.03, [[1, 1, 0.04]], 0.6);
   return fadeTail(out, 0.01);
 }
 // HINTDING {who} — 提示: a clear glassy "ding" (A6 with a fifth above, a little bell)
@@ -1783,4 +1787,50 @@ export function sfxCountUp(e, seed) {
   const j = Math.round(0.66 * d * SR); ping(out, j, mtof(93), 0.08, [[1, 1, 0.3], [2, 0.2, 0.12]], 0.1); ping(out, j, mtof(100), 0.05, [[1, 1, 0.25]], 0.5);
   return fadeTail(out, 0.05);
 }
+// ---- v9: 半托管, the round timer, 超时
+// SEMION {who} — 半托管 switched on: a soft toggle and a gentle green "assist" chime going UP (A5, E6, sine-pure, slow
+// attack): helpful, not a slam (autoOn's confirm goes down)
+export function sfxSemiOn(e, seed) {
+  const out = new Float32Array(Math.ceil(0.9 * SR));
+  noiseBurst(out, 0, { a: 0.0003, tau: 0.003, f0: 900, q: 0.7, mode: 'lp', amp: 0.3 }, new Noise(seed));
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0008, f0: 3600, q: 1, amp: 0.15 }, new Noise(seed + 1));
+  for (const [at, m, a] of [[0.05, 81, 0.05], [0.16, 88, 0.06]]) {
+    const j = Math.round(at * SR), n = Math.round(0.6 * SR), f = mtof(m);
+    for (let i = 0; i < n && j + i < out.length; i++) { const t = i / SR; out[j + i] += (Math.sin(TAU * f * t) + 0.12 * Math.sin(TAU * 2 * f * t)) * a * smooth(t / 0.015) * Math.exp(-t / 0.18); }
+  }
+  return fadeTail(out, 0.05);
+}
+// The round timer's ticks (shared with the score, which rides them): from one tick a second (the 10 s round, each tick a
+// second gone) the period shrinks geometrically to 0.03 s (a buzz) at `dur` (or e.stopAt, the 超时, if sooner)
+export const COUNT_P0 = 1.0, COUNT_P1 = 0.03;
+export function countdownTicks(e) {
+  const d = Math.max(0.5, e.dur || 7), end = Math.min(d, e.stopAt ?? d), T = [], k = Math.log(COUNT_P1 / COUNT_P0) / d;
+  for (let t = 0; t < end;) { T.push(t); t += COUNT_P0 * Math.exp(k * t); }
+  return T;
+}
+// COUNTDOWN {dur, from, to} — the engine of 5-01 .. 5-04: a dry digital tick and tock, the round's "tik" a little higher,
+// faster and faster until it is a buzz; under it a thin rising whine and a soft low pulse on every fourth tick (the chest
+// tightening). It stops dead at e.stopAt (prepareEvents: the first 超时).
+export function sfxCountdown(e, seed) {
+  const d = Math.max(0.5, e.dur || 7), end = Math.min(d, e.stopAt ?? d), T = countdownTicks(e), out = new Float32Array(Math.ceil((end + 0.1) * SR));
+  T.forEach((t, i) => {
+    const u = t / end, j = Math.round(t * SR), f = (i % 2 ? 1900 : 2400) * (1 + 0.25 * u);
+    noiseBurst(out, j, { a: 0.0001, tau: 0.0006, f0: f, q: 1.8, amp: 0.3 + 0.15 * u }, new Noise(seed + i));
+    ping(out, j, f / 2, 0.05 + 0.03 * u, [[1, 1, 0.02], [2.01, 0.3, 0.01]], 0.3);
+    if (i % 4 === 0) sweep(out, j, 90, 55, 0.02, 0.06, 0.18 + 0.25 * u, 0.002, 0.6);
+  });
+  let p = 0;
+  for (let i = 0; i < Math.round(end * SR); i++) { const t = i / SR, u = t / end; p += (1200 + 1800 * u * u) / SR; p -= Math.floor(p); out[i] += Math.sin(TAU * p) * 0.012 * u * u; }
+  const fo = Math.round(0.006 * SR), n = Math.round(end * SR); for (let i = 0; i < fo; i++) out[n - 1 - i] *= i / fo; out.fill(0, n);
+  return out;
+}
+// TIMEOUT {who} — 超时: the round lost: a short harsh game buzzer, two square tones a semitone apart grinding (E-flat3
+// against E3), flat and final, 0.3 s. Not the attack alarm (that one is polished and sings)
+export function sfxTimeout(e, seed) {
+  const n = Math.round(0.32 * SR), out = new Float32Array(n + Math.round(0.05 * SR)), lp = new SVF(2600, 0.7);
+  for (let i = 0; i < n; i++) { const t = i / SR, x = Math.tanh(6 * Math.sin(TAU * 155.6 * t)) + Math.tanh(6 * Math.sin(TAU * 164.8 * t)); lp.run(x); out[i] = lp.lp * 0.16 * Math.min(1, i / 120, (n - i) / 240); }
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.002, f0: 2000, q: 0.8, amp: 0.2 }, new Noise(seed));
+  return out;
+}
+Object.assign(FILM_KINDS, { semiOn: sfxSemiOn, countdown: sfxCountdown, timeout: sfxTimeout });
 Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle, boardFlip: sfxBoardTick, countUp: sfxCountUp });

@@ -43,8 +43,8 @@ if (arg('--kinds')) {
   const KS = { ...FILM_KINDS, ...SCORE_KINDS }, kinds = Object.keys(KS).filter((k) => !['stop', 'smile', 'rage'].includes(k)), gap = 3.0, n = Math.ceil((kinds.length * gap + 2) * SR), L = new Float32Array(n), R = new Float32Array(n);
   const PAR = { antStep: { surface: 'cloth' }, cardToss: { size: 0.7, pov: 'table' }, cardSlap: { size: 1.2, hard: 0.8, pov: 'table', who: 'openai' }, cardWhoosh: { dur: 0.35 },
     chatWake: { dur: 2.4 }, typing: { dur: 2.4, n: 32 }, awe: { dur: 2 }, chuckle: { who: 'openai' }, scuffle: { dur: 1.3 }, cardSkim: { dur: 0.8 }, towerCrash: { n: 16 },
-    lampSwing: { amp: 1, dur: 2.6 }, chairSlide: { who: 'glm', dur: 1.6, pan: -0.6 }, tremble: { dur: 2.2 }, breath: { dir: 'in' }, stream: { rate: 10, dur: 1.5 }, blizzard: { dur: 2.6 },
-    cardsFall: { n: 40, dur: 1 }, cardStand: { i: 0 }, standWave: { dur: 2.6 }, rise: { dur: 2.2 }, lampSpin: { dur: 2.2 }, farSlap: { size: 1, dist: 1 }, leafFall: { dur: 2.4 }, smallSlap: { pov: 'table' }, yawn: { who: 'kimi' } };
+    lampSwing: { amp: 1, dur: 2.6 }, chairSlide: { who: 'meta', dur: 1.6, pan: -0.6 }, tremble: { dur: 2.2 }, breath: { dir: 'in' }, stream: { rate: 10, dur: 1.5 }, blizzard: { dur: 2.6 },
+    cardsFall: { n: 40, dur: 1 }, cardStand: { i: 0 }, standWave: { dur: 2.6 }, rise: { dur: 2.2 }, lampSpin: { dur: 2.2 }, farSlap: { size: 1, dist: 1 }, leafFall: { dur: 2.4 }, smallSlap: { pov: 'table' }, yawn: { who: 'mistral' } };
   log('kind          mix  | peak dBFS  LUFS-M max  len s   (each at gain 1 x its MIX level, solo, centred)');
   kinds.forEach((k, i) => {
     const e = { t: 1 + i * gap, kind: k, gain: 1, pan: 0, pitch: 0, dur: 1.2, size: 0.6, who: 'US', ...PAR[k] }, s = KS[k](e, 4321 + i), g = (MIX[k] ?? [1])[0];
