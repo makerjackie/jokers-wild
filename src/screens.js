@@ -102,7 +102,7 @@ export function makeScreens() {
       c.fillStyle = `rgba(120,8,6,${0.88 * k})`; c.fillRect(0, CH * 0.3, CW, CH * 0.4);
       c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW - 12, CH * 0.4 - 12);
       c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 50px ${SANS}`; c.fillText('⚠ 您正遭受对方攻击', CW / 2, CH * 0.45); c.font = `bold 22px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW / 2, CH * 0.6);
+      c.font = `900 ${s.attacker ? 44 : 50}px ${SANS}`; c.fillText(s.attacker ? `⚠ 您正遭受 ${s.attacker} 攻击` : '⚠ 您正遭受对方攻击', CW / 2, CH * 0.45); c.font = `bold 22px ${SANS}`; c.fillText('无法取消托管 · UNDER ATTACK', CW / 2, CH * 0.6);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);

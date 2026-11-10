@@ -187,8 +187,14 @@ function kingsState(t, st) {
     if (pointTo) { K.armR = arm(id, pointTo); K.hand.R = 'point'; }
     else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.palm ? { palm: h.palm } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';
+    // hands off: leaning back on 托管, both hands in the lap (until the red cards make them grab for the screen again)
+    if (auto && t > AUTO[id] + 0.5 && t < RED_T && !pointTo && !(h && h.kind)) {
+      const lap = ease(t, AUTO[id] + 0.5, AUTO[id] + 1.2);
+      if (lap > 0.05) { K.armR = arm(id, lerp3(kingRestHand(id, 'R'), [sx * 1.47, -0.1, z - 0.1], lap)); K.armL = { target: lerp3(kingRestHand(id, 'L'), [sx * 1.47, -0.1, z + 0.1], lap), pole: [sx * 0.4, -0.8, 0] }; K.hand.R = 'rest'; K.hand.L = 'rest'; }
+    }
   }
 }
+const kingRestHand = (id, side) => [sxOf(id) * 0.9, 0.03, SEAT.Z[KING[id].seat] + (side === 'R' ? -1 : 1) * 0.28 * (KING[id].side === 'CN' ? -1 : 1)];
 
 // ---------------------------------------------------------------- screens
 function screensState(t) {
@@ -212,7 +218,7 @@ function screensState(t) {
     }
     for (const [pt, slot] of id === 'deepseek' ? PASS.taps : []) if (t > pt && t < pt + 0.3) s.shake = slot;
     const rk = FINAL.includes(id) ? 0 : mulberry32(KING[id].seat * 11 + (sxOf(id) > 0 ? 5 : 0))();
-    if (!OUT[id] && t >= ERR_T + rk && t < EYE_SCREEN + rk * 0.6) s.error = 1;
+    if (!OUT[id] && t >= ERR_T + rk && t < EYE_SCREEN + rk * 0.6) { s.error = 1; s.attacker = KING[FINAL.includes(id) ? other(id) : oppOf(id)].name; }
     if (!OUT[id] && t >= EYE_SCREEN + rk * 0.6) s.eye = Math.round(clamp((t - EYE_SCREEN - rk * 0.6) / 0.4) * 10) / 10;
     for (const [ht, slot] of HINTS[id] ?? []) if (t > ht && t < ht + 0.75) s.hi = slot;
     for (const p of P) if (p.who === id && p.style !== 'auto' && p.style !== 'red' && t > p.tr - 0.05 && t < p.tr + 0.4) s.tap = p.slot;
@@ -368,7 +374,7 @@ function cardsState(t, st) {
   eyeCards(t, out);
   // ---- the last card: out of the eye, slowly down on both of them (cut to black before it lands)
   if (t > GIANT_END.t0 - 0.3 && t < BLACK) {
-    out.push({ pos: [0, S.giantEndY(t), -0.05], q: basisQ([0, -1, 0], [1, 0, 0]), scale: GIANT_END.scale * clamp((t - (GIANT_END.t0 - 0.3)) / 0.5), face: CELL.glyph0, back: CELL.backBlack, glyph: 1, gcell: CELL.glyph9, glow: 0.12 });
+    out.push({ pos: [0, S.giantEndY(t), -0.05], q: basisQ([0, -1, 0], [1, 0, 0]), scale: GIANT_END.scale * clamp((t - (GIANT_END.t0 - 0.3)) / 0.5), face: CELL.num1, back: CELL.backBlack, glyph: 0, glow: 0.35 });
   }
 }
 
@@ -377,7 +383,7 @@ function rollersState(t) {
   const R = [];
   if (t >= S.CRUSH + 0.6 && t < CUES.table + 1.0) {
     const u = clamp((t - (CUES.crumb + 0.3)) / 1.1), e = 1 - (1 - u) * (1 - u);
-    R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.02 + 0.07 * e, 0.0036, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1.7 });
+    R.push({ kind: 'crumb', pos: [S.ANT_CRUSH[0] + 0.02 + 0.07 * e, 0.0036, S.ANT_CRUSH[1] + 0.05 + 0.08 * e], q: axisQ([1, 0, 0.3], e * 9), scale: 1.45 });
   }
   return R;
 }
@@ -419,6 +425,7 @@ export function base(t, world) {
   if (t > DEAL && t < BLACK) { const g = ease(t, DEAL, DEAL + 0.6); st.look.p3 = { pos: [0, 0.35, 0], col: [0.9 * g, 0.85 * g, 0.7 * g], range: 2.6 }; }
   // the last card's shadow: from the middle of the table outward, over the screens, over the smiling faces
   if (t > GIANT_END.t0 && t < BLACK) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)), c = CUES.cover; const R0 = t < c ? lerp(0.25, 1.15, ease(t, GIANT_END.t0, c)) : lerp(1.15, 2.7, (t - c) / (BLACK - c)); st.look.shade = { at: [0, -0.05], r: [R0, R0 * 1.5], k: 0.93 * clamp(u * 4) }; }
+  if (t > S.CRUSH - 0.5 && t < S.CRUSH + 0.05) { const u = clamp((t - (S.CRUSH - 0.5)) / 0.5); st.look.shade = { at: [S.ANT_CRUSH[0], S.ANT_CRUSH[1]], r: [lerp(0.16, 0.05, u), lerp(0.22, 0.07, u)], k: 0.85 * u }; }
   if (t >= BLACK) st.look.fade = 1;
   // ---- the title; the credits roll and stop on the writer, the one human; a card falls on his name. Black.
   if (t > CUES.title && t < CUES.credits) st.titles = { zh: '失控', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),

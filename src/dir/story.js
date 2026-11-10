@@ -86,9 +86,9 @@ export function houseFall(s) {
 
 // ---------------------------------------------------------------- the ant (it walks toward OpenAI's screen)
 export const ANT_SPEED = 0.046;
-const ANT_PATH = [[at('1-02'), 0.06, 0.34], [at('1-05', 0.95), 0.29, 0.17]];
+const ANT_PATH = [[at('1-02'), 0.1, 0.44], [at('1-05', 0.95), 0.36, 0.27]];   // (v7) clear of the old pile: the card lands flat
 export const CRUSH = at('1-05', 0.95);
-export const ANT_CRUSH = [0.29, 0.17];
+export const ANT_CRUSH = [0.36, 0.27];
 export const ANT_KING = 'openai';
 export function antAt(t) {
   if (t < at('1-02') - 0.01 || t >= CRUSH) return { show: 0 };

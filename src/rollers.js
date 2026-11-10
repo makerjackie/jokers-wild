@@ -39,7 +39,9 @@ export function makeRollers() {
     const d = new THREE.Mesh(new THREE.CircleGeometry(0.0205, 24).rotateX(-Math.PI / 2), lens); d.position.set(sx * 0.026, 0.0004, 0); glasses.add(d);
     const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.09, 6).rotateX(Math.PI / 2), wire); arm.position.set(sx * 0.047, 0, -0.045); glasses.add(arm); }
   { const br = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.012, 6).rotateZ(Math.PI / 2), wire); glasses.add(br); }
-  const crumb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0022, 1), crumbMat); crumb.visible = false; root.add(crumb);
+  // (v7) a torn lump of bread, not a ball: a squashed, dented chunk
+  const crumbGeo = (() => { const g = new THREE.IcosahedronGeometry(0.0022, 1), P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), k = 1 + 0.22 * Math.sin(x * 2100 + 1.3) * Math.cos(z * 1700 - 0.4) - (y > 0.0012 ? 0.18 : 0); P.setXYZ(i, x * 1.35 * k, y * 0.8 * k, z * k); } g.computeVertexNormals(); return g; })();
+  const crumb = new THREE.Mesh(crumbGeo, crumbMat); crumb.visible = false; root.add(crumb);
   function update(list = []) {
     let ci = 0; crumb.visible = false; ring.visible = false; glasses.visible = false; for (const c of crowns) c.visible = false;
     for (const r of list) {
