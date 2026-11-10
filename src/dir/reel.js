@@ -462,9 +462,9 @@ export function base(t, world) {
     const LH = 0.062, stop = 0.8 - (lines.length - 1) * LH;            // the whole list stays on screen; the writer's line rests low
     const u = clamp((t - CUES.credits - 0.4) / (CUES.slap - CUES.credits - 1.6));
     // the swat: nothing moves, then in two frames a card slams onto his name, a white flash, a hard jolt; then black
-    const hit = CUES.slap + 1.1, jolt = t > hit ? Math.exp(-(t - hit) * 14) * Math.sin((t - hit) * 95) * 0.035 : 0;
+    const hit = CUES.slap + 0.45, jolt = t > hit ? Math.exp(-(t - hit) * 14) * Math.sin((t - hit) * 95) * 0.035 : 0;
     st.titles = { alpha: 1, roll: { y0: lerp(1.08, stop, 1 - (1 - u) ** 2) + jolt, lines, lh: LH } };
-    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.8 + jolt, cell: 'num1', fast: 1, flat: 1 };
+    if (t > hit - 0.07) st.titles.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.8 + jolt, cell: 'aiAuto', fast: 1 };
     if (t > hit && t < hit + 0.09) st.titles.flash = 1 - (t - hit) / 0.09;
     st.titles.alpha = t > CUES.fin - 0.35 ? 0 : 1;
     if (st.titles.slap) st.titles.slap.alpha = st.titles.alpha;

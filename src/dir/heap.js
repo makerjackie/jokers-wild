@@ -8,7 +8,7 @@ import { CARD } from '../cards.js';
 import { basisQ } from '../freecards.js';
 
 const CELL = 0.01, N = 260, X0 = -1.3, Z0 = -1.3;      // a 2.6 m square around the pile, 1 cm cells
-const MAX_TILT = 0.42;                                   // rad
+const MAX_TILT = 0.55;   // (v9) cards slide and lean on the slopes                                   // rad
 
 export function makeField() {
   const H = new Float32Array(N * N);

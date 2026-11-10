@@ -113,9 +113,9 @@ function spot(t, sx, rnd) {
   // a neat pile while men play; a mound once the machines do
   const auto = clamp((t - AUTO.openai) / (STOP - AUTO.openai));
   // (v7) a mound, not a carpet: it stays between the screens (|x| < 0.5) and grows along the table and upward
-  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.16 + 0.34 * auto;
+  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.24 + 0.46 * auto;   // (v9) a wide, low mountain, not a column
   const a = rnd() * Math.PI * 2, d = t < AUTO.openai ? sig * Math.sqrt(rnd()) : sig * Math.pow(rnd(), 0.8);   // denser in the middle: a mound
-  return [sx * 0.02 + Math.max(-0.42, Math.min(0.42, Math.cos(a) * d * 0.95)), 0.02 + Math.sin(a) * d * 1.7];
+  return [sx * 0.02 + Math.max(-0.45, Math.min(0.45, Math.cos(a) * d * 0.9)), 0.02 + Math.sin(a) * d * 1.9];
 }
 export const CHAT_T = at('2-05', 1.0);       // ChatGPT lands; the shockwave
 function buildPlays() {
