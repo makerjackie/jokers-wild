@@ -79,7 +79,7 @@ const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * 
 
 // per company: robe (muted, they are statues), lining/trim, crown kind, metal, hair (also brows, beard), logo plate
 const STYLE = {
-  openai:    { robe: '#26262a', trim: '#cfd2d6', crown: 'tall', metal: '#d4d6da', hair: '#2a211b', plate: '#141414' },
+  openai:    { robe: '#26262a', trim: '#cfd2d6', crown: 'tall', metal: '#8d9199', hair: '#2a211b', plate: '#141414' },
   anthropic: { robe: '#7a4a37', trim: '#d8c3a5', crown: 'leaf', metal: '#c9a25e', hair: '#8a6440', plate: '#efe6d8' },
   google:    { robe: '#a9a395', trim: '#4a5f8f', crown: 'gems', metal: '#c9a25e', hair: '#f1eee6', plate: '#f4f1ea' },
   xai:       { robe: '#18181b', trim: '#8e9096', crown: 'spike', metal: '#5b5e66', hair: '#1c1a19', plate: '#0b0b0d' },

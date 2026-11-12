@@ -104,7 +104,7 @@ export const SHOTS = {
   '2-01': (t, st, w) => screenCam(w.camera, st, 'google', 0.42, 0.45, 0.42, 42),
   '2-02': (t, st, w) => { camLook(w.camera, [0.02, 0.85, 0.05], [0, 0, 0], 30); },
   '2-03': (t, st, w) => boardCam(w.camera, st, t, '2-03'),
-  '2-04': (t, st, w) => faceCam(w.camera, st, w, t, 'openai', { d: 1.05, dz: -0.4, dy: -0.02, ly: -0.12, fov: 36 }),
+  '2-04': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 3 * uRow(t, '2-04'), back: 0.46, dy: 0.1, ly: 0.0 }),
   '2-05': (t, st, w) => { camLook(w.camera, [shake(t, S.CHAT_T, 0.02), 1.45 + shake(t, S.CHAT_T, 0.03, 55), 0.05], [0, 0, 0.02], 46); },
   // low on the cloth: the old cards blown past, off the edge; ChatGPT alone in the middle
   '2-06': (t, st, w) => { const u = uRow(t, '2-06'); camLook(w.camera, [0.04, 0.07, 0.5 + 0.1 * u], [0, 0.04, -1.6], 58); st.look.exposure = 1.1; st.look.near = 0.01; },
@@ -138,7 +138,7 @@ export const SHOTS = {
   '4-01': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.4, 0.38, 0.34, 48, 0.04),
   '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'anthropic', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.36, 44, -0.1); },
   '4-03': (t, st, w) => boardCam(w.camera, st, t, '4-03'),
-  '4-04': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 3 * uRow(t, '4-04'), back: 0.44, dy: -0.04, ly: 0.02 }),
+  '4-04': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 3 * uRow(t, '4-04'), back: 0.46, dy: 0.1, ly: 0.0 }),
   '4-05': (t, st, w) => { const u = uRow(t, '4-05'); camLook(w.camera, [0, 1.3 - 0.05 * u, 3.8 - 0.3 * u], [0, 0.5, 0], 54); st.look.exposure = 2.0; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   // ---------------------------------------------------------------- @5 托管
   // ---------------------------------------------------------------- @5 半托管 → 全托管 (v9)
@@ -147,7 +147,7 @@ export const SHOTS = {
   '5-02': (t, st, w, shot) => { const id = ['anthropic', 'google', 'xai'][+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.6, 0.42, 0.44, 46); },
   '5-03': (t, st, w) => povCam(w.camera, st, w, t, 'anthropic', { fov: 44 - 3 * uRow(t, '5-03'), back: 0.46, dz: 0.24, dy: -0.04 }),
   '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.6, 0.45, 0.46, 46),
-  '5-04b': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 4 * uRow(t, '5-04b'), back: 0.42, dy: -0.05, ly: 0.03 }),
+  '5-04b': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 4 * uRow(t, '5-04b'), back: 0.46, dy: 0.1, ly: 0.0 }),
   '5-04c': (t, st, w) => { const u = uRow(t, '5-04c'); screenCam(w.camera, st, 'openai', 0.74, 0.48, 0.34 - 0.03 * u, 44); },
   '5-05': (t, st, w) => { const u = uRow(t, '5-05'); camLook(w.camera, [0.55 - 0.04 * u, 0.74, 0.7], [1.6, 0.62, 0.12], 35); st.look.exposure = 1.4; },
   '5-06': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.5, 0.44, 46); },
@@ -156,7 +156,7 @@ export const SHOTS = {
   // across the table, low: his grey 淘汰 screen in the foreground, him going back into the dark, Claude beside him looking
   '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [0.35, 0.62, z + 0.75], [lerp(-1.6, -2.4, smooth(u)), 0.35, z - 0.35], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [-2.4, 1.6, z], col: [0.35, 0.3, 0.26], range: 4 }; },
   '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [-0.35, 0.62, z + 0.75], [lerp(1.6, 2.4, smooth(u)), 0.35, z - 0.2], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [2.4, 1.6, z], col: [0.3, 0.3, 0.34], range: 4 }; },
-  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.0, 1.3 - 0.05 * u, 4.0 - 0.25 * u], [0, 0.45, 0.4], 54); st.look.exposure = 2.0; st.look.lampPow = 1.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
+  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.55, 0.85, 1.5 - 0.1 * u], [-1.62, 0.62, 1.0], 50); st.look.exposure = 1.9; st.look.lampPow = 1.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0, 1.75 - 0.1 * u, 4.1 - 0.3 * u], [0, 0.5, 0], 52); st.look.exposure = 2.0; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '5-12': (t, st, w) => { const u = uRow(t, '5-12'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.3; },
   // ---------------------------------------------------------------- @6 底牌

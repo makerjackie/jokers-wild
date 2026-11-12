@@ -398,6 +398,7 @@ function cardsState(t, st) {
     if (d.play?.chat) base.glow = 0.07 * ease(t, d.t + 0.05, d.t + 0.5) * (1 - ease(t, at('2-09'), at('3-01', 1.0)));
     if (t > STOP) {
       const l = liftOf(d);
+      base.glow = Math.max(base.glow, 0.25);
       if (t > l) { pose = riseFrom(pose, l, t, ((d.i * 0.618) % 1)); if (pose.pos[1] > 9 || t - l > 3.4) continue; base.glow = 0.35; }
     }
     out.push({ ...base, ...pose });
@@ -437,6 +438,24 @@ function cardsState(t, st) {
       const p = { who, slot: i % 5, tr, t: tr + 0.55, i, style: 'tap', scale: 1.25 };
       const base = { face: CELL[`future_${who}_${i % 2}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0, glow: 0.1 };
       out.push(t < p.t ? { ...base, ...screenFlight(p, t, rest) } : { ...base, ...rest, scale: 1.25 });
+    }
+  }
+  // ---- (v15) the storm (6-09): the internal cards pour out of every screen and wheel over the table, more every
+  // moment; at the stop (7-01) every one of them hangs where it is; then they go up with the pile
+  if (t >= CUES.blizzard && t < BLACK) {
+    const T0 = CUES.blizzard, N = 300, ids = IDS.filter((id) => !HOLD.includes(id)), ts = Math.min(t, STOP), D = STOP - T0 - 0.2;
+    for (let i = 0; i < N; i++) {
+      const r = mulberry32(i * 71 + 9), b = T0 + 0.05 + D * Math.sqrt((i + 0.5) / N);
+      if (ts < b) break;
+      const who = ids[i % ids.length], f = screenFrame(who), from = screenPoint(who, 0.2 + 0.6 * r(), 0.3, 0.02), s = ts - b;
+      const a0 = Math.atan2((from[2] - RISE.axis[1]) / 1.6, from[0] - RISE.axis[0]), R0 = Math.hypot(from[0] - RISE.axis[0], (from[2] - RISE.axis[1]) / 1.6);
+      const w = 1.5 + 1.9 * r(), R1 = 0.4 + 1.25 * r(), H = 0.25 + 2.3 * Math.pow(r(), 1.4), tum = 3 + 5 * r(), seed = r();
+      const ang = a0 + w * s, rad = lerp(R0, R1, smooth(clamp(s / 0.9))), y = from[1] + H * (1 - Math.exp(-s * 1.7)) + 0.07 * Math.sin(s * 5 + i);
+      let pose = { pos: [RISE.axis[0] + Math.cos(ang) * rad, y, RISE.axis[1] + Math.sin(ang) * rad * 1.6], q: mulQ(axisQ([0, 1, 0], -ang), axisQ([1, 0, 0.3], s * tum + i)) };
+      if (s < 0.14) pose.q = slerpQ(basisQ(f.n, f.up), pose.q, s / 0.14);
+      const l = RISE.t0 + (RISE.t1 - RISE.t0) * 0.75 * clamp(1 - y / 2.2) + (i % 7) * 0.03;
+      if (t > l) { pose = riseFrom(pose, l, t, seed); if (pose.pos[1] > 9 || t - l > 3.4) continue; }
+      out.push({ face: CELL[`future_${who}_${i % 2}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0.4, glow: 0.45, scale: (1.1 + 0.5 * seed) * Math.min(1, 0.35 + s / 0.14), ...pose });
     }
   }
   // ---- the eye

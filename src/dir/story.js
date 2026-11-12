@@ -44,8 +44,8 @@ AUTO.glm = at('5-06', 1.9);
 export const HOLD = ['meta', 'mistral'];
 for (const id of HOLD) AUTO[id] = Infinity;
 export const OUT = {
-  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.35), at('5-08', 3.2)] },
-  mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.55), at('5-09', 2.8)] },
+  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.35), at('5-08', 2.7)] },
+  mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.45), at('5-09', 2.15)] },
 };
 for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
 // (v11) the offer on the screen before each of them takes it ("Too slow? Let AI play for you"); the holdouts see it and don't
