@@ -165,6 +165,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         }
       }
       if (globalThis.__freeSkip) { const [a, b] = globalThis.__freeSkip; st.free = st.free.filter((_, i) => i < a || i > b); }
+      { const cl = st.look.clearLens, cp = world.camera.position; if (cl) st.free = st.free.filter((c) => !c.pos || Math.hypot(c.pos[0] - cp.x, c.pos[1] - cp.y, c.pos[2] - cp.z) > cl); }   // (v18) a face shot: no card across the lens
       free.update(st.free, t);
       fx.update(st.fx, t, world);
       return st;

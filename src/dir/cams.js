@@ -40,6 +40,7 @@ function povCam(cam, st, w, t, id, o = {}) {
   const p = [c[0] + f.up[0] * k, c[1] + f.up[1] * k + (o.dy ?? 0), c[2] + (o.dz ?? 0.1) * sx];   // just beyond the top edge of his screen, low
   cam.position.set(...p); cam.up.set(-sx * 0.25, 1, 0); cam.lookAt(h[0], h[1] - 0.03 + (o.ly ?? 0), h[2]); cam.fov = o.fov ?? 44;
   st.look.dof = { focus: Math.hypot(p[0] - h[0], p[1] - h[1], p[2] - h[2]), k: 0.3, max: 8 }; st.look.near = 0.01; st.look.exposure = o.exp ?? 1.35;
+  st.look.clearLens = 0.55;   // (v18) a face shot: no card flies across the lens
 }
 function twoShot(cam, st, y = 0.95, z = 2.65, fov = 44) { camLook(cam, [0, y, z], [0, 0.44, 0], fov); st.look.exposure = 1.4; }
 const shake = (t, t0, amp, f = 70, decay = 10) => (t > t0 ? Math.exp(-(t - t0) * decay) * amp * Math.sin((t - t0) * f) : 0);
