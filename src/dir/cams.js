@@ -126,9 +126,9 @@ export const SHOTS = {
   // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
   '3-03': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
-    if (cut === 1) { camLook(w.camera, [-0.25, 0.62, -1.7], [-1.35, 0.46, -2.5], 48); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
+    if (cut === 1) return screenCam(w.camera, st, 'glm', 0.5, 0.42, 0.5, 48);   // (v19) over his shoulder, on his screen: FatFish, his finger hanging over the R1, the jab, the card leaving
     if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
-    camLook(w.camera, [0.4 + shake(t, S.SMASH.hit, 0.016), 0.17 + shake(t, S.SMASH.hit, 0.014, 60), 0.72], [0.03, 0.1, 0.0], 46); st.look.exposure = 1.4; st.look.near = 0.01;
+    camLook(w.camera, [0.4 + shake(t, S.SMASH.hit, 0.016), 0.17 + shake(t, S.SMASH.hit, 0.014, 60), 0.72], [0.03, 0.1, 0.0], 46); st.look.exposure = 1.4; st.look.near = 0.01; st.look.clearLens = 0.3;
     if (t > S.SMASH.hit && t < S.SMASH.hit + 0.08) st.look.flash = 0.2 * (1 - (t - S.SMASH.hit) / 0.08);
   },
   '3-04': (t, st, w) => boardCam(w.camera, st, t, '3-04'),
@@ -174,7 +174,8 @@ export const SHOTS = {
   '6-09': (t, st, w) => { camPath(w.camera, t, [[at('6-09'), [0, 0.9, 3.4], [0, 0.6, 0], 50], [at('7-01', 1.2), [0, 2.7, 4.9], [0, 0.8, 0], 48]]); st.look.exposure = 2.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   // ---------------------------------------------------------------- @7 眼睛
   '7-01': (t, st, w) => { camLook(w.camera, [0, 2.7, 4.9], [0, 0.8, 0], 48); st.look.exposure = 2.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
-  '7-02': (t, st, w) => { const u = uRow(t, '7-02'); camLook(w.camera, [0.2, 0.32, 1.25], lerp3([0, 0.9, -0.1], [0, 4.0, -0.1], smooth(u)), 64); st.look.exposure = 1.85; },
+  // (v19) further back, the lens kept clear: the mountain and the hanging storm go up in one spiral between the two of them
+  '7-02': (t, st, w) => { const u = uRow(t, '7-02'); camLook(w.camera, [0.3, 0.34, 3.45 - 0.25 * u], lerp3([0, 0.85, -0.1], [0, 5.2, -0.1], smooth(u)), 54); st.look.exposure = 1.85; st.look.clearLens = 1.0; st.look.near = 0.01; },
   '7-03': (t, st, w) => { const u = uRow(t, '7-03'); camLook(w.camera, [0.0, 0.4, 1.7 - 0.1 * u], [0, S.EYE.c[1], S.EYE.c[2]], 66 - 2 * u); st.set.lamp.hide = 1; st.look.far = 300; st.look.exposure = 1.8; },
   // from the cloth, where the ant was (1-03): the king looking up
   // from in front and below: the king's upturned face, the way the ant looked up at him

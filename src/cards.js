@@ -290,10 +290,12 @@ function paintAiAuto(c, x0, y0) {
   c.strokeStyle = g; c.lineWidth = 12; rr(c, 12, 12, CW - 24, CH - 24, 14); c.stroke();
   c.lineWidth = 2; rr(c, 26, 26, CW - 52, CH - 52, 9); c.stroke();
   c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `900 112px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.38);
-  c.fillRect(CW / 2 - 70, CH * 0.535, 140, 3);
-  c.font = `900 31px ${SANS}`; c.fillText('AUTOPILOT', CW / 2, CH * 0.635, CW - 64);
-  c.font = `900 19px ${SANS}`; c.letterSpacing = '4px'; c.fillText('● ON', CW / 2 + 2, CH * 0.79); c.letterSpacing = '0px';
+  // (v19) the card that lands on the writer's credit says whose credit it is now
+  c.font = `900 21px ${SANS}`; c.letterSpacing = '5px'; c.fillText('WRITTEN BY', CW / 2 + 2, CH * 0.17); c.letterSpacing = '0px';
+  c.font = `900 118px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.42);
+  c.fillRect(CW / 2 - 70, CH * 0.585, 140, 3);
+  c.font = `900 31px ${SANS}`; c.fillText('AUTOPILOT', CW / 2, CH * 0.68, CW - 64);
+  c.font = `900 19px ${SANS}`; c.letterSpacing = '4px'; c.fillText('● ON', CW / 2 + 2, CH * 0.815); c.letterSpacing = '0px';
   c.restore();
 }
 function paintNum1(c, x0, y0) {

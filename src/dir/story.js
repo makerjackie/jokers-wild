@@ -15,6 +15,13 @@ import { buildHeap } from './heap.js';
 import { FUTURE } from '../future-models.js';
 
 export const FINAL = ['anthropic', 'openai'];
+// (v19) the cards that stay in his hand all film (slots 0..3 when nothing else is there): his small, older models
+export const MINOR = {
+  openai: ['GPT-3.5', 'GPT-4 Turbo', 'GPT-4o mini', 'o1-mini'], anthropic: ['Claude Instant', 'Claude 2', 'Claude 3 Haiku', 'Claude 3 Sonnet'],
+  google: ['PaLM 2', 'Gemini Nano', 'Gemini 1.0 Pro', 'Gemini 1.5 Flash'], xai: ['Grok-0', 'Grok-1.5', 'Grok-2 mini', 'Grok-1.5V'],
+  meta: ['Llama 2 7B', 'Code Llama', 'Llama 3 8B', 'Llama 3.2'], mistral: ['Mistral Tiny', 'Mistral Small', 'Codestral', 'Mistral NeMo'],
+  glm: ['FatFish Lite', 'FatFish Mini', 'FatFish Air', 'FatFish Flash'],
+};
 export const CARD_Y = 0.0036;
 export const sxOf = (id) => SIDE_SIGN[KING[id].side];
 const backOf = (id) => (KING[id].side === 'CN' ? CELL.backCN : CELL.backUS);
@@ -67,13 +74,15 @@ export const CANCEL = {
 export const ERR_T = at('6-05', 0.25);       // 系统异常 on every screen
 export const ACCUSE = at('6-07', 0.15);      // they stand and point at each other
 export const EYE_SCREEN = at('6-07', 1.6);   // while they shout, every screen turns into the same eye
-export const PASS = { t0: at('4-01', 0.25), taps: [[at('4-01', 0.9), 3], [at('4-01', 1.6), 4]] };   // 要不起
+export const PASS = { t0: at('4-01', 0.85), taps: [[at('4-01', 0.85), 2], [at('4-01', 1.6), 3]] };   // 要不起: it shows when he tries a card
 // the dates on the board: real ones from the cards; from 2026·11 the machines' calendar runs away
 export function monthsAfterNow(t) { return t < NOW ? 0 : Math.floor(30 * Math.pow(clamp((t - NOW) / (CUES.red - NOW)), 1.5)); }
 export function dateText(m0) { const m = 2026 * 12 + 10 + m0; return `${Math.floor(m / 12)}·${String((m % 12) + 1).padStart(2, '0')}`; }
 export const HINTS = {};                     // [press time, slot] per king
 export const BLACK = CUES.black;             // the cut to black, just before the last card lands
 export const SLAM = at('8-06', 0.45);        // heard in the black
+// (v19) the credits: the list prints (a line every `step`); the round timer's three ticks; the time-out; the last card
+export const CREDITS = { list0: at('9-02', 0.15), step: 0.1, n: 10, count: [0, 0.38, 0.76].map((k) => at('9-03', k)), out: at('9-03', 1.14), hit: at('9-03', 1.9) };
 export const DEAL = at('8-01', 0.6);
 export const REACH = { anthropic: at('8-03', 0.4), openai: at('8-03', 0.7) };
 
@@ -128,18 +137,21 @@ function spot(t, sx, rnd) {
   // a neat pile while men play; a mound once the machines do
   const auto = clamp((t - AUTO.openai) / (STOP - AUTO.openai));
   // (v7) a mound, not a carpet: it stays between the screens (|x| < 0.5) and grows along the table and upward
-  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.24 + 0.46 * auto;   // (v9) a wide, low mountain, not a column
+  const sig = t < AUTO.openai ? 0.03 + 0.05 * clamp((t - at('3-05')) / 10) : 0.13 + 0.2 * Math.sqrt(auto);   // (v19) a mound that climbs, not a carpet
   const a = rnd() * Math.PI * 2, d = t < AUTO.openai ? sig * Math.sqrt(rnd()) : sig * Math.pow(rnd(), 0.8);   // denser in the middle: a mound
-  return [sx * 0.02 + Math.max(-0.45, Math.min(0.45, Math.cos(a) * d * 0.9)), 0.02 + Math.sin(a) * d * 1.9];
+  return [sx * 0.02 + Math.max(-0.45, Math.min(0.45, Math.cos(a) * d * 0.95)), 0.02 + Math.sin(a) * d * (t < AUTO.openai ? 1.9 : 1.45)];
 }
 export const CHAT_T = at('2-05', 1.0);       // ChatGPT lands; the shockwave
 function buildPlays() {
-  const P = [];
+  const P = [], slotK = {};
   const add = (o) => {
     const sx = sxOf(o.who), style = o.style ?? 'tap';
     const flight = o.flight ?? (style === 'auto' || style === 'red' ? 0.5 : style === 'giant' ? 0.75 : 0.6);
-    // (v8) cards he taps sit on the right half of his screen: his right hand never reaches across it (and the lens)
-    const p = { slot: 2 + Math.floor(r0() * 3), scale: 1, glyph: 0, writhe: 0, back: backOf(o.who), dest: 'heap', ...o, style, flight };
+    // (v19) his hand: slots 0..3 his own cards (he plays from 2..4, the right half: the arm never crosses the glass);
+    // slot 4 is where the card the AI suggests appears (every hint, every AI pick)
+    const man = style !== 'auto' && style !== 'red';
+    const k = man && o.slot == null && !o.fresh ? (slotK[o.who] = (slotK[o.who] ?? -1) + 1) : 0; r0();
+    const p = { slot: o.fresh ? 4 : 2 + (k % 3), scale: 1, glyph: 0, writhe: 0, back: backOf(o.who), dest: 'heap', ...o, style, flight };
     if (p.tr == null) p.tr = p.t - flight;
     if (p.dest === 'heap' && !p.at) p.at = spot(p.t, sx, mulberry32(Math.floor(p.t * 977) + 13));
     if (p.yaw == null) p.yaw = p.t < AUTO.openai ? -Math.PI / 2 + (mulberry32(Math.floor(p.t * 331))() - 0.5) * 0.5 : mulberry32(Math.floor(p.t * 331))() * Math.PI * 2;
@@ -151,77 +163,92 @@ function buildPlays() {
   add({ who: 'google', t: at('1-02', 1.4), face: CELL.old0, name: 'AlphaGo', flight: 0.7, slot: 3 });
   add({ who: 'openai', t: at('1-07', 1.4), face: CELL.old2, name: 'GPT-3', flight: 0.7, slot: 3 });
   add({ who: ANT_KING, t: CRUSH, face: CELL.old3, name: 'GPT-2', slot: 2, at: ANT_CRUSH.slice(), yaw: -Math.PI / 2 + 0.3, flight: 0.75, crush: true });
-  // ---- @2: Google's AlphaGo (2-01, 2-02); OpenAI's ChatGPT (2-04 .. 2-05)
+  // ---- @2: Google's LaMDA (2-01, 2-02); OpenAI's ChatGPT (2-04 .. 2-05)
   add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old1, name: 'LaMDA', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
-  add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 0, at: [0, 0.02], yaw: -Math.PI / 2 });
-  // ---- @3: the race. Each landing that claims #1 flips the board. US cards build the house; CN cards go to the pile
-  const US = ['openai', 'xai', 'mistral'], CN = ['anthropic', 'google', 'meta', 'glm'];   // the right row builds the house
-  const montage = [   // [who, v, tap time] — 3-01 cut 1 / 5 show the taps, cuts 2 / 6 the landings, cuts 3 / 7 the board
-    ['openai', 1, at('3-01', 0.55), at('3-01', 1.55)], ['xai', 0, at('3-01', 2.55)], ['google', 1, at('3-01', 2.8)],
-    ['anthropic', 1, at('3-01', 3.5), at('3-01', 4.15)], ['mistral', 1, at('3-01', 4.35)],
-  ];
-  const usV = { openai: 2, xai: 1, mistral: 2 };
-  for (const [who, v, tr, top] of montage) add({ who, tr, t: tr + 0.65, ...card(who, v), top: top ?? true });
-  // the rest of the house, one card at a time; a run of #1s for the US (3-02)
-  const nHouse = HOUSE_SLOTS.length - montage.filter((m) => KING[m[0]].side === 'US').length;
-  const houseT0 = at('3-01', 0.2), houseT1 = at('3-03', 0.6);
-  for (let s = 0; s < 11; s++) { const who = US[s % 3]; add({ who, t: at('3-01', 0.9 + s * 0.5), ...card(who, 1 + Math.floor(s / 6)) }); }
-  const usTops = { [Math.round(nHouse * 0.62)]: 1, [Math.round(nHouse * 0.74)]: 1, [Math.round(nHouse * 0.86)]: 1, [nHouse - 1]: 1 };
-  for (let s = 0; s < 0; s++) {
-    const who = US[s % 3], t_ = lerp(houseT0, houseT1, (s + 0.5) / nHouse);
-    const t = t_ + (montage.some((m) => Math.abs(m[2] + 0.65 - t_) < 0.2) ? 0.22 : 0);
-    const v = usTops[s] ? usV[who]++ : 1 + Math.floor(s / 10);
-    add({ who, t, ...card(who, v), dest: 'house', top: !!usTops[s] });
-  }
-  for (let s = 0; s < 13; s++) { const who = CN[s % 4]; add({ who, t: at('3-01', 0.7 + s * 0.45), ...card(who, 1 + Math.floor(s / 7)) }); }
-  // FatFish-R1 out of 大肥鱼's screen, straight into OpenAI's house
-  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.6, at: [0.05, 0.03], yaw: -Math.PI / 2 + 0.2, top: at('3-04', 0.3) });
+  add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 2, at: [0, 0.02], yaw: -Math.PI / 2 });
+  // ---- @3: the race (v19): every model of 2023 and 2024, each played once, in the order they were released. One card
+  // on the tower every quarter second; nobody plays two within half a second. 3-01 cut 1 is OpenAI's tap (GPT-4), cut 5
+  // Claude's (Claude 3); cuts 3 and 7 are the board
+  const RACE = [['meta', 0], ['openai', 1], ['anthropic', 0], ['google', 0], ['meta', 1], ['mistral', 0], ['xai', 0], ['glm', 0], ['google', 1], ['mistral', 1], ['google', 2],
+    ['mistral', 2], ['anthropic', 1], ['meta', 2], ['glm', 1], ['anthropic', 2], ['meta', 3], ['mistral', 3], ['xai', 1], ['openai', 2], ['google', 3], ['glm', 2], ['openai', 3]];
+  const iG = 1, iC = 12, iN = RACE.length - 1, T_G = 0.55, T_C = 3.5, T_N = 5.9;
+  const raceT = (i) => (i <= iC ? T_G + ((i - iG) * (T_C - T_G)) / (iC - iG) : T_C + ((i - iC) * (T_N - T_C)) / (iN - iC));
+  const raceTop = { 'openai1': at('3-01', 1.55), 'google2': true, 'anthropic1': at('3-01', 4.15), 'anthropic2': true, 'openai2': true, 'openai3': true };
+  RACE.forEach(([who, v], i) => { const tr = at('3-01', raceT(i)); add({ who, tr, t: tr + 0.65, ...card(who, v), top: raceTop[who + v] ?? false, fill: i === iG || i === iC ? 0 : 1 }); });
+  // FatFish-R1 out of 大肥鱼's screen, flat across the table, through the tower
+  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.6, slot: 3, at: [0.05, 0.03], yaw: -Math.PI / 2 + 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
-  add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
-  for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
-  // ---- @4: DeepSeek can't beat it (要不起); the hint (4-02, 4-03); OpenAI's hint (4-04); everyone's (4-05)
-  HINTS.anthropic = [[at('4-02', 0.7), 4]]; HINTS.openai = [[at('4-04', 1.0), 3]];
-  add({ who: 'anthropic', style: 'hint', tr: at('4-02', 1.45), t: at('4-03', 0.25), slot: 4, ...card('anthropic', 3), scale: 1.1, top: at('4-03', 0.45) });
-  add({ who: 'openai', style: 'hint', tr: at('4-04', 1.5), t: at('4-04', 2.0), slot: 3, ...card('openai', 4), scale: 1.1, top: true });
-  const hintV = {};
+  add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', date: '2025·02', scale: 3.0, slot: 3, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
+  // (v19) after the smash nobody plays: they stare; OpenAI answers with the giant; Claude has nothing that beats it (4-01)
+  // ---- @4: the hint does not light a card he had: it makes one. It appears, glowing, in the empty slot; he taps it
+  add({ who: 'anthropic', style: 'hint', hintT: at('4-02', 0.7), fresh: 1, tr: at('4-02', 1.45), t: at('4-03', 0.25), ...card('anthropic', 3), scale: 1.1, top: at('4-03', 0.45) });
+  add({ who: 'openai', style: 'hint', hintT: at('4-04', 1.0), fresh: 1, tr: at('4-04', 1.5), t: at('4-04', 2.0), ...card('openai', 4), scale: 1.1, top: true });
+  const hintV = { anthropic: 0, openai: 1 };
   for (const id of IDS) {
-    let tt = at('4-05', 0.2 + r0() * 0.6);
+    let tt = at('4-05', (FINAL.includes(id) ? 0.55 : 0.25) + r0() * 0.6);
     while (tt < SEMI[id] - 0.6) {
-      const slot = 2 + Math.floor(r0() * 3); (HINTS[id] ??= []).push([tt - 0.42, slot]);
+      r0();
       hintV[id] = (hintV[id] ?? 0) + 1;
-      add({ who: id, style: 'hint', tr: tt, t: tt + 0.55, slot, ...card(id, realV(id, 3 + (hintV[id] % (REAL_N[id] - 3)))), scale: 1.15, top: true });
-      tt += lerp(1.3, 0.6, clamp((tt - at('4-05')) / 4)) + r0() * 0.3;
+      add({ who: id, style: 'hint', hintT: tt - 0.45, fresh: 1, tr: tt, t: tt + 0.55, ...card(id, Math.min(REAL_N[id] - 1, 3 + hintV[id])), scale: 1.15, top: true, fill: 1 });
+      tt += lerp(1.35, 0.9, clamp((tt - at('4-05')) / 4)) + r0() * 0.3;
     }
   }
-  // ---- @5: 半托管. The AI picks, he taps 确认; faster as the countdown shrinks. The holdouts never stop confirming
+  // ---- @5: 半托管. The AI picks (its card appears in the AI slot), he taps it; faster as the countdown shrinks. The
+  // holdouts never stop confirming
   for (const id of IDS) {
     const end = id === 'openai' ? TIMEOUT.openai[0] - 0.15 : AUTO[id] < 1e9 ? AUTO[id] - 0.6 : OUT[id].pass[0] - 0.35;   // (v11) nothing flies over the offer while we read it
     let tt = SEMI[id] + 0.45, k = 0;
     while (tt < end) {
-      add({ who: id, style: 'semi', tr: tt, t: tt + 0.55, ...card(id, realV(id, REAL_N[id] - 1 - (k % 2))), scale: 1.1, top: HOLD.includes(id) ? tt < NOW - 2 && r0() < 0.2 : FINAL.includes(id) ? k % 2 === 0 : r0() < 0.25 });
-      tt += clamp(limitAt(tt) * 0.28 + 0.36, 0.42, 1.9) * (0.85 + 0.3 * r0()); k++;
+      add({ who: id, style: 'semi', fresh: 1, tr: tt, t: tt + 0.55, ...card(id, realV(id, REAL_N[id] - 1 - (k % 2))), scale: 1.1, top: HOLD.includes(id) ? tt < NOW - 2 && r0() < 0.2 : FINAL.includes(id) ? k % 2 === 0 : r0() < 0.25 });
+      tt += clamp(limitAt(tt) * 0.28 + 0.36, 0.5, 1.9) * (0.85 + 0.3 * r0()); k++;
     }
   }
-  // ---- @5 →: auto. Each screen plays by itself, faster and faster; from RED_T the internal ones (red stamps)
-  const nextK = {};
+  // ---- @5 →: auto. Each screen plays by itself, faster and faster; from RED_T the internal ones (red stamps), out of
+  // the bottom row, one slot after another
+  const nextK = {}, redK = {};
   for (const id of IDS) {
     if (HOLD.includes(id)) continue;
     let tt = AUTO[id] + 0.35, n = 0;
-    const lead = FINAL.includes(id), L = MODELS[id].length;
+    const lead = FINAL.includes(id);
     while (tt < STOP) {
       const p = clamp((tt - AUTO.openai) / (STOP - AUTO.openai));
       const red = tt > RED_T && (lead || r0() < 0.6);
       const f = Math.floor(r0() * 2);
-      const c = red ? { face: CELL[`future_${id}_${f}`], name: FUTURE[id][f] } : { ...card(id, REAL_N[id] + (n % 2)), name: nextName(id, Math.floor((nextK[id] = (nextK[id] ?? -1) + 1) / 3)) };
-      add({ who: id, style: red ? 'red' : 'auto', tr: tt, t: tt + 0.45 + 0.1 * r0(), slot: Math.floor(r0() * 5), ...c, red,
-        scale: 1.15 + 0.45 * p, glyph: red ? clamp((tt - CUES.blizzard) / 2.5) : 0, writhe: red ? 0.6 : clamp(p * 1.2), gcell: CELL[`glyph${Math.floor(r0() * 16)}`], top: lead || r0() < 0.3 });
+      const c = red ? { face: CELL[`future_${id}_${f}`], name: FUTURE[id][f] } : { ...card(id, REAL_N[id] + (n % 2)), name: nextName(id, (nextK[id] = (nextK[id] ?? -1) + 1)) };
+      const sl = Math.floor(r0() * 5); r0();
+      const calm = id === FINAL[0] && tt > CUES.red - 0.7 && tt <= RED_T;
+      // (v19) clean faces (no machine script on them), all one size
+      if (!calm) add({ who: id, style: red ? 'red' : 'auto', tr: tt, t: tt + 0.45 + 0.1 * r0(), slot: red ? (redK[id] = (redK[id] ?? -1) + 1) % 6 : sl, ...c, red, scale: 1.12, top: lead || r0() < 0.3 });
+      if (!calm && tt > CUES.allAuto - 1) { const dt = 0.07 + 0.1 * r0(); add({ who: id, style: red ? 'red' : 'auto', ghost: 1, tr: tt + dt, t: tt + dt + 0.45 + 0.1 * r0(), slot: red ? (redK[id] % 6) : sl, ...c, red, scale: 1.12, top: false }); }
       const rate = (lead ? 1.2 : 0.55) + p * p * (lead ? 5 : 1.4) + (tt > CUES.blizzard ? (lead ? 4 : 0.8) : 0);
       tt += (1 / rate) * (0.7 + 0.6 * r0()); n++;
     }
   }
-  P.sort((a, b) => a.t - b.t);
-  P.forEach((p, i) => { p.i = i; });
-  return P;
+  // (v19) one press, one card: a filler that would need the hand again too soon is not played at all
+  const NEAR = 0.38, man = (p) => p.style !== 'auto' && p.style !== 'red';
+  const keep = [];
+  for (const p of P.filter(man).sort((x, y) => (x.fill ?? 0) - (y.fill ?? 0) || x.tr - y.tr)) {
+    const t0 = (p.hintT ?? p.tr) - 0.04, t1 = p.tr;
+    const clash = keep.some((q) => q.who === p.who && t0 < q.tr + NEAR && (q.hintT ?? q.tr) - 0.04 < t1 + NEAR);
+    // 大肥鱼 plays nothing for a moment before his jab
+    const quiet = p.who === 'glm' && p.tr > SMASH.go - 1.6 && p.tr < SMASH.hit;
+    if (p.fill && (clash || quiet)) { p.drop = 1; continue; }
+    keep.push(p);
+  }
+  const Q = P.filter((p) => !p.drop);
+  // (v19) the machines' mountain: a cone that widens as it grows (its foot goes as the cube root of the cards in it), the
+  // cards thickest in the middle. Slopes a card can lie on, not a column
+  { const rm = mulberry32(4242); let n = 0;
+    for (const p of Q.filter((q) => q.style === 'auto' || q.style === 'red').sort((x, y) => x.t - y.t)) {
+      const A = 0.07 * Math.cbrt(n + 25), u = [rm(), rm(), rm()].sort((x, y) => x - y)[1], ang = rm() * Math.PI * 2; n++;
+      p.at = [0.03 + Math.cos(ang) * u * A, 0.03 + Math.sin(ang) * u * A * 1.5]; p.cone = { A, u, ang };
+    } }
+  for (const id in HINTS) delete HINTS[id];
+  for (const p of Q) if (p.hintT != null) (HINTS[p.who] ??= []).push([p.hintT, p.slot]);
+  for (const id in HINTS) HINTS[id].sort((x, y) => x[0] - y[0]);
+  Q.sort((x, y) => x.t - y.t);
+  Q.forEach((p, i) => { p.i = i; });
+  return Q;
 }
 export function plays() { return PLAYS ?? (PLAYS = buildPlays()); }
 
@@ -280,12 +307,20 @@ function buildHeapData() {
   { const ro = mulberry32(77); for (let k = 0; k < 16; k++) { const a = ro() * 6.28, d = 0.03 + 0.11 * Math.sqrt(ro()); pre.push({ t: -1 + k * 0.01, x: Math.cos(a) * d, z: 0.02 + Math.sin(a) * d, yaw: ro() * 6.28, scale: 1, up: ro() > 0.2, face: CELL[`old${4 + (k % 2)}`], back: CELL.backBlack, air: 0.0004 }); } }
   // (v14) the race: every card of it goes on one tower on top of ChatGPT (a crooked stack of #1s). FatFish-R1 goes
   // through it flat; the cards fly (most toward the foot of the table, some off it) and land where the heap puts them
-  const tower = [];
+  const tower = [], cone = [];
   let lx = 0, lz = 0;
   for (const p of plays()) {
     if (p.dest !== 'heap') continue;
-    const d = { t: p.t, x: p.at[0], z: p.at[1], yaw: p.yaw, scale: p.scale, up: true, face: p.face, back: p.back, glyph: p.glyph, writhe: p.writhe, gcell: p.gcell, red: p.red, play: p, air: p.chat ? 0.0 : p.style === 'auto' || p.style === 'red' ? 0.001 + 0.002 * rnd() : 0.0004 };
+    const d = { t: p.t, x: p.at[0], z: p.at[1], yaw: p.yaw, scale: p.scale, up: p.style === 'auto' || p.style === 'red' ? rnd() > 0.22 : true, face: p.face, back: p.back, glyph: p.glyph, writhe: p.writhe, gcell: p.gcell, red: p.red, play: p, air: p.chat ? 0.0 : 0.0004, grow: p.style === 'auto' || p.style === 'red' ? 1 : 0 };
     if (p.t > CHAT_T && p.t < SMASH.hit && !p.chat) { d.towerK = tower.length; tower.push(d); continue; }
+    if (p.cone) {
+      // (v19) the mountain: where the cone's surface is when this card lands, lying on its slope (28 degrees, less near the top)
+      const { A, u, ang } = p.cone, K = 0.53, rr = mulberry32(7000 + cone.length * 13), k = Math.min(1, u / 0.22) * K;
+      const n = [k * Math.cos(ang) + (rr() - 0.5) * 0.24, 1, (k * Math.sin(ang)) / 1.5 + (rr() - 0.5) * 0.24], nl = Math.hypot(...n), nn = n.map((v) => v / nl), face = d.up ? nn : nn.map((v) => -v);
+      const yw = rr() * Math.PI * 2;
+      d.rest = { pos: [d.x, 0.014 + K * A * (1 - u) + 0.004 * rr() + (CARD.T * d.scale) / 2, d.z], q: basisQ(face, [Math.cos(yw), 0, Math.sin(yw)]), n: face };
+      cone.push(d); continue;
+    }
     (p.t < CHAT_T ? pre : D).push(d);
   }
   tower.sort((a, b) => a.t - b.t);
@@ -313,7 +348,7 @@ function buildHeapData() {
   pre.forEach((d, i) => { d.rest = r1[i]; d.i = i; d.blown = true; });
   D.forEach((d, i) => { d.rest = r2[i]; if (d.proxyOf) d.proxyOf.rest = d.rest; });
   for (const d of tower) if (!d.rest) d.rest = d.restTower;
-  const D2 = D.filter((d) => !d.proxyOf).concat(tower).sort((a, b) => a.t - b.t);
+  const D2 = D.filter((d) => !d.proxyOf).concat(tower, cone).sort((a, b) => a.t - b.t);
   D2.forEach((d, i) => { d.i = i + pre.length; });
   return { D: pre.concat(D2) };
 }
@@ -322,7 +357,7 @@ export function heap() { return HEAP ?? (HEAP = buildHeapData()); }
 // ---------------------------------------------------------------- the rise (7-02) and the eye (7-03 →)
 export const RISE = { t0: at('7-02', 0.2), t1: at('7-02', 3.4), axis: [LAMP.pos[0], LAMP.pos[2]] };
 export const CEIL_GONE = at('7-02', 1.4);
-export const EYE = { c: [0, 8.6, -0.1], open0: at('7-03', 0.3), open1: at('7-03', 2.5), R: 5.2 };
+export const EYE = { c: [0, 8.6, -0.1], open0: at('7-03', 1.6), open1: at('7-03', 3.0), R: 5.2 };   // (v19) it gathers shut, then opens
 export const eyeLid = (x) => 2.6 * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(x) / 5.6, 1.7)), 0.85);
 let EYE_SLOTS = null;
 // every card of the eye: pupil (black, face down), iris (glyph rings), the white (blank cards inside an almond)
@@ -376,7 +411,7 @@ export function leaderTimeline() {
   const events = E.map((e) => ({ ...e, kind: 'top' }));
   for (const id of HOLD) events.push({ t: OUT[id].out, who: id, kind: 'out' });
   // every other card laid down also moves its company up the board (never past the #1): the field bunches up
-  for (const p of plays()) if (p.t > CUES.race && p.t < RED_T && !p.top && !p.chat && p.dest !== 'house' && p.date && p.who) events.push({ t: p.t + 0.1, who: p.who, kind: 'play', name: p.name, date: p.date, auto: p.style === 'auto' });
+  for (const p of plays()) if (p.t > CUES.race && p.t < RED_T && !p.top && !p.chat && !p.ghost && p.dest !== 'house' && p.date && p.who) events.push({ t: p.t + 0.1, who: p.who, kind: 'play', name: p.name, date: p.date, auto: p.style === 'auto' });
   events.push({ t: CUES.race - 0.2, kind: 'join' });
   events.sort((a, b) => a.t - b.t);
   for (const e of events) {

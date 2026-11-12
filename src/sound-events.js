@@ -20,7 +20,7 @@ export function soundEvents() {
   E(S.CRUSH, 'cardSlap', { who: S.ANT_KING, size: 1, hard: 1, gain: 1, pov: 'ant' });
   // ---- every play
   for (const p of S.plays()) {
-    if (p.crush) continue;
+    if (p.crush || p.ghost) continue;
     const auto = p.style === 'auto' || p.style === 'red';
     if (!auto) E(p.tr - 0.04, 'screenTap', { who: p.who, gain: p.style === 'smash' || p.style === 'giant' ? 1 : 0.7 });
     if (auto) E(p.tr, 'autoPlay', { who: p.who, red: !!p.red });
@@ -81,7 +81,12 @@ export function soundEvents() {
   { const ids = ['anthropic', 'google', 'meta', 'glm', 'openai', 'xai', 'mistral']; let i = 0;
     for (let t = S.AFTER + 0.3; t < S.AFTER_END - 0.6; t += 0.13, i++) { const who = ids[(i * 3) % ids.length], g = 0.3 * Math.min(1, (S.AFTER_END - 0.6 - t) / 1.5); E(t, 'autoPlay', { who, red: false, gain: g }); E(t + 0.5, 'cardSlap', { who, size: 1, hard: 0.4, gain: g, pov: 'table' }); } }
   for (let t = CUES.antEnd - 0.2; t < S.AFTER_END - 0.1; t += STEP) E(t, 'antStep', { surface: 'cloth', gain: Math.min(1, (t - CUES.antEnd + 0.4) / 1.2) * Math.min(1, (S.AFTER_END - t) / 0.8) });
-  E(CUES.slap + 0.45, 'creditSlap');   // (v8) the swat: no fall, no whoosh; one instant hit
+  // (v19) the credits: every line of the list ticks in; the round timer's three ticks under the writer's name; the buzzer;
+  // then the swat (no fall, no whoosh; one instant hit)
+  for (let i = 0; i < S.CREDITS.n; i++) E(S.CREDITS.list0 + i * S.CREDITS.step, 'creditTick', { i, soft: 1 });
+  S.CREDITS.count.forEach((t, i) => E(t, 'creditTick', { i }));
+  E(S.CREDITS.out, 'timeout', { who: 'credits' });
+  E(S.CREDITS.hit, 'creditSlap');
   ev.sort((a, b) => a.t - b.t);
   return ev;
 }

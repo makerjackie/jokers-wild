@@ -71,7 +71,7 @@ export function makeScreens() {
   for (const k of KINGS) MODELS[k.id].forEach((m, v) => { INV[CELL[`${k.id}${v}`]] = { id: k.id, name: m.name }; });
   for (const k of KINGS) (FUTURE[k.id] ?? []).forEach((n, f) => { INV[CELL[`future_${k.id}_${f}`]] = { id: k.id, name: n, internal: true }; });
   function mini(c, cell, x, y, w, h) {
-    const m = INV[cell]; if (!m) { drawCell(c, cell, x, y, w, h); return; }
+    const m = cell && typeof cell === 'object' ? cell : INV[cell]; if (!m) { drawCell(c, cell, x, y, w, h); return; }
     c.save();
     c.fillStyle = m.internal ? '#2a0b0b' : '#f3ecdc'; c.beginPath(); c.roundRect(x, y, w, h, 6); c.fill();
     c.strokeStyle = m.internal ? '#ff3a2a' : '#a99f8a'; c.lineWidth = 2; c.stroke();
@@ -98,22 +98,31 @@ export function makeScreens() {
     // released cards
     (s.hand ?? []).slice(0, 6).forEach((cell, i) => {
       const [u, v] = slotUV(0, i); let x = u * CW - cw / 2, y = v * CH - ch / 2;
+      if (cell == null) {
+        // (v19) an empty place in his hand (the card that sat here was played); the AI's slot says what it is for
+        const ai = i === s.aiSlot;
+        c.save(); c.setLineDash([6, 5]); c.strokeStyle = ai ? 'rgba(255,226,122,0.6)' : 'rgba(255,255,255,0.17)'; c.lineWidth = 2; c.beginPath(); c.roundRect(x + 2, y + 2, cw - 4, ch - 4, 6); c.stroke(); c.setLineDash([]);
+        if (ai) { c.fillStyle = 'rgba(255,226,122,0.75)'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 22px ${SANS}`; c.fillText('AI', x + cw / 2, y + ch / 2 + 1); }
+        c.restore(); return;
+      }
+      const k = s.handK ? s.handK[i] ?? 1 : 1; y += (1 - k) * 18;   // dealt in: it slides up into its place
       if (i === s.hi) { y -= 14; c.shadowColor = '#ffe27a'; c.shadowBlur = 26; c.fillStyle = '#ffe27a'; c.fillRect(x - 5, y - 5, cw + 10, ch + 10); c.shadowBlur = 0; }
       if (i === s.shake) x += Math.sin(t * 90) * 6;
-      c.globalAlpha = i === s.tap ? 0.25 : s.pass && i !== s.hi ? 0.4 : 1;
+      c.globalAlpha = (s.pass && i !== s.hi ? 0.4 : 1) * (0.2 + 0.8 * k);
       mini(c, cell, x, y, cw, ch); c.globalAlpha = 1;
     });
     // the unreleased: face down; the unaligned edged red (pulsing); those already played by the AI turned up, glyphs
     const n = s.hidden ?? 0;
     for (let i = 0; i < Math.min(6, n); i++) {
       const [u, v] = slotUV(1, i), x = u * CW - cw / 2, y = v * CH - ch / 2;
-      const red = (s.red ?? []).includes(i), flipped = i < (s.flipped ?? 0);
+      const low = s.low ? s.low[i] ?? 0 : 0, red = (s.red ?? []).includes(i) || low !== 0, flipped = low > 0;
+      if (low < 0) { c.save(); c.setLineDash([6, 5]); c.strokeStyle = 'rgba(255,60,40,0.5)'; c.lineWidth = 2; c.beginPath(); c.roundRect(x + 2, y + 2, cw - 4, ch - 4, 6); c.stroke(); c.restore(); continue; }
       if (red) { const p = 0.55 + 0.45 * Math.sin(t * 5 + i); c.shadowColor = '#ff2a1a'; c.shadowBlur = 18 + 14 * p; c.fillStyle = `rgba(255,40,26,${0.6 + 0.4 * p})`; c.fillRect(x - 4, y - 4, cw + 8, ch + 8); c.shadowBlur = 0; }
       if (flipped) mini(c, CELL[`future_${id}_${i % 2}`], x, y, cw, ch); else drawCell(c, side === 'CN' ? CELL.backCN : CELL.backUS, x, y, cw, ch);
       c.globalAlpha = 1;
     }
     // (v8) what the bottom row is: shown once the machine starts playing it
-    if ((s.flipped ?? 0) > 0 && (s.hidden ?? 0) > 0) {
+    if ((s.low ?? []).some((x) => x !== 0) && (s.hidden ?? 0) > 0) {
       const y = slotUV(1, 0)[1] * CH - 48 - 22;
       c.fillStyle = 'rgba(160,10,8,0.92)'; c.beginPath(); c.roundRect(16, y - 16, 330, 32, 8); c.fill();
       c.fillStyle = '#ffe2dc'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 19px ${SANS}`; c.fillText('⚠ UNRELEASED · INTERNAL ONLY', 26, y + 1);
@@ -129,16 +138,17 @@ export function makeScreens() {
     const btn = (key, zh, en, on, onCol = '#3f6fd8') => {
       const [u, v] = BTN[key], w = 150, h = 72, x = u * CW - w / 2, y = v * CH - h / 2;
       const pressed = s.press === key;
+      const lit = on && key === 'auto';
       c.fillStyle = on ? onCol : pressed ? '#555' : key === 'cancel' ? '#5a2020' : '#2b3550';
-      if (on && key !== 'hint') { c.shadowColor = onCol; c.shadowBlur = 20; }
+      if (on && key !== 'hint') { c.shadowColor = onCol; c.shadowBlur = lit ? 8 : 20; }
       c.beginPath(); c.roundRect(x + (pressed ? 3 : 0), y + (pressed ? 3 : 0), w, h, 12); c.fill(); c.shadowBlur = 0;
-      c.fillStyle = '#f4efe2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 23px ${SANS}`; c.fillText(zh, x + w / 2, y + h * 0.4, w - 10);
-      c.font = `bold 12px ${SANS}`; c.globalAlpha = 0.8; c.fillText(en, x + w / 2, y + h * 0.78, w - 10); c.globalAlpha = 1;
+      c.fillStyle = lit ? '#1b1204' : '#f4efe2'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `900 ${lit ? 25 : 23}px ${SANS}`; c.fillText(zh, x + w / 2, y + h * (lit ? 0.36 : 0.4), w - 10);
+      c.font = lit ? `900 19px ${SANS}` : `bold 12px ${SANS}`; c.globalAlpha = lit ? 1 : 0.8; c.fillText(en, x + w / 2, y + h * (lit ? 0.74 : 0.78), w - 10); c.globalAlpha = 1;
     };
     const full = s.full || s.auto;
     btn('hint', 'AI HINT', 'suggests a card', s.press === 'hint' || (s.hi ?? -1) >= 0 || (!!s.semi && !full));
-    btn('auto', 'AUTOPILOT', full ? 'ON' : 'AI plays for you', (!!full && Math.sin(t * 7) > -0.3) || (!!s.invite && Math.sin(t * 9) > 0), '#d8a020');
+    btn('auto', 'AUTOPILOT', full ? '\u25CF ON' : s.invite && Math.sin(t * 9) > 0 ? 'PRESS' : 'AI plays for you', !!full || (!!s.invite && Math.sin(t * 9) > 0), '#b97f10');
     btn('cancel', 'CANCEL', 'take back control', false);
     // (v11) the offer, kindly: too slow? let the AI play for you. An arrow at the AUTOPILOT key
     if (s.invite && !full) {

@@ -1829,6 +1829,15 @@ export function sfxCountdown(e, seed) {
   const fo = Math.round(0.006 * SR), n = Math.round(end * SR); for (let i = 0; i < fo; i++) out[n - 1 - i] *= i / fo; out.fill(0, n);
   return out;
 }
+// CREDITTICK {i, soft} — (v19) one tick of the round timer, alone (the credits): the countdown's dry digital tick and tock;
+// soft: a line of the credits printing itself (smaller, higher)
+export function sfxCreditTick(e, seed) {
+  const out = new Float32Array(Math.ceil(0.14 * SR)), f = e.soft ? 3200 : (e.i % 2 ? 1900 : 2400);
+  noiseBurst(out, 0, { a: 0.0001, tau: 0.0006, f0: f, q: 1.8, amp: e.soft ? 0.14 : 0.38 }, new Noise(seed));
+  ping(out, 0, f / 2, e.soft ? 0.025 : 0.07, [[1, 1, 0.02], [2.01, 0.3, 0.01]], 0.3);
+  if (!e.soft) sweep(out, 0, 90, 55, 0.02, 0.06, 0.3, 0.002, 0.6);
+  return out;
+}
 // TIMEOUT {who} — 超时: the round lost: a short harsh game buzzer, two square tones a semitone apart grinding (E-flat3
 // against E3), flat and final, 0.3 s. Not the attack alarm (that one is polished and sings)
 export function sfxTimeout(e, seed) {
@@ -1866,5 +1875,5 @@ export function sfxAutopilot(e, seed) {
   for (let i = 0; i < n; i++) { const u = i / n; if ((i & 63) === 0) bp.set(3000 + 5000 * u, 1.2); bp.run(nz.white()); out[j + i] += bp.bp * 0.014 * Math.sin(Math.PI * u); }
   return fadeTail(out, 0.2);
 }
-Object.assign(FILM_KINDS, { semiOn: sfxSemiOn, countdown: sfxCountdown, timeout: sfxTimeout });
+Object.assign(FILM_KINDS, { semiOn: sfxSemiOn, countdown: sfxCountdown, timeout: sfxTimeout, creditTick: sfxCreditTick });
 Object.assign(FILM_KINDS, { hesitate: sfxHesitate, eliminated: sfxEliminated, dragOut: sfxDragOutV7, errorAlarm: sfxAttackAlarm, creditSlap: sfxCreditSlap, chuckle: sfxChuckle, boardFlip: sfxBoardTick, countUp: sfxCountUp });

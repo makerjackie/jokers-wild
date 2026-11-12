@@ -178,7 +178,7 @@ export function makeFilm({ scene, overlay, camera, engine }) {
       c.globalAlpha = tt.alpha ?? 1;
       c.fillStyle = tt.color ?? '#efe6d2';
       c.textAlign = 'center'; c.textBaseline = 'middle';
-      const LATIN = 'Georgia, "Times New Roman", "Songti SC", "SimSun", serif';
+      const LATIN = 'Georgia, "Times New Roman", "Songti SC", "SimSun", serif', SANS = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
       const ty = H * (tt.y ?? 0.45);
       // one line, shrunk to fit maxW (letter-spacing included), optically centred
       const line = (str, size, sp, y, maxW, style = '') => {
@@ -214,24 +214,53 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         // the credits roll up from below: every role the same name, the human last. Roles right-aligned to the gutter
         // (so any length fits: "Cinematography"), names left-aligned from it; long ones shrink to the half frame.
         const lh = H * (tt.roll.lh ?? 0.075), y0 = tt.roll.y0 != null ? H * tt.roll.y0 : H * (1.05 - tt.roll.u * 1.25);
-        const gut = H * 0.03, half = W / 2 - gut - W * 0.04;
-        c.globalAlpha = tt.alpha ?? 1;
+        const gut = H * 0.03, half = W / 2 - gut - W * 0.04, gx = W / 2 + H * (tt.roll.dx ?? 0);   // (v19) dx: the block (long roles, short names) sits in the middle of the frame
+        c.globalAlpha = (tt.alpha ?? 1) * (tt.roll.alpha ?? 1);
         tt.roll.lines.forEach(([role, name], i) => {
           const y = y0 + i * lh; if (y < -lh || y > H + lh) return;
           c.letterSpacing = `${Math.round(H * 0.002)}px`;
-          c.textAlign = 'right'; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.042)}px ${LATIN}`; c.fillText(role, W / 2 - gut, y, half);
+          c.textAlign = 'right'; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.042)}px ${LATIN}`; c.fillText(role, gx - gut, y, half);
           c.letterSpacing = '0px';
-          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.05)}px ${LATIN}`; c.fillText(name, W / 2 + gut, y, half);
+          c.textAlign = 'left'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.05)}px ${LATIN}`; c.fillText(name, gx + gut, y, half);
         });
-        c.textAlign = 'center';
+        c.textAlign = 'center'; c.globalAlpha = tt.alpha ?? 1;
+      }
+      if (tt.writer) {
+        // (v19) the one human, alone in the middle of the frame
+        const k = tt.writer, y = H * k.y;
+        c.save(); c.globalAlpha = (tt.alpha ?? 1) * k.alpha; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.letterSpacing = `${Math.round(H * 0.003)}px`; c.fillStyle = '#b9af9b'; c.font = `italic ${Math.round(H * 0.046)}px ${LATIN}`; c.fillText(k.label, W / 2, y - H * 0.085);
+        c.letterSpacing = '0px'; c.fillStyle = '#f4ecda'; c.font = `bold ${Math.round(H * 0.078)}px ${LATIN}`; c.fillText(k.name, W / 2, y + H * 0.008);
+        c.restore();
+      }
+      if (tt.count) {
+        // the game's round timer, under his name: the ring drains, the seconds go
+        const k = tt.count, hot = k.left <= 0, cy = H * 0.69, w = H * (hot ? 0.5 : 0.47), h = H * 0.1, r = H * 0.031, x0 = W / 2 - w / 2, cx = x0 + h / 2 + H * 0.008;
+        c.save(); c.globalAlpha = (tt.alpha ?? 1) * k.alpha;
+        c.fillStyle = hot ? 'rgba(120,14,10,0.96)' : 'rgba(40,36,30,0.96)'; c.beginPath(); c.roundRect(x0, cy - h / 2, w, h, h / 2); c.fill();
+        c.lineWidth = H * 0.012; c.strokeStyle = 'rgba(255,255,255,0.16)'; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.stroke();
+        c.strokeStyle = hot ? '#ff4a3a' : '#ffd36a'; c.beginPath(); c.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (hot ? 1 : 1 - k.ph)); c.stroke();
+        c.fillStyle = hot ? '#ff8a7a' : '#ffe39a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.letterSpacing = '0px';
+        const s1 = `${k.left}s`, tx = cx + r + H * 0.028; c.font = `900 ${Math.round(H * 0.068)}px ${SANS}`; c.fillText(s1, tx, cy + H * 0.004);
+        const w1 = c.measureText(s1).width; c.font = `bold ${Math.round(H * 0.035)}px ${SANS}`; c.fillText(hot ? 'TIME OUT' : 'TO PLAY', tx + w1 + H * 0.02, cy + H * 0.009);
+        c.restore();
+      }
+      if (tt.stamp) {
+        // the verdict, stamped across his name (the chip from the grey screens)
+        const k = tt.stamp, e = Math.max(0, Math.min(1, k.k)), sc = 1 + 1.5 * (1 - e) * (1 - e), w = H * 0.46, h = H * 0.14;
+        c.save(); c.globalAlpha = (tt.alpha ?? 1) * Math.min(1, e * 1.6); c.translate(W / 2, H * (k.y ?? 0.5)); c.rotate(-0.1); c.scale(sc, sc);
+        c.shadowColor = 'rgba(0,0,0,0.7)'; c.shadowBlur = H * 0.02; c.fillStyle = '#c8281e'; c.beginPath(); c.roundRect(-w / 2, -h / 2, w, h, H * 0.018); c.fill(); c.shadowBlur = 0;
+        c.strokeStyle = '#fff4e6'; c.lineWidth = H * 0.004; c.beginPath(); c.roundRect(-w / 2 + H * 0.011, -h / 2 + H * 0.011, w - H * 0.022, h - H * 0.022, H * 0.011); c.stroke();
+        c.fillStyle = '#fff4e6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.letterSpacing = `${Math.round(H * 0.004)}px`; c.font = `900 ${Math.round(H * 0.088)}px ${SANS}`; c.fillText('TOO SLOW', H * 0.002, H * 0.006, w - H * 0.06);
+        c.restore();
       }
       if (tt.slap) {
         // (v7) the last card of the film: it falls out of the dark onto the last name and covers it
         const k = tt.slap, img = cardAtlas().image, cell = CELL[k.cell] ?? CELL.num1;
         const ACW = 256, ACH = 372, ax = (cell % 16) * ACW, ay = Math.floor(cell / 16) * ACH;
-        const ch = H * (k.flat ? 0.4 : 0.5), cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
+        const ch = H * (k.h ?? (k.flat ? 0.4 : 0.5)), cw = ch * (ACW / ACH), u = Math.min(1, k.u), e = u * u;
         // fast (the swat): it comes at the lens, huge, and lands flat in two frames; flat: lying across the name line
-        const cx = W / 2 + H * (k.flat ? 0.235 : 0.2), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
+        const cx = W / 2 + H * (k.dx ?? (k.flat ? 0.235 : 0.2)), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
         c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate((k.flat ? Math.PI / 2 : 0) - 0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
         c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
         c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);

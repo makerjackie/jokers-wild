@@ -39,7 +39,7 @@ export const MIX = {
   // v7: the holdouts (the chairs go into the dark: the big room), the last card (dry: no room at all)
   hesitate: [0.9, 0.06, 's'], eliminated: [0.6, 0.12, 's'], dragOut: [0.8, 0.3, 'b'], creditSlap: [1.4, 0, 's'], countUp: [2.0, 0.1, 's'],
   // v9: 半托管, the round timer, 超时
-  semiOn: [0.8, 0.2, 's'], countdown: [1.9, 0.08, 's'], timeout: [0.9, 0.1, 's'],
+  semiOn: [0.8, 0.2, 's'], countdown: [1.9, 0.08, 's'], timeout: [0.9, 0.1, 's'], creditTick: [1.3, 0.02, 's'],
 };
 const mixOf = (k) => MIX[k] ?? [1, 0.15, 's'];
 // the ant's-eye impacts go to the big room (the hall far away)

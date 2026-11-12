@@ -49,7 +49,7 @@ export const afterFirstOf = (events, C = CUES) => (events.filter((e) => e.t >= C
 export function gates(C = CUES, events = []) {
   const tS = creditSlapOf(events, C);
   return [[stopOf(events, C), C.rise, '7-01 (the cut)'], [C.after - 0.15, afterFirstOf(events, C) - 0.005, '8-07 (the breath after the slam)'], [C.title, C.title + TITLE_HOLD, '9-01 (the title, before the box)'],
-    [C.slap, tS - CREDIT_PRE - 0.002, '9-03 (the black before the last card)'], [tS + CREDIT_LEN, DURATION, '9-03 (after the last card: nothing)']];
+    [Math.max(C.slap, tS - 0.34), tS - CREDIT_PRE - 0.002, '9-03 (the breath before the last card)'], [tS + CREDIT_LEN, DURATION, '9-03 (after the last card: nothing)']];
 }
 // the walls driven into saturation in the master: [t0, t1, drive dB, ramp in, ramp out]
 export function wallDrives(C, events) {

@@ -451,7 +451,7 @@ export const SCORE = {
   R9(k, C, ROW, ev, cue, X) {
     // (v9: the credits are short; when two phrases would run faster than ~0.7 s a note, the box plays the one phrase that
     // comes home: D E F# D E C# A D)
-    const t0 = C.title + TITLE_HOLD + 0.1, tEnd = C.slap - 2.2, LONG = (tEnd - t0) / 16.3 >= 0.7;
+    const t0 = C.title + TITLE_HOLD + 0.1, tEnd = C.slap - 1.3, LONG = (tEnd - t0) / 16.3 >= 0.7;   // (v19) home on D as the writer's name stands alone
     const MEL = LONG ? [0, 2, 4, 0, 2, -1, 0, -5, 0, 2, 4, 0, 2, -1, -5, 0] : [0, 2, 4, 0, 2, -1, -5, 0], nR = MEL.length - 4;
     const W = MEL.map((_, i) => (i < nR ? 1 : [1.1, 1.22, 1.4, 1.6][i - nR])), sumW = W.slice(0, MEL.length - 1).reduce((s, x) => s + x, 0), p = (tEnd - t0) / sumW;
     let t = t0;

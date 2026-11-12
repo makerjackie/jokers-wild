@@ -8,7 +8,7 @@ import { CARD } from '../cards.js';
 import { basisQ } from '../freecards.js';
 
 const CELL = 0.01, N = 260, X0 = -1.3, Z0 = -1.3;      // a 2.6 m square around the pile, 1 cm cells
-const MAX_TILT = 0.55;   // (v9) cards slide and lean on the slopes                                   // rad
+const MAX_TILT = 0.62;   // (v9) cards slide and lean on the slopes                                   // rad
 
 export function makeField() {
   const H = new Float32Array(N * N);
@@ -60,7 +60,7 @@ export function dropCard(F, d) {
     const a = (px * ux + pz * uz) / hw, b = (px * vx + pz * vz) / hh;
     if (Math.abs(a) > 1 || Math.abs(b) > 1) continue;
     // the high end of a tilted card sags under what lands on it: the field keeps only part of the tilt
-    const y = y0 + 0.4 * (ga * a + gb * b) + 0.0012 * s + air * 0.6;   // cards lying flat overlap: the pile grows by much less than a card's (exaggerated) thickness
+    const y = y0 + 0.4 * (ga * a + gb * b) + (d.grow ? T : 0.0012 * s) + air * 0.6;   // cards lying flat overlap: the pile grows by much less than a card's (exaggerated) thickness; (v19) the machines' mountain by all of it
     const k = j * N + i;
     if (y > F.H[k]) F.H[k] = y;
   }
