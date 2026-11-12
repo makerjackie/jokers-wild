@@ -203,9 +203,10 @@ export function makeScreens() {
       c.fillStyle = 'rgba(58,56,54,0.96)'; c.fillRect(0, 0, CW, CH);
       c.fillStyle = '#d8d0c0'; c.textAlign = 'center'; c.textBaseline = 'middle';
       if (s.human) {   // (v13) the end: the man is out, his autopilot is not
-        c.font = `900 104px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.4, CW * 0.9);
-        c.fillStyle = Math.sin(t * 7) > -0.3 ? '#e2a81c' : '#8a6a18'; c.beginPath(); c.roundRect(CW / 2 - 170, CH * 0.64, 340, 72, 14); c.fill();
-        c.fillStyle = '#16120c'; c.font = `900 40px ${SANS}`; c.fillText('AUTOPILOT ON', CW / 2, CH * 0.64 + 38, 320);
+        // (v17) the reason first, then the verdict: TOO SLOW -> ELIMINATED
+        c.fillStyle = '#c8281e'; c.beginPath(); c.roundRect(CW / 2 - 190, CH * 0.2, 380, 84, 12); c.fill();
+        c.fillStyle = '#fff4e6'; c.font = `900 56px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.2 + 45, 350);
+        c.fillStyle = '#e8e0d0'; c.font = `900 108px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.64, CW * 0.92);
       } else { c.font = `900 84px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.44, CW * 0.9); c.font = `bold 34px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.66); }
       c.restore();
     }

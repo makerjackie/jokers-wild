@@ -43,11 +43,15 @@ function presses() {
 function handFor(id, t, rise = 0) {
   const L = presses()[id] ?? [];
   const f = screenFrame(id);
-  const fingers = [-f.n[0], -f.n[1], -f.n[2]];
+  const sxo = sxOf(id), rl = Math.hypot(1, 0.16, 0.3), rf = [-sxo / rl, -0.16 / rl, (sxo * 0.3) / rl];
+  // (v17) the finger meets the glass at a slant, as a finger does, not straight down into it
+  const fingers = [-f.n[0] * 0.62 + rf[0] * 0.5, -f.n[1] * 0.62 + rf[1] * 0.5, -f.n[2] * 0.62 + rf[2] * 0.5];
   let best = null;
   for (const p of L) if (t > p.t - p.lead && t < p.t + p.hold + 0.62) best = p;
   // (v16) the hand leaves from where it rests and goes back there: no pop between resting and pressing
-  const tipL = 0.19 * 1.22 * KING[id].size, rh = kingRestHand(id, 'R', rise), home = [rh[0] + fingers[0] * tipL, rh[1] + 0.03 + fingers[1] * tipL * 0.3, rh[2] + fingers[2] * tipL];
+  // (v17) at rest the hand lies level on the cloth, fingers toward the middle of the table: the finger direction turns with the move
+  const tipL = 0.177 * KING[id].size, rh = kingRestHand(id, 'R', rise), home = [rh[0] + rf[0] * tipL, 0.035, rh[2] + rf[2] * tipL];
+  let fg = fingers;
   if (!best) {
     // between presses close together: hover
     const nx = L.find((p) => p.t >= t), pv = [...L].reverse().find((p) => p.t < t);
@@ -64,14 +68,14 @@ function handFor(id, t, rise = 0) {
   const from = prev && best.t - best.lead < prev.t + prev.hold + 0.62 ? screenPoint(id, prev.uv[0], prev.uv[1], upOf(prev)) : home;   // the next press is near: it never went home
   const stays = next && next.t - next.lead < best.t + best.hold + 0.62;
   let target, pose = best.pose;
-  if (t < best.t - 0.12) { const e = smooth(clamp((t - (best.t - best.lead)) / 0.38)); target = lerp3(from, hov, e); target[1] += (from === home ? 0.1 : 0.03) * Math.sin(Math.PI * e); if (best.lead > 0.6 && e >= 1) { const w = t - (best.t - best.lead + 0.38); target = [target[0], target[1] + 0.006 * Math.sin(w * 9), target[2] + 0.01 * Math.sin(w * 5.3)]; } }   // up and over the screen's edge
+  if (t < best.t - 0.12) { const e = smooth(clamp((t - (best.t - best.lead)) / 0.38)); target = lerp3(from, hov, e); target[1] += (from === home ? 0.1 : 0.03) * Math.sin(Math.PI * e); if (from === home) fg = lerp3(rf, fingers, e); if (best.lead > 0.6 && e >= 1) { const w = t - (best.t - best.lead + 0.38); target = [target[0], target[1] + 0.006 * Math.sin(w * 9), target[2] + 0.01 * Math.sin(w * 5.3)]; } }   // up and over the screen's edge
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
   else if (t < best.t + best.hold) target = on;
   else if (t < best.t + best.hold + 0.2) target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
   else if (stays) target = hov;
-  else { const e = smooth(clamp((t - best.t - best.hold - 0.2) / 0.42)); target = lerp3(hov, home, e); target[1] += 0.07 * Math.sin(Math.PI * e); if (e > 0.55) pose = 'rest'; }
+  else { const e = smooth(clamp((t - best.t - best.hold - 0.2) / 0.42)); target = lerp3(hov, home, e); target[1] += 0.07 * Math.sin(Math.PI * e); fg = lerp3(fingers, rf, e); if (e > 0.55) pose = 'rest'; }
   // a flat palm slaps with its fingers along the glass (away from him), not into it
-  return { target, pose, fingers, kind: best.kind, tip: 1 };
+  return { target, pose, fingers: fg, kind: best.kind, tip: 1 };
 }
 const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.1, 0.24, f.c[2] + 0.2 * (KING[id].side === 'CN' ? 1 : -1)]; };
 const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.35, -0.45, -sxOf(id) * 0.75], ...extra });   // (v8) elbow out to his right side: the forearm crosses from the side, over the glass, clear of the lens
@@ -148,10 +152,13 @@ function kingsState(t, st) {
       if (t > o.out) { K.face = face('shock'); K.look = [0, 0.1, SEAT.Z[k.seat]]; }
       if (t > o.drag[0]) {
         const u = clamp((t - o.drag[0]) / (o.drag[1] - o.drag[0]));
-        K.enter = S.enterOf(id, t); K.face = face('shout', { eyes: 'wide' }); K.rise = 0.12; K.lean = 0.3;
+        K.enter = S.enterOf(id, t); K.face = face('shout', { eyes: 'wide' });
+        const gone = 2.3 * (1 - K.enter) ** 3, off = ease(gone, 0.1, 0.45), rz = k.side === 'CN' ? -1 : 1;   // how far the chair has gone; the hands come off
+        K.rise = lerp(0.3, 0.15, off); K.lean = lerp(0.2 + 1.6 * Math.min(gone, 0.12), 0.3, off);
         K.look = [sx * 0.6, 0.05, z];
-        const reach = [sx * (1.25 + 0.5 * u), 0.08 + 0.1 * u, z + 0.15 * Math.sin(t * 7)];
-        K.armR = arm(id, reach); K.hand.R = 'open'; K.armL = { target: [sx * (1.3 + 0.55 * u), 0.1, z - 0.2], pole: [sx * 0.4, -0.8, 0] }; K.hand.L = 'open';
+        const grab = (s) => [sx * Math.min(1.16, 1.06 + gone), 0.03, z + s * rz * 0.26], away = (s, y) => [sx * 0.9, y + 0.05 * Math.sin(t * 8 + s), z + s * rz * (0.16 + 0.05 * Math.sin(t * 6 + s))];
+        K.armR = { target: lerp3(grab(-1), away(-1, 0.42), off), pole: [sx * 0.35, -0.45, -rz * 0.75], ...(off < 0.5 ? { fingers: [-sx, -0.1, 0] } : {}) }; K.hand.R = 'open';
+        K.armL = { target: lerp3(grab(1), away(1, 0.08), off), pole: [sx * 0.35, -0.45, rz * 0.75], ...(off < 0.5 ? { fingers: [-sx, -0.1, 0] } : {}) }; K.hand.L = 'open';
         continue;
       }
     }
@@ -187,8 +194,9 @@ function kingsState(t, st) {
     if (auto && t < RED_T && t > AUTO[id] + 0.2 && !(t >= CUES.empty && t < CUES.empty + 1.3)) {
       const lb = ease(t, AUTO[id] + 0.3, AUTO[id] + 1.1);
       K.rise = lerp(0.4, 0, lb); K.lean = lerp(0.15, -0.16, lb); K.sweat = 0.5 * (1 - lb);
-      K.face = Math.sin(t * 2.3 + z) > 0.2 ? face('laugh') : face('proud', { mouth: 'grin' });
-      K.look = Math.sin(t * 0.7 + z) > 0 ? [0, 0.2, 0] : f.c;
+      const up = Math.sin(t * 1.9 + z) > 0.1;
+      K.face = up ? face('laugh') : face('proud', { mouth: 'grin', eyes: 'down' });
+      K.look = up ? [sx * -0.6, 0.95, z * 0.6] : [f.c[0] - sx * 0.25, 0.12, f.c[2]];
       if (!lead && Math.sin(t * 0.9 + z * 2) > 0.92) K.face = { eyes: 'closed', brows: 'raised', mouth: 'open' };
     }
     // ---- the internal cards: the smile freezes; the dead cancel; 系统异常; they blame each other; the storm
@@ -211,7 +219,7 @@ function kingsState(t, st) {
     // ---- the stop, the rise, the eye: they look up
     if (t >= STOP && t < CUES.deal) {
       // (v9) frozen upright, not slumped: they sit back and stare at the mountain, then follow it up
-      K.rise = lerp(0.35, 0.05, ease(t, STOP, STOP + 1.2)); K.lean = lerp(0.05, -0.18, ease(t, STOP, STOP + 1.5)); K.sweat = 1;
+      K.rise = lerp(0.35, 0.05, ease(t, STOP, STOP + 1.2)); K.lean = lerp(0.05, -0.07, ease(t, STOP, STOP + 1.5)); K.sweat = 1;
       K.look = t < CUES.rise ? [0, 0.55, 0] : [sx * 0.15, lerp(1.2, 2.8, ease(t, CUES.rise, CUES.eye + 2)), -0.1];
       K.face = t < CUES.rise ? { eyes: 'blank', brows: 'raised', mouth: 'slack' } : t < CUES.eye ? face('fear') : { eyes: 'up', brows: 'worried', mouth: t < CUES.lookUp + 1.4 ? 'open' : 'o' };
     }
@@ -222,7 +230,8 @@ function kingsState(t, st) {
       if (t > CUES.shadow) K.face = { eyes: 'narrow', brows: 'arch', mouth: 'grin' };
     }
     // ---- the arm
-    const h = handFor(id, t, K.rise);
+    let h = handFor(id, t, K.rise);
+    if (id !== 'glm' && t >= SMASH.hit && t < CUES.big - 0.3) h = null;   // thrown back by the smash: nobody's finger stays over his screen
     if (pointTo) { K.armR = { target: pointTo, pole: [0, -1, 0] }; K.hand.R = 'point'; }
     else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.tip ? { tip: 1, pose: h.pose } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';

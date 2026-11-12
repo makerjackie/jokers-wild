@@ -62,7 +62,7 @@
 import * as THREE from 'three';
 import { celMaterial, glowMaterial, C } from './materials.js';
 import { lathe, sectionLoft, superEllipsoid, surface, tube, roundBox, sgnPow, TAU } from './geom.js';
-import { KINGS, SEAT, FLOOR_Y, ENTER_DX, seatPos, seatYaw } from './layout.js';
+import { KINGS, SEAT, TABLE, FLOOR_Y, ENTER_DX, seatPos, seatYaw } from './layout.js';
 import { drawLogo, drawWordmark } from './logos.js';
 import { mulberry32 } from './util.js';
 
@@ -1325,7 +1325,9 @@ function buildHandGeo(s, side, pose) {
   const t2 = new THREE.CapsuleGeometry(0.0118 * s, 0.028 * s, 4, 10); t2.translate(0, 0.014 * s, 0); t2.applyMatrix4(M); geos.push(t2);
   M.multiply(T.makeTranslation(0, 0.028 * s, 0)); M.multiply(R.makeRotationAxis(ax, f2));
   const t3 = new THREE.CapsuleGeometry(0.011 * s, 0.02 * s, 4, 10); t3.translate(0, 0.01 * s, 0); t3.applyMatrix4(M); geos.push(t3);
-  return { geo: mergeGeos(geos), ringM };
+  const geo = mergeGeos(geos), gp = geo.attributes.position, pts = [];
+  for (let i = 0; i < gp.count; i += 9) pts.push(gp.getX(i), gp.getY(i), gp.getZ(i));
+  return { geo, ringM, pts };
 }
 // ---------------------------------------------------------------- per-king face uniforms from an expression
 function faceUniforms(F, hairCol) {
@@ -1527,15 +1529,15 @@ export function makeKings(ctx = {}) {
       const sx = side === 'L' ? 1 : -1;
       const upper = new THREE.Mesh(lathe([[0.058 * s, 0], [0.062 * s, 0.05 * s], [0.052 * s, 0.25 * s], [0.048 * s, 0.3 * s]], 20), robeMat);
       const lowerG = new THREE.Group();
-      const sleeve = new THREE.Mesh(lathe([[0.046 * s, 0], [0.052 * s, 0.06 * s], [0.066 * s, 0.18 * s], [0.082 * s, 0.25 * s]], 24), robeMat);
-      const lining = new THREE.Mesh(lathe([[0.08 * s, 0.25 * s], [0.064 * s, 0.17 * s], [0.04 * s, 0.1 * s]], 24), celMaterial({ color: '#0e0c0b', id: 20, gloss: 0 }));
-      const cuff = new THREE.Mesh(tube(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * TAU; return [Math.sin(a) * 0.078 * s, 0.24 * s, Math.cos(a) * 0.078 * s]; }), 0.013 * s, 36, 8, true), ermine);
+      const sleeve = new THREE.Mesh(lathe([[0.046 * s, 0], [0.05 * s, 0.06 * s], [0.056 * s, 0.18 * s], [0.062 * s, 0.25 * s]], 24), robeMat);
+      const lining = new THREE.Mesh(lathe([[0.06 * s, 0.25 * s], [0.05 * s, 0.2 * s], [0.036 * s, 0.14 * s]], 24), celMaterial({ color: '#241c19', id: 20, gloss: 0 }));
+      const cuff = new THREE.Mesh(tube(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * TAU; return [Math.sin(a) * 0.06 * s, 0.24 * s, Math.cos(a) * 0.06 * s]; }), 0.013 * s, 36, 8, true), ermine);
       lowerG.add(sleeve); lowerG.add(lining); lowerG.add(cuff);
       const hand = new THREE.Group();
       const geos = {};
       for (const p of HANDS) { const key = `${s.toFixed(4)}${side}${p}`; geos[p] = handCache[key] ?? (handCache[key] = buildHandGeo(s, side, p)); }
       const handMesh = new THREE.Mesh(geos.rest.geo, skinMat); hand.add(handMesh);
-      const wrist = new THREE.Mesh(lathe([[0.034 * s, -0.03 * s], [0.036 * s, 0.0], [0.04 * s, 0.03 * s]], 16, { sz: 0.7 }), skinMat); hand.add(wrist);
+      const wrist = new THREE.Mesh(lathe([[0.034 * s, -0.09 * s], [0.036 * s, 0.0], [0.04 * s, 0.03 * s]], 16, { sz: 0.7 }), skinMat); hand.add(wrist);
       const ringMesh = new THREE.Mesh(new THREE.TorusGeometry(0.0128 * s, 0.0042 * s, 6, 16).rotateX(Math.PI / 2), metal);
       ringMesh.matrixAutoUpdate = false; hand.add(ringMesh);
       squash.add(upper); squash.add(lowerG); squash.add(hand);
@@ -1561,7 +1563,7 @@ export function makeKings(ctx = {}) {
     const k = kings[id]; k.seat.updateWorldMatrix(true, false);
     const sz = k.cur.size, r = k.cur.rise;
     const near = 0.42 * k.s * sz, fwd = near + r * Math.max(0, 1.02 - near);
-    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.39 * k.s * sz + 0.05 * r), -SEAT.Y + 0.052, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
+    const p = new THREE.Vector3((side === 'L' ? 1 : -1) * (0.39 * k.s * sz + 0.05 * r), -SEAT.Y + 0.03, fwd).applyMatrix4(k.seat.matrixWorld);   // (v8) beside the screen, not on it
     return [p.x, p.y, p.z];
   }
   const placeSeg = (mesh, a, b) => {           // orient a +y-up segment mesh from a to b (in the seat's frame)
@@ -1572,17 +1574,38 @@ export function makeKings(ctx = {}) {
   };
   const INV = new THREE.Matrix4();
   const WRIST_MAX = 1.2;
-  function solveArm(k, a, o) {
+  const HM = new THREE.Matrix4(), HP = new THREE.Vector3(), CUFF_R = 0.074;
+  function solveArm(k, a, o, pose = 'rest') {
     const seatInv = INV.copy(k.squash.matrixWorld).invert();                // the king's own frame (scaled by size)
     SH.copy(shoulderLocal(k, a.side)).applyMatrix4(k.body.matrix);         // shoulder in that frame
     if (o?.target) TG.set(...o.target).applyMatrix4(seatInv);
-    else { const r = restHand(k.K.id, a.side); TG.set(...r).applyMatrix4(seatInv); }
+    else {
+      const r = restHand(k.K.id, a.side); TG.set(...r).applyMatrix4(seatInv);
+      o = { fingers: tmpV.set(-a.sx * 0.3, -0.16, 1).transformDirection(k.squash.matrixWorld).toArray() };
+    }
+    const want = TG.clone();
+    for (let pass = 0; pass < 3; pass++) {
+      if (pass) TG.copy(want);
+      placeArm(k, a, o, seatInv);
+      // the lowest point of the hand and of the cuff, over the table: lift the hand by what is under the cloth
+      HM.compose(a.hand.position, a.hand.quaternion, ONE3).premultiply(k.squash.matrixWorld);
+      const P = (a.geos[pose] ?? a.geos.rest).pts; let low = 1;
+      for (let i = 0; i < P.length; i += 3) { HP.set(P[i], P[i + 1], P[i + 2]).applyMatrix4(HM); if (Math.abs(HP.x) < TABLE.HALF_W + 0.01 && Math.abs(HP.z) < TABLE.HALF_L + 0.01 && HP.y < low) low = HP.y; }
+      { const ar = HP.copy(TG).sub(EL).normalize(), c = tmpV2.copy(EL).addScaledVector(ar, 0.24 * k.s).applyMatrix4(k.squash.matrixWorld), ay = ar.y;
+        if (Math.abs(c.x) < TABLE.HALF_W - 0.02 && Math.abs(c.z) < TABLE.HALF_L) low = Math.min(low, c.y - CUFF_R * k.s * k.cur.size * Math.sqrt(Math.max(0, 1 - ay * ay))); }
+      const lift = 0.004 - low;
+      if (lift < 0.0005 || low < -0.25) break;                              // (well under the table: a hand in the lap)
+      want.y += lift / k.cur.size;
+    }
+  }
+  const ONE3 = new THREE.Vector3(1, 1, 1);
+  function placeArm(k, a, o, seatInv) {
     if (o?.pole) PO.set(...o.pole).transformDirection(seatInv); else PO.set(a.sx * 0.8, -0.35, -0.5).normalize();
     const L1 = a.LU, L2 = a.LF;
     // (v9) o.tip: o.target is where the FINGERTIP (point), the knuckles (fist) or the fingertips (open) must be.
     // Solve the arm, see where that puts the tip, move the hand target by the difference; three passes converge.
     if (o?.tip && o?.target) {
-      const TIP = new THREE.Vector3(...o.target).applyMatrix4(seatInv);
+      const TIP = TG.clone();
       const tipLen = (o.pose === 'fist' ? 0.125 : o.pose === 'open' ? 0.17 : 0.195) * k.s;
       TG.copy(TIP);
       for (let it = 0; it < 3; it++) {
@@ -1716,7 +1739,7 @@ export function makeKings(ctx = {}) {
       k.crown.group.rotation.set(-0.05, 0, ct);
       k.crown.group.position.set(-Math.sin(ct) * CR * 0.5, 0.093 * k.s + Math.abs(Math.sin(ct)) * CR * 0.22, -0.008 * k.s);
       k.seat.updateMatrixWorld(true);
-      for (const side of ['L', 'R']) { solveArm(k, k.arms[side], s['arm' + side]); setPose(k.arms[side], s.hand?.[side] ?? 'rest'); }
+      for (const side of ['L', 'R']) { solveArm(k, k.arms[side], s['arm' + side], s.hand?.[side] ?? 'rest'); setPose(k.arms[side], s.hand?.[side] ?? 'rest'); }
       // (v1) pressed into a card
       k.squash.matrix.multiply(squashMatrix(k, s.flat ?? 0, SQF));
       k.robeU.uCut.value = (s.flat ?? 0) > 0.42 ? -0.03 : -99;
