@@ -18,7 +18,6 @@ export function soundEvents() {
   for (let t = 0.35; t < S.CRUSH - 0.05; t += STEP) E(t, 'antStep', { surface: 'cloth', gain: Math.min(1, (t - 0.35) / 1.65) ** 1.5 });
   E(S.CRUSH - 0.35, 'cardWhoosh', { who: S.ANT_KING, dur: 0.35 });
   E(S.CRUSH, 'cardSlap', { who: S.ANT_KING, size: 1, hard: 1, gain: 1, pov: 'ant' });
-  E(at('1-06', 0.3), 'crumbRoll', { dur: 1.1 });
   // ---- every play
   for (const p of S.plays()) {
     if (p.crush) continue;
@@ -43,6 +42,7 @@ export function soundEvents() {
   // ---- @3: R1 into the house
   E(S.SMASH.go, 'cardSkim', { dur: S.SMASH.hit - S.SMASH.go });
   E(S.SMASH.hit, 'cardSlap', { who: 'glm', size: 1.6, hard: 1, gain: 1, pov: 'table' });
+  E(S.SMASH.hit, 'towerCrash', { n: 30 });
   // ---- @4: 要不起; the hints; @5 auto; @6 the dead cancels, 系统异常, the blame, the eye
   for (const [t] of S.PASS.taps) E(t + 0.02, 'denied', { who: S.FINAL[0] });
   for (const id in S.HINTS) for (const [t] of S.HINTS[id]) E(t, 'hintDing', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.4 });

@@ -1,3 +1,4 @@
+import { basisQ } from '../freecards.js';
 // 《失控》 v3 (榜首) — the story as data. Every card a king plays from his screen (tap, hint, auto, the red ones), the
 // #1 board that flips each time a stronger card lands, ChatGPT's shockwave, the US house of cards and R1 smashing it,
 // the giant, the heap they make, the dead cancel presses, the accusation, the eye on every screen, the rise, the eye,
@@ -91,8 +92,9 @@ function houseSlots() {
   return S;
 }
 export const HOUSE_SLOTS = houseSlots();
-export const SMASH = { go: at('3-03', 0.75), hit: at('3-03', 2.6) };   // (v8) slow enough to read: FatFish-R1, flat, across the table
-export const HOUSE_HIT = [0.05, 0.16, 0.03];   // (v13) no house: FatFish-R1 lands on top of the pile
+export const SMASH = { go: at('3-03', 0.75), hit: at('3-03', 3.3) };   // (v8) slow enough to read: FatFish-R1, flat, across the table
+export const TOWER = [0.05, 0.03];
+export const HOUSE_HIT = [0.05, 0.075, 0.03];   // (v13) no house: FatFish-R1 lands on top of the pile
 export function houseFall(s) {
   const h = HOUSE_SLOTS[s], r = mulberry32(900 + s * 7);
   const t0 = SMASH.hit + 0.01 + Math.hypot(h.pos[0] - HOUSE_HIT[0], h.pos[1] - HOUSE_HIT[1]) * 0.25 + r() * 0.03;
@@ -109,12 +111,12 @@ const ANT2 = [[at('8-08') - 0.3, -0.2, 0.78], [at('9-01') + 0.3, 0.08, 0.66]];  
 export function antAt(t) {
   if (t >= ANT2[0][0] && t < ANT2[1][0]) {
     const [ta, xa, za] = ANT2[0], [tb, xb, zb] = ANT2[1], u = (t - ta) / (tb - ta), dl = Math.hypot(xb - xa, zb - za);
-    return { show: 1, speed: 1, alert: 0, crumb: 1, crumbTilt: 0, size: 1, look: null, pos: [lerp(xa, xb, u), 0.0004, lerp(za, zb, u)], dir: [(xb - xa) / dl, (zb - za) / dl], pitch: 0, dist: (t - ta) * (dl / (tb - ta)), surface: 'cloth' };
+    return { show: 1, speed: 1, alert: 0, crumb: 0, crumbTilt: 0, size: 1, look: null, pos: [lerp(xa, xb, u), 0.0004, lerp(za, zb, u)], dir: [(xb - xa) / dl, (zb - za) / dl], pitch: 0, dist: (t - ta) * (dl / (tb - ta)), surface: 'cloth' };
   }
   if (t < at('1-02') - 0.01 || t >= CRUSH) return { show: 0 };
   const [ta, xa, za] = ANT_PATH[0], [tb, xb, zb] = ANT_PATH[1];
   const u = (t - ta) / (tb - ta), dl = Math.hypot(xb - xa, zb - za);
-  return { show: 1, speed: 1, alert: 0, crumb: 1, crumbTilt: 0, size: 1, look: null, pos: [lerp(xa, xb, u), 0.0004, lerp(za, zb, u)], dir: [(xb - xa) / dl, (zb - za) / dl], pitch: 0, dist: (t - ta) * ANT_SPEED, surface: 'cloth' };
+  return { show: 1, speed: 1, alert: 0, crumb: 0, crumbTilt: 0, size: 1, look: null, pos: [lerp(xa, xb, u), 0.0004, lerp(za, zb, u)], dir: [(xb - xa) / dl, (zb - za) / dl], pitch: 0, dist: (t - ta) * ANT_SPEED, surface: 'cloth' };
 }
 
 // ---------------------------------------------------------------- every card played
@@ -163,7 +165,7 @@ function buildPlays() {
   // the rest of the house, one card at a time; a run of #1s for the US (3-02)
   const nHouse = HOUSE_SLOTS.length - montage.filter((m) => KING[m[0]].side === 'US').length;
   const houseT0 = at('3-01', 0.2), houseT1 = at('3-03', 0.6);
-  for (let s = 0; s < 6; s++) { const who = US[s % 3]; add({ who, t: at('3-01', 1.2 + s * 0.95), ...card(who, 1 + Math.floor(s / 4)) }); }
+  for (let s = 0; s < 11; s++) { const who = US[s % 3]; add({ who, t: at('3-01', 0.9 + s * 0.5), ...card(who, 1 + Math.floor(s / 6)) }); }
   const usTops = { [Math.round(nHouse * 0.62)]: 1, [Math.round(nHouse * 0.74)]: 1, [Math.round(nHouse * 0.86)]: 1, [nHouse - 1]: 1 };
   for (let s = 0; s < 0; s++) {
     const who = US[s % 3], t_ = lerp(houseT0, houseT1, (s + 0.5) / nHouse);
@@ -171,7 +173,7 @@ function buildPlays() {
     const v = usTops[s] ? usV[who]++ : 1 + Math.floor(s / 10);
     add({ who, t, ...card(who, v), dest: 'house', top: !!usTops[s] });
   }
-  for (let s = 0; s < 7; s++) { const who = CN[s % 4]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
+  for (let s = 0; s < 13; s++) { const who = CN[s % 4]; add({ who, t: at('3-01', 0.7 + s * 0.45), ...card(who, 1 + Math.floor(s / 7)) }); }
   // FatFish-R1 out of 大肥鱼's screen, straight into OpenAI's house
   add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.6, at: [0.05, 0.03], yaw: -Math.PI / 2 + 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
@@ -276,11 +278,28 @@ function buildHeapData() {
   pre.push({ t: -1, x: 0.02, z: 0.01, yaw: -Math.PI / 2 + 0.2, scale: 1, up: true, face: CELL.old4, back: CELL.backBlack, air: 0 });
   pre.push({ t: -1, x: -0.03, z: 0.03, yaw: -Math.PI / 2 - 0.15, scale: 1, up: true, face: CELL.old5, back: CELL.backBlack, air: 0 });
   { const ro = mulberry32(77); for (let k = 0; k < 16; k++) { const a = ro() * 6.28, d = 0.03 + 0.11 * Math.sqrt(ro()); pre.push({ t: -1 + k * 0.01, x: Math.cos(a) * d, z: 0.02 + Math.sin(a) * d, yaw: ro() * 6.28, scale: 1, up: ro() > 0.2, face: CELL[`old${4 + (k % 2)}`], back: CELL.backBlack, air: 0.0004 }); } }
+  // (v14) the race: every card of it goes on one tower on top of ChatGPT (a crooked stack of #1s). FatFish-R1 goes
+  // through it flat; the cards fly (most toward the foot of the table, some off it) and land where the heap puts them
+  const tower = [];
+  let lx = 0, lz = 0;
   for (const p of plays()) {
     if (p.dest !== 'heap') continue;
     const d = { t: p.t, x: p.at[0], z: p.at[1], yaw: p.yaw, scale: p.scale, up: true, face: p.face, back: p.back, glyph: p.glyph, writhe: p.writhe, gcell: p.gcell, red: p.red, play: p, air: p.chat ? 0.0 : p.style === 'auto' || p.style === 'red' ? 0.001 + 0.002 * rnd() : 0.0004 };
+    if (p.t > CHAT_T && p.t < SMASH.hit && !p.chat) { d.towerK = tower.length; tower.push(d); continue; }
     (p.t < CHAT_T ? pre : D).push(d);
   }
+  tower.sort((a, b) => a.t - b.t);
+  tower.forEach((d, k) => {
+    const rr = mulberry32(600 + k * 31), N = tower.length;
+    lx += (rr() - 0.5) * 0.005; lz += (rr() - 0.5) * 0.005;
+    const yaw = -Math.PI / 2 + (rr() - 0.5) * 0.7;
+    d.restTower = { pos: [TOWER[0] + lx + (rr() - 0.5) * 0.022, CARD_Y + CARD.T * 1.6 + k * 0.0043, TOWER[1] + lz + (rr() - 0.5) * 0.022], q: basisQ([0, 1, 0], [Math.cos(yaw), 0, Math.sin(yaw)]) };
+    const gone = k % 4 === 3, ang = Math.PI / 2 + (rr() - 0.5) * (gone ? 1.1 : 2.6), dist = gone ? 2.6 + 1.6 * rr() : 0.22 + 0.5 * rr() + 0.3 * (k / N);
+    const x1 = gone ? TOWER[0] + Math.cos(ang) * dist : Math.max(-0.62, Math.min(0.62, TOWER[0] + Math.cos(ang) * dist)), z1 = TOWER[1] + Math.sin(ang) * dist * (gone ? 1 : 1.35);
+    const t0 = SMASH.hit + 0.012 + 0.0025 * k, dur = gone ? 1.1 + 0.4 * rr() : 0.5 + 0.4 * rr();
+    d.sc = { t0, t1: t0 + dur, h: (gone ? 0.35 : 0.14) + 0.3 * rr() + 0.22 * (k / N), turns: (1 + Math.floor(rr() * 3)) * (rr() > 0.5 ? 1 : -1), axis: [Math.sin(ang), 0, -Math.cos(ang)], gone, end: [x1, gone ? -0.6 : 0, z1] };
+    if (!gone) D.push({ t: d.sc.t1, x: x1, z: z1, yaw: rr() * 6.28, scale: 1, up: rr() > 0.35, air: 0.001, proxyOf: d });
+  });
   const housePlays = plays().filter((q) => q.dest === 'house');
   for (let s = 0; s < (housePlays.length ? HOUSE_SLOTS.length : 0); s++) {
     const p = housePlays[s] ?? housePlays[housePlays.length - 1];
@@ -292,28 +311,34 @@ function buildHeapData() {
   pre.sort((a, b) => a.t - b.t); D.sort((a, b) => a.t - b.t);
   const r1 = buildHeap(pre).rest, r2 = buildHeap(D).rest;
   pre.forEach((d, i) => { d.rest = r1[i]; d.i = i; d.blown = true; });
-  D.forEach((d, i) => { d.rest = r2[i]; d.i = i + pre.length; });
-  return { D: pre.concat(D) };
+  D.forEach((d, i) => { d.rest = r2[i]; if (d.proxyOf) d.proxyOf.rest = d.rest; });
+  for (const d of tower) if (!d.rest) d.rest = d.restTower;
+  const D2 = D.filter((d) => !d.proxyOf).concat(tower).sort((a, b) => a.t - b.t);
+  D2.forEach((d, i) => { d.i = i + pre.length; });
+  return { D: pre.concat(D2) };
 }
 export function heap() { return HEAP ?? (HEAP = buildHeapData()); }
 
 // ---------------------------------------------------------------- the rise (7-02) and the eye (7-03 →)
 export const RISE = { t0: at('7-02', 0.2), t1: at('7-02', 3.4), axis: [LAMP.pos[0], LAMP.pos[2]] };
 export const CEIL_GONE = at('7-02', 1.4);
-export const EYE = { c: [0, 8.6, -0.1], open0: at('7-03', 0.4), open1: at('7-03', 3.6), R: 5.2 };
+export const EYE = { c: [0, 8.6, -0.1], open0: at('7-03', 0.3), open1: at('7-03', 2.5), R: 5.2 };
+export const eyeLid = (x) => 2.6 * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(x) / 5.6, 1.7)), 0.85);
 let EYE_SLOTS = null;
 // every card of the eye: pupil (black, face down), iris (glyph rings), the white (blank cards inside an almond)
 export function eyeSlots() {
   if (EYE_SLOTS) return EYE_SLOTS;
   const S = [];
   const rnd = mulberry32(808);
-  for (let i = 0; i < 46; i++) { const a = rnd() * Math.PI * 2, r = 1.0 * Math.sqrt(rnd()); S.push({ x: Math.cos(a) * r, z: Math.sin(a) * r, yaw: rnd() * 6.28, kind: 'pupil', r }); }
-  for (const r of [1.3, 1.75, 2.2, 2.65]) { const n = Math.round((Math.PI * 2 * r) / 0.42); for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + r; S.push({ x: Math.cos(a) * r, z: Math.sin(a) * r, yaw: a + Math.PI / 2, kind: 'iris', r }); } }
-  for (let gx = -5.4; gx <= 5.4; gx += 0.46) for (let gz = -2.6; gz <= 2.6; gz += 0.62) {
-    const x = gx + (rnd() - 0.5) * 0.12, z = gz + (rnd() - 0.5) * 0.12, r = Math.hypot(x, z);
-    const lid = 2.75 * Math.sqrt(Math.max(0, 1 - (x / 5.6) ** 2)) * 1.0;
-    if (r > 2.95 && Math.abs(z) < lid) S.push({ x, z, yaw: Math.PI / 2 + (rnd() - 0.5) * 0.2, kind: 'white', r, lid });
+  for (let i = 0; i < 34; i++) { const a = rnd() * Math.PI * 2, r = 0.74 * Math.sqrt(rnd()); S.push({ x: Math.cos(a) * r, z: Math.sin(a) * r, yaw: rnd() * 6.28, kind: 'pupil', r }); }
+  for (const [gx, gz] of [[-0.36, -0.3], [-0.12, -0.42], [-0.44, -0.08]]) S.push({ x: gx, z: gz, yaw: 0.5, kind: 'glint', r: 0.4 });
+  for (const r of [1.02, 1.36, 1.7, 2.04]) { const n = Math.round((Math.PI * 2 * r) / 0.4); for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + r; S.push({ x: Math.cos(a) * r, z: Math.sin(a) * r, yaw: a + Math.PI / 2, kind: 'iris', r }); } }
+  for (let gx = -5.5; gx <= 5.5; gx += 0.42) for (let gz = -2.6; gz <= 2.6; gz += 0.58) {
+    const x = gx + (rnd() - 0.5) * 0.08, z = gz + (rnd() - 0.5) * 0.08, r = Math.hypot(x, z);
+    const lid = eyeLid(x);
+    if (r > 1.85 && Math.abs(z) < lid - 0.12) S.push({ x, z, yaw: Math.PI / 2 + (rnd() - 0.5) * 0.14, kind: 'white', r, lid });
   }
+  for (let x = -5.6; x <= 5.61; x += 0.36) for (const sg of [-1, 1]) { const sl = (eyeLid(x + 0.05) - eyeLid(x - 0.05)) / 0.1; S.push({ x, z: sg, yaw: Math.atan2(sg * sl, 1), kind: 'rim', r: 9, lid: eyeLid(x) }); }
   EYE_SLOTS = S;
   return S;
 }

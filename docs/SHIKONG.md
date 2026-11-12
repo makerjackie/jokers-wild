@@ -186,3 +186,15 @@ with a `faceTo` cheat for inserts), `src/decks.js` (the two stands), `src/ant.js
 benches in isolation (`tools/build-bench.mjs`, `tools/snap-bench.mjs`); `tools/probe.mjs` evaluates state in the
 page; `&freeSkip=a-b` drops free cards (bisecting a stray one); flying cards are kept out of the lens in film.js.
 Review cuts (720p, crf 28): `out/review/`. No 1080p until the user approves.
+
+## v12–v14 (TOO SLOW)
+
+- v12: the title is TOO SLOW. The holdouts are eliminated for being too slow; at the end so is everyone.
+- v13: card dates only go forward (AlphaGo 2016, GPT-2 2019, GPT-3 2020, LaMDA 2021, ChatGPT 2022); the screen shows
+  the card that is about to fly; the countdown runs from the first frame (60 s, 30 s, 10 s, 0.3 s); no house of cards.
+- v14: the race stacks every card on one crooked tower over ChatGPT (`heap().D[i].restTower`); FatFish-R1 goes through
+  it flat and the cards fly (`d.sc`, `scatterPose` in reel.js; every fourth leaves the table). The ant carries nothing.
+  The last screens say ELIMINATED and a chip AUTOPILOT ON. The eye (story.js `eyeSlots`, `eyeLid`): an almond of blank
+  cards, an iris of glyph cards, a dimmed pupil with a glint, lid rims made of both decks' backs. Cards in the air
+  carry glow 0.3 so a face turned from the lamp is never a black shape. 7-04 is a table-level two-shot (the ant's view
+  of the kings in 1-03). Wides sit closer (z ~ 4) with a fill light.

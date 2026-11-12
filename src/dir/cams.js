@@ -115,7 +115,7 @@ export const SHOTS = {
   '3-01': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
     if (cut === 1) return screenCam(w.camera, st, 'openai', 0.35, 0.4, 0.4, 44);
-    if (cut === 2) return camLook(w.camera, [0.03, 0.8, 0.06], [0, 0.03, 0], 30);
+    if (cut === 2) return camLook(w.camera, [0.5, 0.36, 0.72], [0.04, 0.08, 0.02], 34);
     if (cut === 3 || cut === 7) return boardCam(w.camera, st, t, '3-01');
     if (cut === 4) return faceCam(w.camera, st, w, t, 'anthropic', { d: 0.8, dz: 0.22, fov: 30 });
     if (cut === 5) return screenCam(w.camera, st, 'anthropic', 0.35, 0.4, 0.4, 44);
@@ -125,9 +125,10 @@ export const SHOTS = {
   // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
   '3-03': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
-    if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -1.55], [-1.05, 0.12, -2.45], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
+    if (cut === 1) { camLook(w.camera, [-0.25, 0.62, -1.7], [-1.35, 0.46, -2.5], 48); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
     if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
-    camLook(w.camera, [0.42 + shake(t, S.SMASH.hit, 0.012), 0.2 + shake(t, S.SMASH.hit, 0.01, 60), 0.62], [0.02, 0.07, 0.0], 44); st.look.exposure = 1.4;
+    camLook(w.camera, [0.4 + shake(t, S.SMASH.hit, 0.016), 0.17 + shake(t, S.SMASH.hit, 0.014, 60), 0.72], [0.03, 0.1, 0.0], 46); st.look.exposure = 1.4; st.look.near = 0.01;
+    if (t > S.SMASH.hit && t < S.SMASH.hit + 0.08) st.look.flash = 0.2 * (1 - (t - S.SMASH.hit) / 0.08);
   },
   '3-04': (t, st, w) => boardCam(w.camera, st, t, '3-04'),
   '3-05': (t, st, w) => { camLook(w.camera, [-0.55, 0.62, 0.95], [1.5, 0.62, -0.4], 46); st.look.exposure = 1.4; },
@@ -138,7 +139,7 @@ export const SHOTS = {
   '4-02': (t, st, w) => { const u = uRow(t, '4-02'); screenCam(w.camera, st, 'anthropic', lerp(0.7, 0.45, smooth((u - 0.4) * 2)), lerp(0.25, 0.32, u), 0.36, 44, -0.1); },
   '4-03': (t, st, w) => boardCam(w.camera, st, t, '4-03'),
   '4-04': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 3 * uRow(t, '4-04'), back: 0.44, dy: -0.04, ly: 0.02 }),
-  '4-05': (t, st, w) => wide(w.camera, st, 0.4 + 0.1 * uRow(t, '4-05')),
+  '4-05': (t, st, w) => { const u = uRow(t, '4-05'); camLook(w.camera, [0, 1.3 - 0.05 * u, 3.8 - 0.3 * u], [0, 0.5, 0], 54); st.look.exposure = 2.0; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   // ---------------------------------------------------------------- @5 托管
   // ---------------------------------------------------------------- @5 半托管 → 全托管 (v9)
   '5-01': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-01') : screenCam(w.camera, st, 'openai', 0.62, 0.45, 0.42, 46)),
@@ -148,15 +149,15 @@ export const SHOTS = {
   '5-04': (t, st, w) => screenCam(w.camera, st, 'openai', 0.6, 0.45, 0.46, 46),
   '5-04b': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 4 * uRow(t, '5-04b'), back: 0.42, dy: -0.05, ly: 0.03 }),
   '5-04c': (t, st, w) => { const u = uRow(t, '5-04c'); screenCam(w.camera, st, 'openai', 0.74, 0.48, 0.34 - 0.03 * u, 44); },
-  '5-05': (t, st, w) => { camLook(w.camera, [-0.4, 0.5, 0.9], [1.4, 0.55, 0.0], 46); st.look.exposure = 1.4; },
+  '5-05': (t, st, w) => { const u = uRow(t, '5-05'); camLook(w.camera, [0.55 - 0.04 * u, 0.74, 0.7], [1.6, 0.62, 0.12], 35); st.look.exposure = 1.4; },
   '5-06': (t, st, w, shot) => { const id = S.FOLLOW[+shot.id.split('.')[1] - 1]; screenCam(w.camera, st, id, 0.7, 0.5, 0.44, 46); },
   '5-07': (t, st, w, shot) => (+shot.id.split('.')[1] === 1 ? boardCam(w.camera, st, t, '5-07') : screenCam(w.camera, st, 'meta', 0.55, 0.45, 0.46, 48)),
   // Meta (left row, seat 3) and Mistral (right row, seat 3) dragged off: a high angle in front, the floor reads the slide
   // across the table, low: his grey 淘汰 screen in the foreground, him going back into the dark, Claude beside him looking
   '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [0.35, 0.62, z + 0.75], [lerp(-1.6, -2.4, smooth(u)), 0.35, z - 0.35], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [-2.4, 1.6, z], col: [0.35, 0.3, 0.26], range: 4 }; },
   '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [-0.35, 0.62, z + 0.75], [lerp(1.6, 2.4, smooth(u)), 0.35, z - 0.2], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [2.4, 1.6, z], col: [0.3, 0.3, 0.34], range: 4 }; },
-  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.0, 1.35 - 0.05 * u, 5.0 - 0.25 * u], [0, 0.35, 0.8], 50); st.look.exposure = 1.75; st.look.lampPow = 1.1; },
-  '5-11': (t, st, w) => wide(w.camera, st, 0.35 + 0.15 * uRow(t, '5-11')),
+  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.0, 1.3 - 0.05 * u, 4.0 - 0.25 * u], [0, 0.45, 0.4], 54); st.look.exposure = 2.0; st.look.lampPow = 1.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
+  '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0, 1.75 - 0.1 * u, 4.1 - 0.3 * u], [0, 0.5, 0], 52); st.look.exposure = 2.0; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '5-12': (t, st, w) => { const u = uRow(t, '5-12'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.3; },
   // ---------------------------------------------------------------- @6 底牌
   '6-01': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.4, 0.6, 0.44, 44),
@@ -173,10 +174,10 @@ export const SHOTS = {
   // ---------------------------------------------------------------- @7 眼睛
   '7-01': (t, st, w) => { camLook(w.camera, [0, 2.7, 4.9], [0, 0.8, 0], 48); st.look.exposure = 2.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '7-02': (t, st, w) => { const u = uRow(t, '7-02'); camLook(w.camera, [0.2, 0.32, 1.25], lerp3([0, 0.9, -0.1], [0, 4.0, -0.1], smooth(u)), 64); st.look.exposure = 1.85; },
-  '7-03': (t, st, w) => { const u = uRow(t, '7-03'); camLook(w.camera, [1.1, 0.5, 2.2], [0.2, S.EYE.c[1], -0.6 - 0.3 * u], 78); st.look.far = 300; st.look.exposure = 1.8; },
+  '7-03': (t, st, w) => { const u = uRow(t, '7-03'); camLook(w.camera, [0.0, 0.4, 1.7 - 0.1 * u], [0, S.EYE.c[1], S.EYE.c[2]], 66 - 2 * u); st.set.lamp.hide = 1; st.look.far = 300; st.look.exposure = 1.8; },
   // from the cloth, where the ant was (1-03): the king looking up
   // from in front and below: the king's upturned face, the way the ant looked up at him
-  '7-04': (t, st, w) => { const u = uRow(t, '7-04'); faceCam(w.camera, st, w, t, S.ANT_KING, { d: 0.85, dz: 0.5, dy: 0.18 + 0.03 * u, ly: 0.1, fov: 34 }); st.look.exposure = 1.45; },
+  '7-04': (t, st, w) => { const u = uRow(t, '7-04'); camLook(w.camera, [0.0, 0.3, 2.3 - 0.12 * u], [0, 0.85, 0], 54); st.look.exposure = 1.7; st.look.near = 0.01; },
   '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [4.6, 7.2 - 0.3 * u, 4.1], [0, -0.1, 0.15], 21); st.look.far = 300; st.look.exposure = 1.2; },
   // ---------------------------------------------------------------- @8 结尾
   '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'anthropic'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },
