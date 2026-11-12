@@ -40,12 +40,14 @@ function presses() {
   return PRESS;
 }
 // the hand at t: hovering over the screen near a press, on the glass at it, else resting
-function handFor(id, t) {
+function handFor(id, t, rise = 0) {
   const L = presses()[id] ?? [];
   const f = screenFrame(id);
   const fingers = [-f.n[0], -f.n[1], -f.n[2]];
   let best = null;
-  for (const p of L) if (t > p.t - p.lead && t < p.t + p.hold + 0.45) best = p;
+  for (const p of L) if (t > p.t - p.lead && t < p.t + p.hold + 0.62) best = p;
+  // (v16) the hand leaves from where it rests and goes back there: no pop between resting and pressing
+  const tipL = 0.19 * 1.22 * KING[id].size, rh = kingRestHand(id, 'R', rise), home = [rh[0] + fingers[0] * tipL, rh[1] + 0.03 + fingers[1] * tipL * 0.3, rh[2] + fingers[2] * tipL];
   if (!best) {
     // between presses close together: hover
     const nx = L.find((p) => p.t >= t), pv = [...L].reverse().find((p) => p.t < t);
@@ -56,15 +58,20 @@ function handFor(id, t) {
   // past the hand target (kings.js hand frame), a fist's knuckles ~8 cm, a flat palm ~3 cm
   // (v9) the target is the fingertip (or the knuckles of a fist) itself: kings.js solves the arm so it lands exactly here
   const touch = best.pose === 'fist' ? 0.03 : 0.005;
-  const up = touch + (best.kind === 'hard' || best.kind === 'auto' ? 0.13 : best.kind === 'cancel' ? 0.08 : 0.06);
-  const hov = screenPoint(id, best.uv[0], best.uv[1], up), on = screenPoint(id, best.uv[0], best.uv[1], touch);
-  let target;
-  if (t < best.t - 0.12) { const e = smooth(clamp((t - (best.t - best.lead)) / 0.38)); target = lerp3(pathRest(id), hov, e); target[1] += 0.1 * Math.sin(Math.PI * e); if (best.lead > 0.6 && e >= 1) { const w = t - (best.t - best.lead + 0.38); target = [target[0], target[1] + 0.006 * Math.sin(w * 9), target[2] + 0.01 * Math.sin(w * 5.3)]; } }   // up and over the screen's edge
+  const upOf = (p) => (p.pose === 'fist' ? 0.03 : 0.005) + (p.kind === 'hard' || p.kind === 'auto' ? 0.13 : p.kind === 'cancel' ? 0.08 : 0.06);
+  const hov = screenPoint(id, best.uv[0], best.uv[1], upOf(best)), on = screenPoint(id, best.uv[0], best.uv[1], touch);
+  const bi = L.indexOf(best), prev = L[bi - 1], next = L[bi + 1];
+  const from = prev && best.t - best.lead < prev.t + prev.hold + 0.62 ? screenPoint(id, prev.uv[0], prev.uv[1], upOf(prev)) : home;   // the next press is near: it never went home
+  const stays = next && next.t - next.lead < best.t + best.hold + 0.62;
+  let target, pose = best.pose;
+  if (t < best.t - 0.12) { const e = smooth(clamp((t - (best.t - best.lead)) / 0.38)); target = lerp3(from, hov, e); target[1] += (from === home ? 0.1 : 0.03) * Math.sin(Math.PI * e); if (best.lead > 0.6 && e >= 1) { const w = t - (best.t - best.lead + 0.38); target = [target[0], target[1] + 0.006 * Math.sin(w * 9), target[2] + 0.01 * Math.sin(w * 5.3)]; } }   // up and over the screen's edge
   else if (t < best.t) target = lerp3(hov, on, ((t - (best.t - 0.12)) / 0.12) ** 2);
   else if (t < best.t + best.hold) target = on;
-  else target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
+  else if (t < best.t + best.hold + 0.2) target = lerp3(on, hov, smooth((t - best.t - best.hold) / 0.2));
+  else if (stays) target = hov;
+  else { const e = smooth(clamp((t - best.t - best.hold - 0.2) / 0.42)); target = lerp3(hov, home, e); target[1] += 0.07 * Math.sin(Math.PI * e); if (e > 0.55) pose = 'rest'; }
   // a flat palm slaps with its fingers along the glass (away from him), not into it
-  return { target, pose: best.pose, fingers, kind: best.kind, tip: 1 };
+  return { target, pose, fingers, kind: best.kind, tip: 1 };
 }
 const pathRest = (id) => { const f = screenFrame(id); return [f.c[0] + sxOf(id) * 0.1, 0.24, f.c[2] + 0.2 * (KING[id].side === 'CN' ? 1 : -1)]; };
 const arm = (id, target, extra = {}) => ({ target, pole: [sxOf(id) * 0.35, -0.45, -sxOf(id) * 0.75], ...extra });   // (v8) elbow out to his right side: the forearm crosses from the side, over the glass, clear of the lens
@@ -215,7 +222,7 @@ function kingsState(t, st) {
       if (t > CUES.shadow) K.face = { eyes: 'narrow', brows: 'arch', mouth: 'grin' };
     }
     // ---- the arm
-    const h = handFor(id, t);
+    const h = handFor(id, t, K.rise);
     if (pointTo) { K.armR = { target: pointTo, pole: [0, -1, 0] }; K.hand.R = 'point'; }
     else if (h && !(auto && t < CUES.cancel && h.kind !== 'auto')) { K.armR = arm(id, h.target, { fingers: h.fingers, ...(h.tip ? { tip: 1, pose: h.pose } : {}) }); K.hand.R = h.pose; }
     else K.hand.R = 'rest';
@@ -226,7 +233,8 @@ function kingsState(t, st) {
     }
   }
 }
-const kingRestHand = (id, side) => [sxOf(id) * 0.9, 0.03, SEAT.Z[KING[id].seat] + (side === 'R' ? -1 : 1) * 0.28 * (KING[id].side === 'CN' ? -1 : 1)];
+// where kings.js rests a hand (restHand there): beside his screen, on the table
+const kingRestHand = (id, side, rise = 0) => { const s = 1.22 * KING[id].size, near = 0.42 * s; return [sxOf(id) * (SEAT.X - near - rise * Math.max(0, 1.02 - near)), 0.052, SEAT.Z[KING[id].seat] + (side === 'R' ? -1 : 1) * (0.39 * s + 0.05 * rise) * (KING[id].side === 'CN' ? -1 : 1)]; };
 
 // ---------------------------------------------------------------- screens
 function screensState(t) {
