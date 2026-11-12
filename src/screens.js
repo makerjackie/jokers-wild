@@ -118,7 +118,7 @@ export function makeScreens() {
       const low = s.low ? s.low[i] ?? 0 : 0, red = (s.red ?? []).includes(i) || low !== 0, flipped = low > 0;
       if (low < 0) { c.save(); c.setLineDash([6, 5]); c.strokeStyle = 'rgba(255,60,40,0.5)'; c.lineWidth = 2; c.beginPath(); c.roundRect(x + 2, y + 2, cw - 4, ch - 4, 6); c.stroke(); c.restore(); continue; }
       if (red) { const p = 0.55 + 0.45 * Math.sin(t * 5 + i); c.shadowColor = '#ff2a1a'; c.shadowBlur = 18 + 14 * p; c.fillStyle = `rgba(255,40,26,${0.6 + 0.4 * p})`; c.fillRect(x - 4, y - 4, cw + 8, ch + 8); c.shadowBlur = 0; }
-      if (flipped) mini(c, CELL[`future_${id}_${i % 2}`], x, y, cw, ch); else drawCell(c, side === 'CN' ? CELL.backCN : CELL.backUS, x, y, cw, ch);
+      if (flipped) mini(c, (s.lowC ?? [])[i] ?? CELL[`future_${id}_0`], x, y, cw, ch); else drawCell(c, side === 'CN' ? CELL.backCN : CELL.backUS, x, y, cw, ch);
       c.globalAlpha = 1;
     }
     // (v8) what the bottom row is: shown once the machine starts playing it
@@ -167,7 +167,7 @@ export function makeScreens() {
     }
     // the countdown: a ring that drains faster each round, and the seconds
     if (s.limit > 0) {
-      const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = (t / per) % 1, cx = CW * 0.47, cy = 25;
+      const L = s.limit, per = Math.max(0.25, Math.min(1.6, L * 0.35)), ph = s.limitK != null ? 1 - s.limitK : (t / per) % 1, cx = CW * 0.47, cy = 25;
       const hot = L < 1.2;
       c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.roundRect(cx - 24, 2, 250, 46, 23); c.fill();
       c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,0.15)'; c.beginPath(); c.arc(cx, cy, 16, 0, Math.PI * 2); c.stroke();

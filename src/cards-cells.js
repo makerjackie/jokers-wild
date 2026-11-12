@@ -33,7 +33,7 @@ export const CELL = {};
   CELL.chatText = i++;    // the text that writes itself on that screen: G = mask, R/G = reading order (freecards reveal)
   CELL.gpt45 = i++;       // the door-sized GPT-4.5 (3-06), gold frame
   // v3 (榜首): the internal models nobody released, two per company, stamped 内部 · 禁止发布; the #1 card the eye deals
-  for (const k of KINGS) for (let f = 0; f < 2; f++) CELL[`future_${k.id}_${f}`] = i++;
+  for (const k of KINGS) for (let f = 0; f < 4; f++) CELL[`future_${k.id}_${f}`] = i++;   // (v20) four generations of them
   CELL.num1 = i++;
   CELL.aiAuto = i++;   // v9: the card slapped on the writer's name: AI 托管
   CELL.old4 = i++; CELL.old5 = i++;   // v13: Deep Blue, Watson (the pile before the film starts)

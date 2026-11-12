@@ -15,8 +15,19 @@ const headOf = (id, w, st, t) => {
   if (w?.kings?.headWorld) { const v = w.kings.headWorld(id, new (w.camera.position.constructor)()); return [v.x, v.y, v.z]; }
   const k = KING[id]; return [SIDE_SIGN[k.side] * 1.5, 0.72, SEAT.Z[k.seat]];
 };
+// (v20) where his head is when he sits still: a face shot looks there, so a nod or a glance moves him in the frame and not
+// the frame around him (the lens used to follow the head: every tap shook the whole picture)
+const calmHead = (id, w, st, t) => {
+  const K = st?.kings?.[id];
+  if (!K?.calm || !w?.kings?.update || !w.kings.headWorld) return headOf(id, w, st, t);
+  const keep = { rise: K.rise, lean: K.lean, look: K.look };
+  Object.assign(K, K.calm); w.kings.update(st.kings, t);
+  const v = w.kings.headWorld(id, new (w.camera.position.constructor)()), h = [v.x, v.y, v.z];
+  Object.assign(K, keep); _posed = null;
+  return h;
+};
 function faceCam(cam, st, w, t, id, o = {}) {
-  const h = headOf(id, w, st, t), sx = SIDE_SIGN[KING[id].side];
+  const h = calmHead(id, w, st, t), sx = SIDE_SIGN[KING[id].side];
   const d = o.d ?? 0.8, dz = o.dz ?? 0.18, dy = o.dy ?? -0.06;
   camLook(cam, [h[0] - sx * d, h[1] + dy, h[2] + dz], [h[0], h[1] - 0.04 + (o.ly ?? 0), h[2] + (o.lz ?? 0)], o.fov ?? 28);
   st.look.dof = { focus: Math.hypot(d, dz, dy), k: 0.35, max: 8 };
@@ -36,7 +47,7 @@ function screenCam(cam, st, id, u = 0.5, v = 0.5, d = 0.36, fov = 40, side = 0.1
 }
 // (v11) from his screen, looking up into his face: what the machine sees. Top-left of the glass, clear of his right hand
 function povCam(cam, st, w, t, id, o = {}) {
-  const f = screenFrame(id), c = screenPoint(id, 0.5, 0.5, 0), h = headOf(id, w, st, t), k = o.back ?? 0.36, sx = SIDE_SIGN[KING[id].side];
+  const f = screenFrame(id), c = screenPoint(id, 0.5, 0.5, 0), h = calmHead(id, w, st, t), k = o.back ?? 0.36, sx = SIDE_SIGN[KING[id].side];
   const p = [c[0] + f.up[0] * k, c[1] + f.up[1] * k + (o.dy ?? 0), c[2] + (o.dz ?? 0.1) * sx];   // just beyond the top edge of his screen, low
   cam.position.set(...p); cam.up.set(-sx * 0.25, 1, 0); cam.lookAt(h[0], h[1] - 0.03 + (o.ly ?? 0), h[2]); cam.fov = o.fov ?? 44;
   st.look.dof = { focus: Math.hypot(p[0] - h[0], p[1] - h[1], p[2] - h[2]), k: 0.3, max: 8 }; st.look.near = 0.01; st.look.exposure = o.exp ?? 1.35;
@@ -157,7 +168,8 @@ export const SHOTS = {
   // across the table, low: his grey 淘汰 screen in the foreground, him going back into the dark, Claude beside him looking
   '5-08': (t, st, w) => { const u = uRow(t, '5-08'), z = 1.25; camLook(w.camera, [0.35, 0.62, z + 0.75], [lerp(-1.6, -2.4, smooth(u)), 0.35, z - 0.35], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [-2.4, 1.6, z], col: [0.35, 0.3, 0.26], range: 4 }; },
   '5-09': (t, st, w) => { const u = uRow(t, '5-09'), z = 1.25; camLook(w.camera, [-0.35, 0.62, z + 0.75], [lerp(1.6, 2.4, smooth(u)), 0.35, z - 0.2], 50); st.look.exposure = 1.9; if (!st.look.p2) st.look.p2 = { pos: [2.4, 1.6, z], col: [0.3, 0.3, 0.34], range: 4 }; },
-  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0.55, 0.85, 1.5 - 0.1 * u], [-1.62, 0.62, 1.0], 50); st.look.exposure = 1.9; st.look.lampPow = 1.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
+  // (v20) from the foot of the table: the two gaps nearest the lens, and beyond them every one who is left, leaning back, laughing
+  '5-10': (t, st, w) => { const u = uRow(t, '5-10'); camLook(w.camera, [0, 1.12 - 0.05 * u, 3.1 - 0.3 * u], [0, 0.52, 0], 47); st.look.exposure = 1.9; st.look.lampPow = 1.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '5-11': (t, st, w) => { const u = uRow(t, '5-11'); camLook(w.camera, [0, 1.75 - 0.1 * u, 4.1 - 0.3 * u], [0, 0.5, 0], 52); st.look.exposure = 2.0; st.look.lampPow = 1.0; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   '5-12': (t, st, w) => { const u = uRow(t, '5-12'); camLook(w.camera, [0.0, 0.85 + 0.1 * u, 1.9 - 0.2 * u], [0, 0.25, 0], 44); st.look.exposure = 1.3; },
   // ---------------------------------------------------------------- @6 底牌

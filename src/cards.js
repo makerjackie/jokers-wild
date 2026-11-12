@@ -311,7 +311,7 @@ function paintNum1(c, x0, y0) {
 }
 import { FUTURE as FUTURE_NAMES } from './future-models.js';
 function paintShikong(c) {
-  for (const id in FUTURE_NAMES) FUTURE_NAMES[id].forEach((n, f) => paintFuture(c, ...cellXY(CELL[`future_${id}_${f}`]), id, n));
+  for (const id in FUTURE_NAMES) FUTURE_NAMES[id].forEach((n, f) => { if (CELL[`future_${id}_${f}`] != null) paintFuture(c, ...cellXY(CELL[`future_${id}_${f}`]), id, n); });
   paintNum1(c, ...cellXY(CELL.num1));
   paintAiAuto(c, ...cellXY(CELL.aiAuto));
   OLD.forEach((o, g) => paintOld(c, ...cellXY(CELL[`old${g}`]), o));

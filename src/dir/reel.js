@@ -179,7 +179,7 @@ function kingsState(t, st) {
       K.rise = 0.18 + 0.1 * hurry; K.lean = 0.08 + 0.06 * hurry; K.sweat = hurry;   // (v11) hunched, but his head stays clear of the lens over his screen
       K.face = hurry < 0.45 ? face('smug', { eyes: 'side' }) : face('angry', { mouth: 'grit', eyes: 'down' });
       K.look = hurry < 0.45 && t > CUES['5-02'] ? headAt(oppOf(id) ?? other(id)) : f.c;
-      if (hurry >= 0.45 && (t * 1.3 + k.seat * 0.37) % 1 < 0.3) { K.look = headAt(oppOf(id) ?? other(id)); K.face = face('angry', { mouth: 'grit' }); }
+      if (hurry >= 0.45 && (t * 1.05 + k.seat * 0.37) % 1 < 0.3) { K.lookCalm = K.look; K.look = headAt(oppOf(id) ?? other(id)); K.face = face('angry', { mouth: 'grit' }); }
     }
     // ---- (v11) OpenAI reads the offer, glances at Claude across the pile, and decides: his own choice
     if (id === 'openai' && t >= CUES.invite + 0.3 && t < AUTO.openai + 0.2) {
@@ -198,15 +198,15 @@ function kingsState(t, st) {
       }
     }
     // ---- the rest see the empty places (5-09), and lean back again
-    if (!OUT[id] && t >= CUES.empty && t < CUES.empty + 1.3) {
+    if (!OUT[id] && t >= CUES.empty && t < CUES.empty + 1.0) {
       const near = HOLD.map((h) => [h, Math.abs(SEAT.Z[KING[h].seat] - z) + (KING[h].side === k.side ? 0 : 0.4)]).sort((a, b) => a[1] - b[1])[0][0];
       K.look = [SIDE_SIGN[KING[near].side] * 1.6, 0.55, SEAT.Z[KING[near].seat]]; K.face = { eyes: 'side', brows: 'raised', mouth: 'flat' }; K.lean = 0.0; K.rise = 0.1;
     }
     // ---- auto: he leans back, the screen plays itself; he laughs
-    if (auto && t < RED_T && t > AUTO[id] + 0.2 && !(t >= CUES.empty && t < CUES.empty + 1.3)) {
+    if (auto && t < RED_T && t > AUTO[id] + 0.2 && !(t >= CUES.empty && t < CUES.empty + 1.0)) {
       const lb = ease(t, AUTO[id] + 0.3, AUTO[id] + 1.1);
       K.rise = lerp(0.4, 0, lb); K.lean = lerp(0.15, -0.16, lb); K.sweat = 0.5 * (1 - lb);
-      const up = Math.sin(t * 1.9 + z) > 0.1;
+      const up = Math.sin(t * 1.9 + z) > 0.1 || (t >= CUES.empty + 1.0 && t < CUES.allAuto + 0.5);
       K.face = up ? face('laugh') : face('proud', { mouth: 'grin', eyes: 'down' });
       K.look = up ? [sx * -0.6, 0.95, z * 0.6] : [f.c[0] - sx * 0.25, 0.12, f.c[2]];
       if (!lead && Math.sin(t * 0.9 + z * 2) > 0.92) K.face = { eyes: 'closed', brows: 'raised', mouth: 'open' };
@@ -309,11 +309,12 @@ function autoHandAt(id, t) {
 // the bottom row: 0 face down, 1 turned up (it is about to be played, or has been: the machine keeps them coming), -1 gone for a moment
 let REDTL = null;
 function lowAt(id, t) {
-  if (!REDTL) { REDTL = {}; for (const p of S.plays()) if (p.style === 'red' && !p.ghost) ((REDTL[p.who] ??= [[], [], [], [], [], []])[p.slot]).push(p.tr); }
-  return (REDTL[id] ?? [[], [], [], [], [], []]).map((T) => { let st = 0; for (const tr of T) { if (tr - 0.45 > t) break; st = t >= tr && t < tr + 0.16 ? -1 : 1; } return st; });
+  if (!REDTL) { REDTL = {}; for (const p of S.plays()) if (p.style === 'red' && !p.ghost) ((REDTL[p.who] ??= [[], [], [], [], [], []])[p.slot]).push(p); }
+  return (REDTL[id] ?? [[], [], [], [], [], []]).map((T) => { let st = 0, cell = null; for (const p of T) { if (p.tr - 0.45 > t) break; st = t >= p.tr && t < p.tr + 0.16 ? -1 : 1; cell = p.face; } const nx = T.find((p) => p.tr > t - 0.16); return { st, cell: nx && st ? nx.face : cell }; });
 }
 
 // ---------------------------------------------------------------- screens
+let MANTR = null;
 function screensState(t) {
   const out = {};
   const P = S.plays();
@@ -332,9 +333,19 @@ function screensState(t) {
       if (t >= CUES.stuck) s.aiSlot = AI_SLOT;
     }
     if (FINAL.includes(id)) s.red = [1, 3, 4];
-    if (t >= RED_T - 0.5) s.low = lowAt(id, t);
+    if (t >= RED_T - 0.5) { const LW = lowAt(id, t); s.low = LW.map((x) => x.st); s.lowC = LW.map((x) => x.cell); }
     if (id === FINAL[0] && t >= PASS.t0 && t < HINTS[FINAL[0]][0][0]) s.pass = 1;
-    if (t < AUTO[id] && !(OUT[id] && t >= OUT[id].out)) s.limit = Math.round(limitAt(t) * 10) / 10;
+    if (t < AUTO[id] && !(OUT[id] && t >= OUT[id].out)) {
+      const L = S.limitFor(id, t);
+      if (L < 1.2) s.limit = L;
+      else {
+        // (v20) the seconds he has left: his round began when he last played a card
+        const T = (MANTR ??= Object.fromEntries(IDS.map((k) => [k, P.filter((p) => p.who === k && p.style !== 'auto' && p.style !== 'red').map((p) => p.tr).sort((a, b) => a - b)])))[id];
+        let t0 = -9; for (const x of T) { if (x > t) break; t0 = x; }
+        const L0 = S.limitFor(id, Math.max(0, t0)), left = Math.max(1, Math.min(L, L0 - (t - t0)));
+        s.limit = Math.ceil(left - 1e-6); s.limitK = Math.round((left / Math.max(L0, left)) * 60) / 60;
+      }
+    }
     if (t >= SEMI[id] && t < AUTO[id]) s.semi = 1;
     for (const tt of TIMEOUT[id] ?? []) if (t > tt && t < tt + 0.45) s.timeout = 1;
     if (t >= AUTO[id]) s.full = 1;
@@ -403,7 +414,9 @@ function screenFlight(p, t, rest) {
   const arcH = p.style === 'giant' ? 0.0 : (p.style === 'auto' || p.style === 'red' ? 0.12 : 0.2) + 0.06 * (p.i % 3) / 2;
   const pos = [lerp(a[0], rest.pos[0], e), lerp(a[1], rest.pos[1], e) + Math.sin(Math.PI * u) * arcH, lerp(a[2], rest.pos[2], e)];
   const spin = (1 - u) * 1.4 * (p.i % 2 ? 1 : -1);
-  return { pos, q: mulQ(slerpQ(qs, rest.q, smooth(u)), axisQ([0, 0, 1], spin)), scale: p.scale ?? 1 };
+  let q = mulQ(slerpQ(qs, rest.q, smooth(u)), axisQ([0, 0, 1], spin));
+  if (p.crush) q = mulQ(axisQ([0.839, 0, 0.545], 0.55 * smooth(clamp((u - 0.4) / 0.3)) * (1 - smooth(clamp((u - 0.9) / 0.1)))), q);
+  return { pos, q, scale: p.scale ?? 1 };
 }
 function chatFlight(p, t, rest) {
   // ChatGPT: out of OpenAI's screen, up over the middle of the table, hangs, then slaps down
@@ -419,9 +432,12 @@ function smashFlight(p, t, rest) {
   const f = screenFrame(p.who), from = screenPoint(p.who, ...slotUV(0, p.slot), 0.02), qs = basisQ(f.n, f.up);
   const flat = basisQ([0, 1, 0], [1, 0, 0]);
   if (t < SMASH.hit) {
-    const u = clamp((t - p.tr) / (SMASH.hit - p.tr)), e = u * (0.75 + 0.25 * u), c1 = [from[0] - sxOf(p.who) * 0.75, from[1] + 0.1, from[2] + (HOUSE_HIT[2] - from[2]) * 0.12];
-    const pos = lerp3(lerp3(from, c1, e), lerp3(c1, HOUSE_HIT, e), e); pos[1] += 0.06 * Math.sin(Math.PI * Math.min(1, u * 1.2));
-    return { pos, q: slerpQ(qs, flat, clamp(u * 3)), scale: p.scale * Math.min(1, 0.4 + u * 6) };
+    const u = clamp((t - p.tr) / (SMASH.hit - p.tr)), UA = 0.13, a = smooth(clamp(u / UA));
+    const p1 = [0, 1, 2].map((i) => from[i] + f.n[i] * (0.03 + 0.12 * a) + f.up[i] * 0.36 * a);
+    if (u < UA) return { pos: p1, q: qs, scale: p.scale * (0.4 + 0.3 * a) };
+    const v = (u - UA) / (1 - UA), e = v * (0.75 + 0.25 * v), c1 = [p1[0] - sxOf(p.who) * 0.5, p1[1] + 0.1, p1[2] + (HOUSE_HIT[2] - p1[2]) * 0.12];
+    const pos = lerp3(lerp3(p1, c1, e), lerp3(c1, HOUSE_HIT, e), e); pos[1] += 0.05 * Math.sin(Math.PI * Math.min(1, v * 1.2));
+    return { pos, q: slerpQ(qs, flat, clamp(v * 3.5)), scale: p.scale * Math.min(1, 0.7 + v * 2.5) };
   }
   const u = clamp((t - SMASH.hit) / (p.t - SMASH.hit));
   return { pos: lerp3(HOUSE_HIT, rest.pos, 1 - (1 - u) ** 2), q: slerpQ(flat, rest.q, u), scale: p.scale };
@@ -540,7 +556,7 @@ function cardsState(t, st) {
       const a = r() * Math.PI * 2, d = 0.2 * Math.sqrt(r());
       const yw = r() * 6.28, rest = { pos: [Math.cos(a) * d * 0.8, CARD_Y + 0.0009 * i, -0.05 + Math.sin(a) * d * 1.5], q: flatQ(Math.cos(yw), Math.sin(yw)) };
       const p = { who, slot: i % 5, tr, t: tr + 0.55, i, style: 'tap', scale: 1.25 };
-      const base = { face: CELL[`future_${who}_${i % 2}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0, glow: 0.1 };
+      const base = { face: CELL[`future_${who}_3`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0, glow: 0.1 };
       out.push(t < p.t ? { ...base, ...screenFlight(p, t, rest) } : { ...base, ...rest, scale: 1.25 });
     }
   }
@@ -559,7 +575,7 @@ function cardsState(t, st) {
       if (s < 0.14) pose.q = slerpQ(basisQ(f.n, f.up), pose.q, s / 0.14);
       const l = RISE.t0 + (RISE.t1 - RISE.t0) * 0.75 * clamp(1 - y / 2.2) + (i % 7) * 0.03;
       if (t > l) { pose = riseFrom(pose, l, t, seed); if (pose.pos[1] > 6.6 || t - l > 3.4) continue; }
-      out.push({ face: CELL[`future_${who}_${i % 2}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0.4, glow: 0.45, scale: (1.1 + 0.5 * seed) * Math.min(1, 0.35 + s / 0.14), ...pose });
+      out.push({ face: CELL[`future_${who}_${2 + (i % 2)}`], back: KING[who].side === 'CN' ? CELL.backCN : CELL.backUS, glyph: 0, gcell: CELL.glyph0, writhe: 0, glow: 0.45, scale: (1.1 + 0.5 * seed) * Math.min(1, 0.35 + s / 0.14), ...pose });
     }
   }
   // ---- the eye
@@ -607,9 +623,9 @@ export function base(t, world) {
   kingsState(t, st);
   { // (v11) nothing snaps: body and gaze are a weighted average of the last 0.3 s (the faces still change on the cut)
     const W = [[0.07, 0.3], [0.14, 0.22], [0.21, 0.14], [0.28, 0.08]], w0 = 0.26;
-    const acc = {}; for (const id of IDS) { const K = st.kings[id]; acc[id] = { rise: K.rise * w0, lean: K.lean * w0, slump: K.slump * w0, look: K.look.map((v) => v * w0) }; }
-    for (const [d, w] of W) { const s2 = { kings: {} }; kingsState(t - d, s2); for (const id of IDS) { const K = s2.kings[id], A = acc[id]; A.rise += (K.rise ?? 0) * w; A.lean += (K.lean ?? 0) * w; A.slump += (K.slump ?? 0) * w; for (let i = 0; i < 3; i++) A.look[i] += K.look[i] * w; } }
-    for (const id of IDS) { const K = st.kings[id]; if (K.enter === 0 || K.empty) continue; Object.assign(K, acc[id]); }
+    const acc = {}; for (const id of IDS) { const K = st.kings[id]; acc[id] = { rise: K.rise * w0, lean: K.lean * w0, slump: K.slump * w0, look: K.look.map((v) => v * w0), cl: (K.lookCalm ?? K.look).map((v) => v * w0) }; }
+    for (const [d, w] of W) { const s2 = { kings: {} }; kingsState(t - d, s2); for (const id of IDS) { const K = s2.kings[id], A = acc[id]; A.rise += (K.rise ?? 0) * w; A.lean += (K.lean ?? 0) * w; A.slump += (K.slump ?? 0) * w; for (let i = 0; i < 3; i++) { A.look[i] += K.look[i] * w; A.cl[i] += (K.lookCalm ?? K.look)[i] * w; } } }
+    for (const id of IDS) { const K = st.kings[id]; if (K.enter === 0 || K.empty) continue; const { cl, ...A } = acc[id]; Object.assign(K, A); K.calm = { rise: K.rise, lean: K.lean, look: cl }; }
     // (v19) nobody is a statue: a slow breath and sway under every held pose (not in the dead stop of 7-01)
     if (!(t >= STOP && t < CUES.rise)) for (const k of KINGS) {
       const K = st.kings[k.id]; if (K.enter === 0 || K.empty) continue;
@@ -635,7 +651,7 @@ export function base(t, world) {
   if (t > DEAL && t < BLACK) { const g = ease(t, DEAL, DEAL + 0.6); st.look.p3 = { pos: [0, 0.35, 0], col: [0.45 * g, 0.42 * g, 0.35 * g], range: 2.2 }; }
   // the last card's shadow: from the middle of the table outward, over the screens, over the smiling faces
   if (t > GIANT_END.t0 && t < BLACK) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)), c = CUES.cover; const R0 = t < c ? lerp(0.25, 1.15, ease(t, GIANT_END.t0, c)) : lerp(1.15, 2.7, (t - c) / (BLACK - c)); st.look.shade = { at: [0, -0.05], r: [R0, R0 * 1.5], k: 0.93 * clamp(u * 4) }; }
-  if (t > S.CRUSH - 0.5 && t < S.CRUSH + 0.05) { const u = clamp((t - (S.CRUSH - 0.5)) / 0.5); st.look.shade = { at: [S.ANT_CRUSH[0], S.ANT_CRUSH[1]], r: [lerp(0.16, 0.05, u), lerp(0.22, 0.07, u)], k: 0.85 * u }; }
+  if (t > S.CRUSH - 0.5 && t < S.CRUSH - 0.05) { const u = clamp((t - (S.CRUSH - 0.5)) / 0.5); st.look.shade = { at: [S.ANT_CRUSH[0], S.ANT_CRUSH[1]], r: [lerp(0.16, 0.05, u), lerp(0.22, 0.07, u)], k: 0.85 * u }; }   // (v20) gone before the card is in front of it (it drew on the card's face)
   if (t >= BLACK && (t < AFTER || t >= CUES.title)) st.look.fade = 1;
   // ---- the title; the credits roll and stop on the writer, the one human; a card falls on his name. Black.
   if (t > CUES.title && t < CUES.credits) {

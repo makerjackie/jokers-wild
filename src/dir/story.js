@@ -8,7 +8,7 @@ import { KINGS, KING, SIDE_SIGN, LAMP } from '../layout.js';
 import { CUES } from '../shots.js';
 import { at } from './core.js';
 import { mulberry32, clamp, lerp } from '../util.js';
-import { MODELS, REAL_N, nextName } from '../models.js';
+import { MODELS, REAL_N } from '../models.js';
 import { CELL } from '../cards-cells.js';
 import { CARD } from '../cards.js';
 import { buildHeap } from './heap.js';
@@ -51,7 +51,7 @@ AUTO.glm = at('5-06', 1.9);
 export const HOLD = ['meta', 'mistral'];
 for (const id of HOLD) AUTO[id] = Infinity;
 export const OUT = {
-  meta: { pass: [at('5-07', 2.0), at('5-07', 2.6)], out: at('5-07', 3.15), drag: [at('5-08', 0.35), at('5-08', 2.7)] },
+  meta: { pass: [at('5-07', 2.6), at('5-07', 3.3)], out: at('5-07', 4.0), drag: [at('5-08', 0.35), at('5-08', 2.7)] },   // (v20) 5-07 cut 2 from 1.6: the offer he leaves, too slow, too slow, out (held)
   mistral: { pass: [at('5-09', 0.12)], out: at('5-09', 0.4), drag: [at('5-09', 0.45), at('5-09', 2.15)] },
 };
 for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
@@ -59,6 +59,12 @@ for (const id of HOLD) TIMEOUT[id] = OUT[id].pass;
 export const INVITE = { openai: at('5-04', 0.85), glm: AUTO.glm - 0.6 };
 for (const id of FOLLOW) INVITE[id] = AUTO[id] - 0.48;
 for (const id of HOLD) INVITE[id] = at('5-04c', 0.2);
+// (v20) each king's own round timer. The table's limit shrinks (limitAt); a hand can keep up with 0.6 s. At his crisis (the
+// offer he takes; for the two who won't, the round they lose) it is 0.3 s: no hand can
+export const CRISIS = { openai: LIMIT1, glm: INVITE.glm - 0.15 };
+for (const id of FOLLOW) CRISIS[id] = INVITE[id] - 0.15;
+for (const id of HOLD) CRISIS[id] = OUT[id].pass[0] - 0.7;
+export function limitFor(id, t) { const L = limitAt(t); return L >= 0.6 ? L : t >= (CRISIS[id] ?? 1e9) ? 0.3 : 0.6; }
 // (v11) after the last card: the lamp comes back on an empty table. The game goes on without them
 export const AFTER = at('8-07'), AFTER_END = at('9-01');
 export const inGame = (id, t) => !OUT[id] || t < OUT[id].drag[1];
@@ -196,11 +202,11 @@ function buildPlays() {
   // ---- @5: 半托管. The AI picks (its card appears in the AI slot), he taps it; faster as the countdown shrinks. The
   // holdouts never stop confirming
   for (const id of IDS) {
-    const end = id === 'openai' ? TIMEOUT.openai[0] - 0.15 : AUTO[id] < 1e9 ? AUTO[id] - 0.6 : OUT[id].pass[0] - 0.35;   // (v11) nothing flies over the offer while we read it
+    const end = id === 'openai' ? TIMEOUT.openai[0] - 0.15 : AUTO[id] < 1e9 ? AUTO[id] - 0.68 : OUT[id].pass[0] - 0.78;   // (v11) nothing flies over the offer while we read it; (v20) his last tap in time is before his crisis
     let tt = SEMI[id] + 0.45, k = 0;
     while (tt < end) {
       add({ who: id, style: 'semi', fresh: 1, tr: tt, t: tt + 0.55, ...card(id, realV(id, REAL_N[id] - 1 - (k % 2))), scale: 1.1, top: HOLD.includes(id) ? tt < NOW - 2 && r0() < 0.2 : FINAL.includes(id) ? k % 2 === 0 : r0() < 0.25 });
-      tt += clamp(limitAt(tt) * 0.28 + 0.36, 0.5, 1.9) * (0.85 + 0.3 * r0()); k++;
+      tt += clamp(Math.max(0.6, limitAt(tt)) * 0.28 + 0.36, 0.5, 1.9) * (0.85 + 0.2 * r0()); k++;   // (v20) always inside the round's time
     }
   }
   // ---- @5 →: auto. Each screen plays by itself, faster and faster; from RED_T the internal ones (red stamps), out of
@@ -214,14 +220,17 @@ function buildPlays() {
       const p = clamp((tt - AUTO.openai) / (STOP - AUTO.openai));
       const red = tt > RED_T && (lead || r0() < 0.6);
       const f = Math.floor(r0() * 2);
-      const c = red ? { face: CELL[`future_${id}_${f}`], name: FUTURE[id][f] } : { ...card(id, REAL_N[id] + (n % 2)), name: nextName(id, (nextK[id] = (nextK[id] ?? -1) + 1)) };
+      // (v20) which generation: by the clock, the same for every company (GPT-8 with Claude 7 with FatFish 6; then the internal 20, 30, 50, 99)
+      const g = Math.min(3, Math.floor(4 * (red ? clamp((tt - RED_T) / (STOP - RED_T)) : clamp((tt - AUTO.openai) / (RED_T - AUTO.openai))))); void f;
+      const c = red ? { face: CELL[`future_${id}_${g}`], name: FUTURE[id][g] } : card(id, REAL_N[id] + g);
       const sl = Math.floor(r0() * 5); r0();
       const calm = id === FINAL[0] && tt > CUES.red - 0.7 && tt <= RED_T;
+      const slow = id === FINAL[0] && tt > RED_T && tt < at('6-02');   // (v20) 6-01, his screen: one at a time, each turned over, read, gone
       // (v19) clean faces (no machine script on them), all one size
       if (!calm) add({ who: id, style: red ? 'red' : 'auto', tr: tt, t: tt + 0.45 + 0.1 * r0(), slot: red ? (redK[id] = (redK[id] ?? -1) + 1) % 6 : sl, ...c, red, scale: 1.12, top: lead || r0() < 0.3 });
-      if (!calm && tt > CUES.allAuto - 1) { const dt = 0.07 + 0.1 * r0(); add({ who: id, style: red ? 'red' : 'auto', ghost: 1, tr: tt + dt, t: tt + dt + 0.45 + 0.1 * r0(), slot: red ? (redK[id] % 6) : sl, ...c, red, scale: 1.12, top: false }); }
-      const rate = (lead ? 1.2 : 0.55) + p * p * (lead ? 5 : 1.4) + (tt > CUES.blizzard ? (lead ? 4 : 0.8) : 0);
-      tt += (1 / rate) * (0.7 + 0.6 * r0()); n++;
+      if (!calm && !slow && tt > CUES.allAuto - 1) { const dt = 0.07 + 0.1 * r0(); add({ who: id, style: red ? 'red' : 'auto', ghost: 1, tr: tt + dt, t: tt + dt + 0.45 + 0.1 * r0(), slot: red ? (redK[id] % 6) : sl, ...c, red, scale: 1.12, top: false }); }
+      const rate = slow ? 1.35 : (lead ? 1.2 : 0.55) + p * p * (lead ? 5 : 1.4) + (tt > CUES.blizzard ? (lead ? 4 : 0.8) : 0);
+      tt += (1 / rate) * (slow ? 1 : 0.7 + 0.6 * r0()); n++;
     }
   }
   // (v19) one press, one card: a filler that would need the hand again too soon is not played at all

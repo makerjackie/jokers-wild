@@ -126,11 +126,13 @@ for (const id in MODELS) for (const m of MODELS[id]) if (m.score == null) m.scor
 // future, not anyone's roadmap. Appended to each company's list (so they get atlas cells); REAL_N[id] = how many are real.
 export const REAL_N = Object.fromEntries(Object.entries(MODELS).map(([id, l]) => [id, l.length]));
 const NEXT = {
-  openai: ['GPT-7', 'GPT-8'], anthropic: ['Claude 6', 'Claude 7'], google: ['Gemini 5', 'Gemini 6'], xai: ['Grok 6', 'Grok 8'],
+  // (v20) what the machines release under autopilot: one generation after another, every company in step (each list goes
+  // on from its last real model). Four generations before the internal ones come out (future-models.js)
+  openai: ['GPT-7', 'GPT-8', 'GPT-9', 'GPT-10'], anthropic: ['Claude 6', 'Claude 7', 'Claude 8', 'Claude 9'], google: ['Gemini 5', 'Gemini 6', 'Gemini 7', 'Gemini 8'], xai: ['Grok 5', 'Grok 6', 'Grok 7', 'Grok 8'],
   meta: ['Muse Ultra', 'Muse Max'], deepseek: ['Hundun 6', 'Hundun 7'], qwen: ['WanWen 4', 'WanWen 5'],
-  kimi: ['Mooncake 4', 'Mooncake 5'], mistral: ['Mistral 4', 'Mistral 5'], glm: ['FatFish 5', 'FatFish 6'], doubao: ['Dousha 3', 'Dousha 4'],
+  kimi: ['Mooncake 4', 'Mooncake 5'], mistral: ['Mistral 4', 'Mistral 5'], glm: ['FatFish 5', 'FatFish 6', 'FatFish 7', 'FatFish 8'], doubao: ['Dousha 3', 'Dousha 4'],
 };
-for (const id in NEXT) NEXT[id].forEach((name, i) => MODELS[id].push({ name, date: i ? '2027·06' : '2026·12', future: true }));
+for (const id in NEXT) NEXT[id].forEach((name, i) => MODELS[id].push({ name, date: ['2026·12', '2027·03', '2027·06', '2027·09'][i], future: true }));
 // the names the #1 board flips through under 托管 (k = 0, 1, 2 ...): faster than anyone can read
 const LINE = { openai: ['GPT-', 7], anthropic: ['Claude ', 6], google: ['Gemini ', 5], xai: ['Grok ', 6], meta: ['Muse ', 2], deepseek: ['Hundun ', 6], qwen: ['WanWen ', 4], kimi: ['Mooncake ', 4], mistral: ['Mistral ', 4], glm: ['FatFish ', 5], doubao: ['Dousha ', 3] };
 export function nextName(id, k) { const [b, v] = LINE[id]; const n = v + k * 0.5; return b + (Number.isInteger(n) ? n : n.toFixed(1)); }
