@@ -389,7 +389,9 @@ export function leaderTimeline() {
       if (!joined || !S[e.who] || S[e.who].out || (e.t >= NOW && HOLD.includes(e.who))) continue;   // by hand you stay under the line
       const max = Math.max(...Object.values(S).filter((x) => !x.out).map((x) => x.score)), r = mulberry32(Math.floor(e.t * 97))();
       const sc = e.t >= NOW ? max * (0.25 + 0.6 * r) : Math.min(max - 0.03 - 0.3 * r * (100 - max) / 10, bump(e.date, 0, e.t) - 0.5 - 2 * r);
-      if (sc > S[e.who].score) { S[e.who] = { ...S[e.who], model: e.name, score: sc }; snap(e.t); }
+      // (v18) a company's row never goes back to an older model: an old card only lifts the score
+      const mi = (n) => (MODELS[e.who] ?? []).findIndex((m) => m.name === n), older = mi(e.name) >= 0 && mi(e.name) < mi(S[e.who].model);
+      if (sc > S[e.who].score) { S[e.who] = { ...S[e.who], model: older ? S[e.who].model : e.name, score: sc }; snap(e.t); }
       continue;
     }
     if (e.t < -5) continue;
@@ -409,8 +411,12 @@ export function leaderAt(t) {
   const rows = cur.order.map((id, i) => {
     const pi = prev.order.indexOf(id), d = cur.data[id], pd = prev.data[id];
     const score = pd && Number.isFinite(d.score) && Number.isFinite(pd.score) ? lerp(pd.score, d.score, clamp(u * 1.6)) : d.score;
-    const mover = pi > i && cur.order[i] === cur.order.find((x, j) => prev.order.indexOf(x) - j === Math.max(...cur.order.map((y, jj) => prev.order.indexOf(y) - jj)));
-    return { who: id, model: d.model, score, y: pi < 0 || !mover ? i : lerp(pi, i, e), rank: i + 1, out: d.out ? 1 : 0, glitch: 0 };
+    // (v18) where the row is drawn: its place averaged over the last 0.3 s, so it slides however fast the board changes
+    const W = 0.3; let acc = 0, tt = t;
+    for (let j = k; j >= 0 && tt > t - W; j--) { const a0 = Math.max(L[j].t, t - W), ix = L[j].order.indexOf(id); acc += (ix < 0 ? i : ix) * (tt - a0); tt = a0; }
+    if (tt > t - W) acc += i * (tt - (t - W));
+    const y = Math.abs(acc / W - i) < 0.004 ? i : acc / W;
+    return { who: id, model: d.model, score, y, rank: i + 1, up: y > i ? 1 : 0, out: d.out ? 1 : 0, glitch: 0 };
   });
   const top = cur.order[0], prevTop = prev.order[0];
   return { rows, date: topAt(t).date, flash: top !== prevTop ? (1 - u) : 0, red: t >= RED_T ? 1 : 0 };

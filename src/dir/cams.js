@@ -107,7 +107,7 @@ export const SHOTS = {
   '2-04': (t, st, w) => povCam(w.camera, st, w, t, 'openai', { fov: 42 - 3 * uRow(t, '2-04'), back: 0.46, dy: 0.1, ly: 0.0 }),
   '2-05': (t, st, w) => { camLook(w.camera, [shake(t, S.CHAT_T, 0.02), 1.45 + shake(t, S.CHAT_T, 0.03, 55), 0.05], [0, 0, 0.02], 46); },
   // low on the cloth: the old cards blown past, off the edge; ChatGPT alone in the middle
-  '2-06': (t, st, w) => { const u = uRow(t, '2-06'); camLook(w.camera, [0.04, 0.07, 0.5 + 0.1 * u], [0, 0.04, -1.6], 58); st.look.exposure = 1.1; st.look.near = 0.01; },
+  '2-06': (t, st, w) => { const u = uRow(t, '2-06'); camLook(w.camera, [0.04, 0.07, 0.62 + 0.1 * u], [0, 0.33, -1.6], 60); st.look.exposure = 1.1; st.look.near = 0.01; },
   '2-07': (t, st, w) => boardCam(w.camera, st, t, '2-07'),
   '2-08': (t, st, w) => { const u = uRow(t, '2-08'); camLook(w.camera, [0, 1.25 - 0.1 * u, 3.3 - 0.3 * u], [0, 0.42, 0], 50); st.look.exposure = 1.45; },
   '2-09': (t, st, w) => faceCam(w.camera, st, w, t, 'anthropic', { d: 0.8, dz: 0.2 }),
@@ -168,7 +168,7 @@ export const SHOTS = {
   '6-05': (t, st, w) => { const f = screenFrame('anthropic'), p = screenPoint('anthropic', 0.42, 0.5, 0); camLook(w.camera, [p[0] + f.n[0] * 0.36 - f.right[0] * 0.3, p[1] + f.n[1] * 0.36 + 0.2, p[2] + f.n[2] * 0.36 - f.right[2] * 0.3], p, 44); st.look.exposure = 1.15; if (st.props?.plates) st.props.plates.show = 0; },
   '6-06': (t, st, w) => screenCam(w.camera, st, 'openai', 0.6, 0.55, 0.5, 46, 0.0),
   // the two of them, up, pointing, shouting across the pile; their teams behind them doing the same
-  '6-07': (t, st, w) => { const u = uRow(t, '6-07'); camLook(w.camera, [shake(t, S.ACCUSE + 0.2, 0.01, 30, 4), 0.92, 2.0 - 0.2 * u], [0, 0.8, 0], 58); st.look.exposure = 1.8; if (!st.look.p2) st.look.p2 = { pos: [0, 1.6, 2.4], col: [0.35, 0.32, 0.3], range: 6 }; },
+  '6-07': (t, st, w) => { const u = uRow(t, '6-07'); camLook(w.camera, [shake(t, S.ACCUSE + 0.2, 0.01, 30, 4), 1.4, 3.0 - 0.25 * u], [0, 0.72, 0], 42); st.look.exposure = 1.8; if (!st.look.p2) st.look.p2 = { pos: [0, 1.6, 2.4], col: [0.35, 0.32, 0.3], range: 6 }; },
   '6-08': (t, st, w, shot) => { const cut = +shot.id.split('.')[1]; screenCam(w.camera, st, cut === 1 ? 'anthropic' : 'openai', 0.5, 0.5, 0.46, 46, cut === 1 ? 0.06 : -0.06); },
   '6-09': (t, st, w) => { camPath(w.camera, t, [[at('6-09'), [0, 0.9, 3.4], [0, 0.6, 0], 50], [at('7-01', 1.2), [0, 2.7, 4.9], [0, 0.8, 0], 48]]); st.look.exposure = 2.1; if (!st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34, 0.31, 0.28], range: 14 }; },
   // ---------------------------------------------------------------- @7 眼睛
@@ -177,7 +177,7 @@ export const SHOTS = {
   '7-03': (t, st, w) => { const u = uRow(t, '7-03'); camLook(w.camera, [0.0, 0.4, 1.7 - 0.1 * u], [0, S.EYE.c[1], S.EYE.c[2]], 66 - 2 * u); st.set.lamp.hide = 1; st.look.far = 300; st.look.exposure = 1.8; },
   // from the cloth, where the ant was (1-03): the king looking up
   // from in front and below: the king's upturned face, the way the ant looked up at him
-  '7-04': (t, st, w) => { const u = uRow(t, '7-04'); camLook(w.camera, [0.0, 0.3, 2.3 - 0.12 * u], [0, 0.85, 0], 54); st.look.exposure = 1.7; st.look.near = 0.01; },
+  '7-04': (t, st, w) => { const u = uRow(t, '7-04'); camLook(w.camera, [0.0, 0.25, 3.5 - 0.15 * u], [0, 0.95, 0], 40); st.look.exposure = 1.7; st.look.near = 0.01; },
   '7-05': (t, st, w) => { const u = uRow(t, '7-05'); camLook(w.camera, [4.6, 7.2 - 0.3 * u, 4.1], [0, -0.1, 0.15], 21); st.look.far = 300; st.look.exposure = 1.2; },
   // ---------------------------------------------------------------- @8 结尾
   '8-01': (t, st, w, shot) => { const id = +shot.id.split('.')[1] === 1 ? 'openai' : 'anthropic'; screenCam(w.camera, st, id, 0.4, 0.5, 0.5, 46, 0.0); st.look.exposure = 1.5; },

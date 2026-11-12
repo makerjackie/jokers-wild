@@ -188,7 +188,7 @@ export function makeLeaderboard() {
     // the human line: a vermilion thread down the board, over the settled cards
     c.save(); c.setLineDash([11, 8]); c.strokeStyle = red ? '#ff4a2e' : '#d9301f'; c.lineWidth = 3.5;
     c.beginPath(); c.moveTo(HX, 144); c.lineTo(HX, CH - 30); c.stroke(); c.restore();
-    for (const r of vis.filter(isMoving).sort((a, b) => b.y - a.y)) drawRow(s, r, t, red);
+    for (const r of vis.filter(isMoving).sort((a, b) => (a.up ?? 0) - (b.up ?? 0) || b.y - a.y)) drawRow(s, r, t, red);
     if ((s.lit ?? 1) < 1) { c.fillStyle = `rgba(0,0,0,${1 - (s.lit ?? 1)})`; c.fillRect(0, 0, CW, CH); }
   }
   function update(s, t = 0) {

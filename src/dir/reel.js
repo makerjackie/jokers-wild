@@ -203,7 +203,7 @@ function kingsState(t, st) {
     if (t >= RED_T && t < STOP) {
       K.look = f.c; K.rise = 0.3; K.lean = 0.1; K.sweat = 0.6;
       K.face = t < CUES.freeze + (lead ? 0.7 : 1.8) ? face('proud', { mouth: 'grin', eyes: 'wide' }) : face('worry');
-      if (t > CUES.cancel) { K.face = face('fear'); K.rise = 0.4; K.sweat = 1; }
+      if (t > CUES.cancel) { K.face = face('fear'); K.rise = 0.26; K.lean = 0.06; K.sweat = 1; }
       if (t >= ACCUSE) {
         const k0 = lead ? ACCUSE : ACCUSE + 0.5 + r() * 0.7;
         if (t >= k0) {
@@ -219,7 +219,7 @@ function kingsState(t, st) {
     // ---- the stop, the rise, the eye: they look up
     if (t >= STOP && t < CUES.deal) {
       // (v9) frozen upright, not slumped: they sit back and stare at the mountain, then follow it up
-      K.rise = lerp(0.35, 0.05, ease(t, STOP, STOP + 1.2)); K.lean = lerp(0.05, -0.07, ease(t, STOP, STOP + 1.5)); K.sweat = 1;
+      K.rise = lerp(0.35, 0.05, ease(t, STOP, STOP + 1.2)); K.lean = lerp(0.05, 0.12, ease(t, STOP, STOP + 1.5)); K.sweat = 1;
       K.look = t < CUES.rise ? [0, 0.55, 0] : [sx * 0.15, lerp(1.2, 2.8, ease(t, CUES.rise, CUES.eye + 2)), -0.1];
       K.face = t < CUES.rise ? { eyes: 'blank', brows: 'raised', mouth: 'slack' } : t < CUES.eye ? face('fear') : { eyes: 'up', brows: 'worried', mouth: t < CUES.lookUp + 1.4 ? 'open' : 'o' };
     }
