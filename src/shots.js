@@ -27,7 +27,7 @@ export const CUES = Object.fromEntries(Object.keys(ROW).map((id) => [id, ROW[id]
 Object.assign(CUES, {
   steps: T('1-01'), ant: T('1-02'), giant: T('1-03'), crush: T('1-05'), crumb: T('1-06'), table: T('1-07'),
   screen: T('2-01'), stack: T('2-02'), board0: T('2-03'), draw: T('2-04'), chat: T('2-05'), blast: T('2-06'), boardChat: T('2-07'), awe: T('2-08'), behind: T('2-09'),
-  race: T('3-01'), tower: T('3-02'), smash: T('3-03'), boardR1: T('3-04'), gasp: T('3-05'), big: T('3-06'), boardBig: T('3-07'),
+  race: T('3-01'), smash: T('3-03'), boardR1: T('3-04'), gasp: T('3-05'), big: T('3-06'), boardBig: T('3-07'),
   stuck: T('4-01'), hint: T('4-02'), win: T('4-03'), hintUS: T('4-04'), hints: T('4-05'),
   auto: T('5-01'), semi: T('5-01'), stamps: T('5-02'), hurry: T('5-03'), full: T('5-04'), lean: T('5-05'), autoAll: T('5-06'), holdout: T('5-07'), pass: T('5-07'), drag: T('5-08'), outs: T('5-09'), empty: T('5-10'), allAuto: T('5-11'), mountain: T('5-12'),
   red: T('6-01'), boardFuture: T('6-02'), freeze: T('6-03'), cancel: T('6-04'), error: T('6-05'), cancelUS: T('6-06'), accuse: T('6-07'), eyes: T('6-08'), blizzard: T('6-09'),

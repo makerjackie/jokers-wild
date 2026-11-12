@@ -98,7 +98,7 @@ export const SHOTS = {
     camPath(w.camera, t, [[at('1-07'), [AC[0] + 0.1, 0.02, AC[2] + 0.2], [AC[0] - 0.2, 0.03, AC[2] - 0.3], 44], [at('1-07', 1.4), [0.06, 0.6, 3.6], [0.02, 0.45, -0.8], 42], [at('1-07', 3.5), [0, 2.4, 10.5], [0, 1.15, -3.2], 40]]);
     st.look.near = lerp(0.004, 0.03, smooth(u * 2));
     if (u < 0.4) st.look.dof = { focus: lerp(0.2, 3, u / 0.4), k: 0.6 * (1 - u / 0.4), max: 16 };
-    st.look.exposure = lerp(1.3, 1.9, smooth(u));
+    st.look.exposure = lerp(1.3, 2.5, smooth(u)); if (u > 0.3 && !st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34 * u, 0.31 * u, 0.28 * u], range: 14 };
   },
   // ---------------------------------------------------------------- @2 横空出世
   '2-01': (t, st, w) => screenCam(w.camera, st, 'google', 0.42, 0.45, 0.42, 42),
@@ -115,20 +115,19 @@ export const SHOTS = {
   '3-01': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
     if (cut === 1) return screenCam(w.camera, st, 'openai', 0.35, 0.4, 0.4, 44);
-    if (cut === 2) { camLook(w.camera, [0.2, 0.36, -0.2], [0.42, 0.06, -0.62], 42); st.look.exposure = 1.35; return; }
+    if (cut === 2) return camLook(w.camera, [0.03, 0.8, 0.06], [0, 0.03, 0], 30);
     if (cut === 3 || cut === 7) return boardCam(w.camera, st, t, '3-01');
     if (cut === 4) return faceCam(w.camera, st, w, t, 'anthropic', { d: 0.8, dz: 0.22, fov: 30 });
     if (cut === 5) return screenCam(w.camera, st, 'anthropic', 0.35, 0.4, 0.4, 44);
     if (cut === 6) return camLook(w.camera, [0.03, 0.8, 0.06], [0, 0.03, 0], 30);
     return faceCam(w.camera, st, w, t, 'openai', { d: 0.8, dz: -0.22, fov: 30 });
   },
-  '3-02': (t, st, w) => { const u = uRow(t, '3-02'); camLook(w.camera, [0.1 - 0.04 * u, 0.22, 0.55], [0.4, 0.14, -0.62], 46); st.look.dof = { focus: 1.0, k: 0.2, max: 4 }; st.look.exposure = 1.35; },
   // 大肥鱼 jabs; the small card crosses the table flat (we ride along and read it); it hits the house (seen from the foot)
   '3-03': (t, st, w, shot) => {
     const cut = +shot.id.split('.')[1];
     if (cut === 1) { camLook(w.camera, [-0.62, 0.42, -1.55], [-1.05, 0.12, -2.45], 46); st.look.exposure = 1.45; if (st.props?.plates) st.props.plates.show = 0; return; }   // beside 大肥鱼's screen: the card leaves it
     if (cut === 2) { const c = smashPos(t); camLook(w.camera, [c[0] - 0.12, c[1] + 0.2, c[2] + 0.24], [c[0] + 0.02, c[1], c[2] - 0.02], 40); st.look.exposure = 1.45; st.look.dof = { focus: 0.32, k: 0.25, max: 6 }; st.look.near = 0.005; return; }
-    camLook(w.camera, [0.02 + shake(t, S.SMASH.hit, 0.01), 0.22 + shake(t, S.SMASH.hit, 0.008, 60), 0.6], [0.36, 0.14, -0.62], 50); st.look.exposure = 1.4;
+    camLook(w.camera, [0.42 + shake(t, S.SMASH.hit, 0.012), 0.2 + shake(t, S.SMASH.hit, 0.01, 60), 0.62], [0.02, 0.07, 0.0], 44); st.look.exposure = 1.4;
   },
   '3-04': (t, st, w) => boardCam(w.camera, st, t, '3-04'),
   '3-05': (t, st, w) => { camLook(w.camera, [-0.55, 0.62, 0.95], [1.5, 0.62, -0.4], 46); st.look.exposure = 1.4; },

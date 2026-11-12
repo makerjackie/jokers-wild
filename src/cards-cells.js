@@ -36,6 +36,7 @@ export const CELL = {};
   for (const k of KINGS) for (let f = 0; f < 2; f++) CELL[`future_${k.id}_${f}`] = i++;
   CELL.num1 = i++;
   CELL.aiAuto = i++;   // v9: the card slapped on the writer's name: AI 托管
+  CELL.old4 = i++; CELL.old5 = i++;   // v13: Deep Blue, Watson (the pile before the film starts)
   CELL.count = i;
 }
 // cells per atlas row/column (cards.js paints them; 16 x 11 fit in the 4096 atlas)

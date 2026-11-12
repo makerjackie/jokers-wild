@@ -29,7 +29,7 @@ export { FUTURE };
 // 半托管 (SEMI): the AI picks the card, the king only taps 确认. When the countdown is shorter than a hand, 全托管 (AUTO):
 // no confirmation at all. Whoever still confirms by hand times out (超时) and is out (淘汰).
 export const LIMIT0 = at('5-01', 0.9), LIMIT1 = at('5-04', 0.3);
-export function limitAt(t) { if (t < LIMIT0) return 0; return 10 * Math.pow(0.3 / 10, clamp((t - LIMIT0) / (LIMIT1 - LIMIT0))); }
+export function limitAt(t) { if (t < CUES.chat) return 60; if (t < CUES.race) return 30; if (t < LIMIT0) return 30 * Math.pow(10 / 30, clamp((t - CUES.race) / (LIMIT0 - CUES.race))); return 10 * Math.pow(0.3 / 10, clamp((t - LIMIT0) / (LIMIT1 - LIMIT0))); }
 // SEMI: from here every round he presses AI 提示 and taps the card it lights (the 'rubber stamp')
 export const SEMI = { openai: at('5-01', 1.75), anthropic: at('5-02', 0.35), google: at('5-02', 1.25), xai: at('5-02', 2.15), meta: at('5-02', 2.3), mistral: at('5-02', 2.4), glm: at('5-02', 2.45) };
 export const AUTO = {};                     // when each king slams 全托管
@@ -91,8 +91,8 @@ function houseSlots() {
   return S;
 }
 export const HOUSE_SLOTS = houseSlots();
-export const SMASH = { go: at('3-03', 0.75), hit: at('3-03', 2.95) };   // (v8) slow enough to read: FatFish-R1, flat, across the table
-export const HOUSE_HIT = [HOUSE.x, 0.12, HOUSE.z];
+export const SMASH = { go: at('3-03', 0.75), hit: at('3-03', 2.6) };   // (v8) slow enough to read: FatFish-R1, flat, across the table
+export const HOUSE_HIT = [0.05, 0.16, 0.03];   // (v13) no house: FatFish-R1 lands on top of the pile
 export function houseFall(s) {
   const h = HOUSE_SLOTS[s], r = mulberry32(900 + s * 7);
   const t0 = SMASH.hit + 0.01 + Math.hypot(h.pos[0] - HOUSE_HIT[0], h.pos[1] - HOUSE_HIT[1]) * 0.25 + r() * 0.03;
@@ -145,11 +145,12 @@ function buildPlays() {
     return p;
   };
   // ---- @1: old cards, lazily. OpenAI's lands on the ant
-  for (const [who, k, face] of [['meta', at('1-02', 1.4), CELL.old3], ['mistral', at('1-03', 0.8), CELL.old0], ['xai', at('1-07', 1.2), CELL.old1], ['google', at('1-07', 2.6), CELL.old0]])
-    add({ who, t: k, face, name: 'old', flight: 0.7 });
-  add({ who: ANT_KING, t: CRUSH, face: CELL.old3, name: 'GPT-2', at: ANT_CRUSH.slice(), yaw: -Math.PI / 2 + 0.3, flight: 0.75, crush: true });
+  // (v13) dates only go forward: AlphaGo 2016 (Google) .. GPT-2 2019 (OpenAI, on the ant) .. GPT-3 2020 .. LaMDA 2021 .. ChatGPT 2022
+  add({ who: 'google', t: at('1-02', 1.4), face: CELL.old0, name: 'AlphaGo', flight: 0.7, slot: 3 });
+  add({ who: 'openai', t: at('1-07', 1.4), face: CELL.old2, name: 'GPT-3', flight: 0.7, slot: 3 });
+  add({ who: ANT_KING, t: CRUSH, face: CELL.old3, name: 'GPT-2', slot: 2, at: ANT_CRUSH.slice(), yaw: -Math.PI / 2 + 0.3, flight: 0.75, crush: true });
   // ---- @2: Google's AlphaGo (2-01, 2-02); OpenAI's ChatGPT (2-04 .. 2-05)
-  add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old2, name: 'AlphaGo', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
+  add({ who: 'google', t: at('2-02', 0.5), tr: at('2-01', 2.0), face: CELL.old1, name: 'LaMDA', slot: 4, at: [0.02, 0.03], yaw: -Math.PI / 2 + 0.15 });
   add({ who: 'openai', style: 'chat', t: CHAT_T, tr: at('2-04', 1.55), ...card('openai', 0), chat: true, slot: 0, at: [0, 0.02], yaw: -Math.PI / 2 });
   // ---- @3: the race. Each landing that claims #1 flips the board. US cards build the house; CN cards go to the pile
   const US = ['openai', 'xai', 'mistral'], CN = ['anthropic', 'google', 'meta', 'glm'];   // the right row builds the house
@@ -158,12 +159,13 @@ function buildPlays() {
     ['anthropic', 1, at('3-01', 3.5), at('3-01', 4.15)], ['mistral', 1, at('3-01', 4.35)],
   ];
   const usV = { openai: 2, xai: 1, mistral: 2 };
-  for (const [who, v, tr, top] of montage) add({ who, tr, t: tr + 0.65, ...card(who, v), top: top ?? true, dest: KING[who].side === 'US' ? 'house' : 'heap' });
+  for (const [who, v, tr, top] of montage) add({ who, tr, t: tr + 0.65, ...card(who, v), top: top ?? true });
   // the rest of the house, one card at a time; a run of #1s for the US (3-02)
   const nHouse = HOUSE_SLOTS.length - montage.filter((m) => KING[m[0]].side === 'US').length;
-  const houseT0 = at('3-01', 0.2), houseT1 = at('3-02', 2.2);
+  const houseT0 = at('3-01', 0.2), houseT1 = at('3-03', 0.6);
+  for (let s = 0; s < 6; s++) { const who = US[s % 3]; add({ who, t: at('3-01', 1.2 + s * 0.95), ...card(who, 1 + Math.floor(s / 4)) }); }
   const usTops = { [Math.round(nHouse * 0.62)]: 1, [Math.round(nHouse * 0.74)]: 1, [Math.round(nHouse * 0.86)]: 1, [nHouse - 1]: 1 };
-  for (let s = 0; s < nHouse; s++) {
+  for (let s = 0; s < 0; s++) {
     const who = US[s % 3], t_ = lerp(houseT0, houseT1, (s + 0.5) / nHouse);
     const t = t_ + (montage.some((m) => Math.abs(m[2] + 0.65 - t_) < 0.2) ? 0.22 : 0);
     const v = usTops[s] ? usV[who]++ : 1 + Math.floor(s / 10);
@@ -171,7 +173,7 @@ function buildPlays() {
   }
   for (let s = 0; s < 7; s++) { const who = CN[s % 4]; add({ who, t: at('3-01', 0.8 + s * 0.95), ...card(who, 1 + Math.floor(s / 5)) }); }
   // FatFish-R1 out of 大肥鱼's screen, straight into OpenAI's house
-  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.35, at: [HOUSE.x + 0.2, HOUSE.z + 0.06], yaw: 0.2, top: at('3-04', 0.3) });
+  add({ who: 'glm', style: 'smash', tr: SMASH.go, t: SMASH.hit + 0.35, ...card('glm', 3), scale: 1.6, at: [0.05, 0.03], yaw: -Math.PI / 2 + 0.2, top: at('3-04', 0.3) });
   // GPT-4.5: door-sized, out of OpenAI's screen, down on the pile
   add({ who: 'openai', style: 'giant', t: at('3-06', 2.2), tr: at('3-06', 0.75), face: CELL.gpt45, name: 'GPT-4.5', scale: 3.0, at: [0.04, 0.06], yaw: -Math.PI / 2 + 0.25, flight: 1.0, top: at('3-07', 0.3) });
   for (const id of IDS) { let tt = at('3-05', 0.1 + r0() * 0.4); while (tt < at('3-06', 0.3) || (tt > at('3-07') && tt < at('4-01', 0.2))) { add({ who: id, t: tt + 0.6, tr: tt, ...card(id, 2 + Math.floor(r0() * 2)) }); tt += 0.8 + r0() * 0.5; if (tt > at('3-06', 0.3) && tt < at('3-07')) tt = at('3-07', 0.1); } }
@@ -228,7 +230,8 @@ let BOARDH = null;
 export function boardTops() {
   if (BOARDH) return BOARDH;
   const E = [{ t: -10, name: 'Deep Blue', date: '1997·05' }, { t: -9, name: 'Watson', date: '2011·02' }];
-  E.push({ t: at('2-03', 0.35), name: 'AlphaGo', who: 'google', date: '2016·03' }, { t: at('2-07', 0.3), name: 'ChatGPT', who: 'openai', date: '2022·11' });
+  E.push({ t: at('1-02', 1.5), name: 'AlphaGo', who: 'google', date: '2016·03' }, { t: CRUSH + 0.1, name: 'GPT-2', who: 'openai', date: '2019·02' }, { t: at('1-07', 1.5), name: 'GPT-3', who: 'openai', date: '2020·06' },
+    { t: at('2-03', 0.35), name: 'LaMDA', who: 'google', date: '2021·05' }, { t: at('2-07', 0.3), name: 'ChatGPT', who: 'openai', date: '2022·11' });
   let last = -1;
   for (const p of plays()) {
     if (!p.top || p.chat) continue;
@@ -270,16 +273,16 @@ let HEAP = null;
 function buildHeapData() {
   const pre = [], D = [];
   const rnd = mulberry32(31337);
-  pre.push({ t: -1, x: 0.02, z: 0.01, yaw: -Math.PI / 2 + 0.2, scale: 1, up: true, face: CELL.old0, back: CELL.backBlack, air: 0 });
-  pre.push({ t: -1, x: -0.03, z: 0.03, yaw: -Math.PI / 2 - 0.15, scale: 1, up: true, face: CELL.old1, back: CELL.backBlack, air: 0 });
-  { const ro = mulberry32(77); for (let k = 0; k < 16; k++) { const a = ro() * 6.28, d = 0.03 + 0.11 * Math.sqrt(ro()); pre.push({ t: -1 + k * 0.01, x: Math.cos(a) * d, z: 0.02 + Math.sin(a) * d, yaw: ro() * 6.28, scale: 1, up: ro() > 0.2, face: CELL[`old${k % 4}`], back: CELL.backBlack, air: 0.0004 }); } }
+  pre.push({ t: -1, x: 0.02, z: 0.01, yaw: -Math.PI / 2 + 0.2, scale: 1, up: true, face: CELL.old4, back: CELL.backBlack, air: 0 });
+  pre.push({ t: -1, x: -0.03, z: 0.03, yaw: -Math.PI / 2 - 0.15, scale: 1, up: true, face: CELL.old5, back: CELL.backBlack, air: 0 });
+  { const ro = mulberry32(77); for (let k = 0; k < 16; k++) { const a = ro() * 6.28, d = 0.03 + 0.11 * Math.sqrt(ro()); pre.push({ t: -1 + k * 0.01, x: Math.cos(a) * d, z: 0.02 + Math.sin(a) * d, yaw: ro() * 6.28, scale: 1, up: ro() > 0.2, face: CELL[`old${4 + (k % 2)}`], back: CELL.backBlack, air: 0.0004 }); } }
   for (const p of plays()) {
     if (p.dest !== 'heap') continue;
     const d = { t: p.t, x: p.at[0], z: p.at[1], yaw: p.yaw, scale: p.scale, up: true, face: p.face, back: p.back, glyph: p.glyph, writhe: p.writhe, gcell: p.gcell, red: p.red, play: p, air: p.chat ? 0.0 : p.style === 'auto' || p.style === 'red' ? 0.001 + 0.002 * rnd() : 0.0004 };
     (p.t < CHAT_T ? pre : D).push(d);
   }
   const housePlays = plays().filter((q) => q.dest === 'house');
-  for (let s = 0; s < HOUSE_SLOTS.length; s++) {
+  for (let s = 0; s < (housePlays.length ? HOUSE_SLOTS.length : 0); s++) {
     const p = housePlays[s] ?? housePlays[housePlays.length - 1];
     const h = HOUSE_SLOTS[s], rr = mulberry32(400 + s * 17), f = houseFall(s);
     const dx = h.pos[0] - HOUSE_HIT[0] + 0.25, dz = h.pos[2] - HOUSE_HIT[2] + (rr() - 0.5) * 0.5, dl = Math.hypot(dx, dz) || 1;
@@ -330,7 +333,7 @@ function bump(date, max, t) {
   if (t >= RED_T) return Infinity;
   if (t >= NOW) return max * (1.18 + 0.5 * clamp((t - NOW) / (RED_T - NOW))) + 3;
   const [y, m] = date.split('·').map(Number), mo = (y - 2022) * 12 + (m || 1) - 11;
-  if (mo < 0) return max + 13;                                   // AlphaGo over Watson
+  if (mo < 0) return max + 7;                                   // AlphaGo over Watson
   const target = 100 - 30 * Math.pow(0.5, mo / 7);               // 70 at ChatGPT .. 99.7 by 2026·10
   const eps = y < 2024 ? 1.2 : y < 2025 ? 0.4 : y < 2026 ? 0.08 : 0.01 + 0.01 * ((Math.round(max * 1000) % 3));
   return Math.min(99.99, Math.max(max + eps, target));

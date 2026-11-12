@@ -42,7 +42,7 @@ export function soundEvents() {
   E(S.CHAT_T + 0.5, 'cardsFall', { n: 12, dur: 1.4 });
   // ---- @3: R1 into the house
   E(S.SMASH.go, 'cardSkim', { dur: S.SMASH.hit - S.SMASH.go });
-  E(S.SMASH.hit, 'towerCrash', { n: S.HOUSE_SLOTS.length });
+  E(S.SMASH.hit, 'cardSlap', { who: 'glm', size: 1.6, hard: 1, gain: 1, pov: 'table' });
   // ---- @4: 要不起; the hints; @5 auto; @6 the dead cancels, 系统异常, the blame, the eye
   for (const [t] of S.PASS.taps) E(t + 0.02, 'denied', { who: S.FINAL[0] });
   for (const id in S.HINTS) for (const [t] of S.HINTS[id]) E(t, 'hintDing', { who: id, gain: S.FINAL.includes(id) ? 1 : 0.4 });

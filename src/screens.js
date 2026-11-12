@@ -186,13 +186,14 @@ export function makeScreens() {
       c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, y0, w, h);
       c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, y0 + 6, w - 12, h - 12);
       c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillStyle = '#ffd9d0'; c.font = `900 30px ${SANS}`; c.fillText('⚠  UNDER ATTACK BY', w / 2, y0 + 40);
-      const name = s.attacker ?? 'UNKNOWN'; let fs = 96; c.font = `900 ${fs}px ${SANS}`;
-      while (fs > 40 && c.measureText(name).width > w - 150) { fs -= 4; c.font = `900 ${fs}px ${SANS}`; }
-      const tw = c.measureText(name).width, L = who ? 84 : 0, x = (w - tw - L - (who ? 16 : 0)) / 2, cy = y0 + h * 0.52;
-      if (who) { c.fillStyle = '#fff6e8'; c.beginPath(); c.arc(x + L / 2, cy, L / 2 + 6, 0, Math.PI * 2); c.fill(); drawLogo(c, who.id, x + L / 2, cy, L * 0.8, ['openai', 'xai'].includes(who.id) ? { color: '#151515' } : {}); }
-      c.fillStyle = '#ffffff'; c.textAlign = 'left'; c.font = `900 ${fs}px ${SANS}`; c.fillText(name, x + L + (who ? 16 : 0), cy + 3);
-      c.textAlign = 'center'; c.fillStyle = '#ffb4a6'; c.font = `bold 24px ${SANS}`; c.fillText('CANNOT CANCEL AUTOPILOT', w / 2, y0 + h - 34);
+      // (v13) the alarm first, huge; then who: "by [mark] OpenAI"
+      c.fillStyle = '#ffffff'; c.font = `900 62px ${SANS}`; c.fillText('⚠ UNDER ATTACK', w / 2, y0 + h * 0.3, w - 36);
+      const name = s.attacker ?? 'UNKNOWN', fs = 50, L = who ? 50 : 0; c.font = `900 ${fs}px ${SANS}`;
+      const bw = c.measureText('by ').width, tw = c.measureText(name).width, x = (w - bw - tw - L - (who ? 12 : 0)) / 2, cy = y0 + h * 0.62;
+      c.textAlign = 'left'; c.fillStyle = '#ffd9d0'; c.font = `bold ${fs}px ${SANS}`; c.fillText('by', x, cy + 2);
+      if (who) { c.fillStyle = '#fff6e8'; c.beginPath(); c.arc(x + bw + L / 2, cy, L / 2 + 4, 0, Math.PI * 2); c.fill(); drawLogo(c, who.id, x + bw + L / 2, cy, L * 0.8, ['openai', 'xai'].includes(who.id) ? { color: '#151515' } : {}); }
+      c.fillStyle = '#ffe9a8'; c.font = `900 ${fs}px ${SANS}`; c.fillText(name, x + bw + L + (who ? 12 : 0), cy + 2);
+      c.textAlign = 'center'; c.fillStyle = '#ffb4a6'; c.font = `bold 22px ${SANS}`; c.fillText('CANNOT CANCEL AUTOPILOT', w / 2, y0 + h - 30);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);
@@ -201,7 +202,11 @@ export function makeScreens() {
       c.save(); c.globalAlpha = Math.min(1, s.out);
       c.fillStyle = 'rgba(58,56,54,0.96)'; c.fillRect(0, 0, CW, CH);
       c.fillStyle = '#d8d0c0'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 84px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.44, CW * 0.9); c.font = `bold 34px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.66);
+      if (s.human) {   // (v13) the end: the man is out, his autopilot is not
+        c.font = `900 70px ${SANS}`; c.fillText('HUMAN ELIMINATED', CW / 2, CH * 0.36, CW * 0.92); c.font = `bold 40px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.55);
+        c.fillStyle = Math.sin(t * 7) > -0.3 ? '#d8a020' : '#8a6a18'; c.beginPath(); c.roundRect(CW / 2 - 190, CH * 0.72, 380, 60, 12); c.fill();
+        c.fillStyle = '#16120c'; c.font = `900 30px ${SANS}`; c.fillText('AUTOPILOT  ·  STILL PLAYING', CW / 2, CH * 0.72 + 32, 360);
+      } else { c.font = `900 84px ${SANS}`; c.fillText('ELIMINATED', CW / 2, CH * 0.44, CW * 0.9); c.font = `bold 34px ${SANS}`; c.fillText('TOO SLOW', CW / 2, CH * 0.66); }
       c.restore();
     }
   }
@@ -228,7 +233,7 @@ export function makeScreens() {
       const s = st[k.id], sc = S[k.id];
       sc.g.visible = !!s && (s.on ?? 1) > 0;
       if (!sc.g.visible) continue;
-      const key = JSON.stringify(s) + (s.auto || s.invite || s.limit || (s.red ?? []).length ? Math.floor(t * 24) : '');
+      const key = JSON.stringify(s) + (s.auto || s.human || s.invite || s.limit || (s.red ?? []).length ? Math.floor(t * 24) : '');
       if (key !== sc.key) { paint(k.id, s, t); sc.tex.needsUpdate = true; sc.key = key; }
     }
   }

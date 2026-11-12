@@ -49,7 +49,7 @@ function handFor(id, t) {
   if (!best) {
     // between presses close together: hover
     const nx = L.find((p) => p.t >= t), pv = [...L].reverse().find((p) => p.t < t);
-    if (nx && pv && nx.t - pv.t < 1.4) return { target: screenPoint(id, (nx.uv[0] + pv.uv[0]) / 2, (nx.uv[1] + pv.uv[1]) / 2, 0.07), pose: 'point', fingers, tip: 1 };
+    if (nx && pv && nx.t - pv.t < 0.75) return { target: screenPoint(id, (nx.uv[0] + pv.uv[0]) / 2, (nx.uv[1] + pv.uv[1]) / 2, 0.07), pose: 'point', fingers, tip: 1 };
     return null;
   }
   // (v7) where the hand target stops so the finger / fist / palm just meets the glass: a pointing fingertip is ~13 cm
@@ -114,7 +114,7 @@ function kingsState(t, st) {
         else if (KING[top.who].side !== k.side) { K.face = face('sour', { eyes: 'side' }); K.look = headAt(top.who); }
       }
       // the house of cards: the US gloat; R1 hits it; mouths open
-      if (sx > 0 && t > at('3-02') && t < SMASH.hit) { K.look = HOUSE_HIT; K.face = face('proud', { mouth: 'smirk', eyes: 'narrow' }); }
+      if (id === 'openai' && t > at('3-03') && t < SMASH.hit) { K.look = headAt(FINAL[0]); K.face = face('proud', { mouth: 'smirk', eyes: 'narrow' }); }
       if (sx > 0 && t >= SMASH.hit && t < CUES.big) { K.look = HOUSE_HIT; K.face = face('shock'); K.lean = -0.08; }
       if (id === 'glm' && t > SMASH.go - 0.6 && t < CUES.gasp) { K.face = t < SMASH.hit ? face('angry', { mouth: 'grit' }) : face('proud'); K.look = HOUSE_HIT; }
       // stuck under GPT-4.5: 要不起, the sweat, the hint, the grin
@@ -214,7 +214,7 @@ function kingsState(t, st) {
     // hands off: leaning back on 托管, both hands in the lap (until the red cards make them grab for the screen again)
     if (auto && t > AUTO[id] + 0.5 && t < RED_T && !pointTo && !(h && h.kind)) {
       const lap = ease(t, AUTO[id] + 0.5, AUTO[id] + 1.2);
-      if (lap > 0.05) { K.armR = arm(id, lerp3(kingRestHand(id, 'R'), [sx * 1.47, -0.1, z - 0.1], lap)); K.armL = { target: lerp3(kingRestHand(id, 'L'), [sx * 1.47, -0.1, z + 0.1], lap), pole: [sx * 0.4, -0.8, 0] }; K.hand.R = 'rest'; K.hand.L = 'rest'; }
+      if (lap > 0.05) { const rz = KING[id].side === 'CN' ? 1 : -1; K.armR = { target: lerp3(kingRestHand(id, 'R'), [sx * 1.42, 0.0, z + rz * 0.27], lap), pole: [0, -0.6, rz * 0.8] }; K.armL = { target: lerp3(kingRestHand(id, 'L'), [sx * 1.42, 0.0, z - rz * 0.27], lap), pole: [0, -0.6, -rz * 0.8] }; K.hand.R = 'rest'; K.hand.L = 'rest'; }
     }
   }
 }
@@ -226,15 +226,16 @@ function screensState(t) {
   const P = S.plays();
   for (const k of KINGS) {
     const id = k.id;
-    if (t >= AFTER) { out[id] = { on: 1, hand: [], hidden: 0, red: [], flipped: 0, hi: -1, tap: -1, press: null, auto: 0, deal: null, out: 1 }; continue; }
+    if (t >= AFTER) { out[id] = { on: 1, hand: [], hidden: 0, red: [], flipped: 0, hi: -1, tap: -1, press: null, auto: 1, deal: null, out: 1, human: 1 }; continue; }
     if (t >= BLACK) continue;
     const v0 = Math.max(0, Math.min(REAL_N[id] - 5, Math.floor((t - 20) / 14)));
     const hand = t >= AUTO[id] ? [0, 1, 2, 3, 4].map((i) => CELL[`${id}${REAL_N[id] + (i % 2)}`]) : [0, 1, 2, 3, 4].map((i) => CELL[`${id}${Math.min(i + v0, REAL_N[id] - 1)}`] ?? CELL.blank);
     const s = { on: 1, hand, hidden: 6, red: [1, 4], flipped: 0, hi: -1, tap: -1, press: null, auto: t >= AUTO[id] ? 1 : 0, deal: null };
+    if (t < AUTO[id]) { const seen = {}; for (const p of P) { if (p.who !== id || p.style === 'auto' || p.style === 'red' || p.tr < t - 0.05 || p.tr > t + 5 || p.slot > 4 || seen[p.slot]) continue; seen[p.slot] = 1; s.hand[p.slot] = p.face; } if (t < CUES.chat) s.hand = s.hand.map((c, i) => (seen[i] ? c : CELL.blank)); }
     if (FINAL.includes(id)) s.red = [1, 3, 4];
     if (t >= RED_T) s.flipped = Math.min(6, Math.floor((t - RED_T) * (id === FINAL[0] ? 2.2 : 1.6)) + 1);
     if (id === FINAL[0] && t >= PASS.t0 && t < HINTS[FINAL[0]][0][0]) s.pass = 1;
-    if (t >= LIMIT0 && t < AUTO[id] && !(OUT[id] && t >= OUT[id].out)) s.limit = limitAt(t);
+    if (t < AUTO[id] && !(OUT[id] && t >= OUT[id].out)) s.limit = Math.round(limitAt(t) * 10) / 10;
     if (t >= SEMI[id] && t < AUTO[id]) {
       s.semi = 1;
       const nx = P.find((p) => p.who === id && p.style === 'semi' && p.tr > t - 0.05);

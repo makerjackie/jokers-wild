@@ -201,10 +201,12 @@ function paintMakerFace(c, x0, y0) {
 // ---------------------------------------------------------------- 《失控》
 // the cards from before ChatGPT: narrow machines, an older print (yellowed paper, no score, no rosette)
 const OLD = [
+  { name: 'AlphaGo', maker: 'DeepMind', date: '2016', col: '#2d2d33', icon: 'go' },
+  { name: 'LaMDA', maker: 'Google', date: '2021', col: '#3b6fb6', icon: 'globe' },
+  { name: 'GPT-3', maker: 'OpenAI', date: '2020', col: '#3d4a44', icon: 'openai' },
+  { name: 'GPT-2', maker: 'OpenAI', date: '2019', col: '#4b5a52', icon: 'openai' },
   { name: 'DEEP BLUE', maker: 'IBM', date: '1997', col: '#1f4f9a', icon: 'knight' },
   { name: 'WATSON', maker: 'IBM', date: '2011', col: '#3b6fb6', icon: 'globe' },
-  { name: 'AlphaGo', maker: 'DeepMind', date: '2016', col: '#2d2d33', icon: 'go' },
-  { name: 'GPT-2', maker: 'OpenAI', date: '2019', col: '#4b5a52', icon: 'openai' },
 ];
 function paintOld(c, x0, y0, o) {
   c.save(); c.translate(x0, y0);
