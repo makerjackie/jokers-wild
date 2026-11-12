@@ -3427,6 +3427,7 @@ export function makeSet(ctx = {}) {
       const sw = st.lamp?.swing ?? [0, 0];
       state.swing[0] = sw[0] ?? 0; state.swing[1] = sw[1] ?? 0;
       lamp.swing.rotation.set(state.swing[0], 0, state.swing[1]);
+      lamp.root.visible = !(st.lamp?.hide);   // (v12) the fixture out of a shot that looks straight up past it (its light stays)
       lamp.LU.uGlow.value = 1 - 0.88 * (st.lamp?.flicker ?? 0);
       lamp.LU.uOn.value = Math.max(0, Math.min(1, st.lamp?.on ?? 1));
       api.lampBulb(lamp.LU.uBulbW.value);

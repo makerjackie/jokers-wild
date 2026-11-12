@@ -1005,7 +1005,7 @@ function buildCrown(id, s, mats, plateTex) {
     glowGem.position.set(0, bandH + 0.035 * s, R * 1.05); g.add(glowGem);
   }
   const plateR = (kind === 'tall' ? 0.055 : 0.042) * s;
-  const plateMat = celMaterial({ color: '#ffffff', id: 27, gloss: 0.8, uniforms: { uMap: { value: plateTex } }, pattern: 'col = texture(uMap, vUv).rgb; specTh = 0.97;' });
+  const plateMat = celMaterial({ color: '#ffffff', id: 27, gloss: 0.8, uniforms: { uMap: { value: plateTex } }, pattern: 'col = texture(uMap, vUv).rgb; specTh = 0.97; emis = col * 0.42;' });   // (v12) his mark never falls into shadow
   const plate = new THREE.Mesh(new THREE.CircleGeometry(plateR, 40), plateMat);
   const rim = new THREE.Mesh(new THREE.TorusGeometry(plateR, 0.005 * s, 8, 40), metal);
   const plateG = new THREE.Group(); plateG.add(plate); plateG.add(rim);

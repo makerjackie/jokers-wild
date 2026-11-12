@@ -186,7 +186,7 @@ export const SHOTS = {
   // over his head, looking down at the glowing #1 and the finger coming to it
   '8-03': (t, st, w) => screenCam(w.camera, st, 'anthropic', 0.56, 0.5, 0.5, 44),
   // low, looking up past their heads: the last card coming down out of the eye
-  '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [1.1, 0.32, 1.75 - 0.15 * u], [-0.75, lerp(5.6, 5.0, u), -0.4], 66); st.look.far = 300; st.look.exposure = 1.85; },
+  '8-04': (t, st, w) => { const u = uRow(t, '8-04'); camLook(w.camera, [-0.5, 0.32, 1.75 - 0.15 * u], [1.3, lerp(5.6, 5.0, u), -0.4], 66); st.set.lamp.hide = 1; st.look.far = 300; st.look.exposure = 1.85; },
   // his grin, close; the edge of the shadow slides over it
   '8-05': (t, st, w) => { faceCam(w.camera, st, w, t, 'anthropic', { d: 0.5, dz: 0.1, dy: -0.22, ly: -0.02, fov: 32 }); st.look.exposure = 1.45; },
   '8-06': (t, st, w) => { camLook(w.camera, [0, 0.74, 1.2], [0, 0.64, 0], 74); st.look.fade = 1; },

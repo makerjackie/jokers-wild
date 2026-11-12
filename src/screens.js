@@ -124,7 +124,7 @@ export function makeScreens() {
       c.fillStyle = '#bdb6a6'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 26px ${SANS}`; c.fillText("CAN'T BEAT IT", CW * 0.38, CH * 0.415 + 26);
     }
     // a card dealt from above
-    if (s.deal != null) { const x = CW * 0.56 - 50, y = CH * 0.5 - 72; c.shadowColor = '#fff3c4'; c.shadowBlur = 40; c.fillStyle = '#fff3c4'; c.fillRect(x - 6, y - 6, 112, 156); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 100, 144); }
+    if (s.deal != null) { const x = CW * 0.45 - 90, y = CH * 0.56 - 130; c.shadowColor = '#fff3c4'; c.shadowBlur = 50; c.fillStyle = '#fff3c4'; c.fillRect(x - 7, y - 7, 194, 274); c.shadowBlur = 0; drawCell(c, s.deal, x, y, 180, 260); }   // (v12) big: the one thing on the screen
     // buttons
     const btn = (key, zh, en, on, onCol = '#3f6fd8') => {
       const [u, v] = BTN[key], w = 150, h = 72, x = u * CW - w / 2, y = v * CH - h / 2;
@@ -181,11 +181,18 @@ export function makeScreens() {
     }
     // 系统异常: the cancel did nothing
     if (s.error) {
-      const k = Math.sin(t * 9) > -0.4 ? 1 : 0.55;
-      c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, CH * 0.3, CW * 0.76, CH * 0.4);
-      c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, CH * 0.3 + 6, CW * 0.76 - 12, CH * 0.4 - 12);
-      c.fillStyle = '#ffe9e2'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `900 ${s.attacker ? 40 : 46}px ${SANS}`; c.fillText(s.attacker ? `⚠ UNDER ATTACK BY ${s.attacker}` : '⚠ UNDER ATTACK', CW * 0.38, CH * 0.45, CW * 0.72); c.font = `bold 26px ${SANS}`; c.fillText('CANNOT CANCEL AUTOPILOT', CW * 0.38, CH * 0.6, CW * 0.72);
+      // (v12) read in one glance: WHO, huge, with his mark; the rest is small print
+      const k = Math.sin(t * 9) > -0.4 ? 1 : 0.55, y0 = CH * 0.2, h = CH * 0.6, w = CW * 0.76, who = KINGS.find((q) => q.name === s.attacker);
+      c.fillStyle = k > 0.9 ? 'rgb(132,10,8)' : 'rgb(96,6,5)'; c.fillRect(0, y0, w, h);
+      c.strokeStyle = '#ff3a26'; c.lineWidth = 5; c.strokeRect(6, y0 + 6, w - 12, h - 12);
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillStyle = '#ffd9d0'; c.font = `900 30px ${SANS}`; c.fillText('⚠  UNDER ATTACK BY', w / 2, y0 + 40);
+      const name = s.attacker ?? 'UNKNOWN'; let fs = 96; c.font = `900 ${fs}px ${SANS}`;
+      while (fs > 40 && c.measureText(name).width > w - 150) { fs -= 4; c.font = `900 ${fs}px ${SANS}`; }
+      const tw = c.measureText(name).width, L = who ? 84 : 0, x = (w - tw - L - (who ? 16 : 0)) / 2, cy = y0 + h * 0.52;
+      if (who) { c.fillStyle = '#fff6e8'; c.beginPath(); c.arc(x + L / 2, cy, L / 2 + 6, 0, Math.PI * 2); c.fill(); drawLogo(c, who.id, x + L / 2, cy, L * 0.8, ['openai', 'xai'].includes(who.id) ? { color: '#151515' } : {}); }
+      c.fillStyle = '#ffffff'; c.textAlign = 'left'; c.font = `900 ${fs}px ${SANS}`; c.fillText(name, x + L + (who ? 16 : 0), cy + 3);
+      c.textAlign = 'center'; c.fillStyle = '#ffb4a6'; c.font = `bold 24px ${SANS}`; c.fillText('CANNOT CANCEL AUTOPILOT', w / 2, y0 + h - 34);
     }
     // the same eye on every screen
     if (s.eye) paintEye(c, s.eye, t);

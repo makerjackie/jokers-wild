@@ -316,7 +316,7 @@ export function eyeSlots() {
 }
 
 // ---------------------------------------------------------------- the end: the last card comes down out of the eye
-export const GIANT_END = { scale: 30, from: 9.0, t0: at('8-04', 0.1), to: 4.7, x: -0.75 };   // (v9) above the lamp chain, off its axis   // (v8) we cut to black while it is still above the lamp
+export const GIANT_END = { scale: 30, from: 9.0, t0: at('8-04', 0.1), to: 4.7, x: 1.15 };   // (v9) above the lamp chain, off its axis   // (v8) we cut to black while it is still above the lamp
 export function giantEndY(t) { const u = clamp((t - GIANT_END.t0) / (BLACK - GIANT_END.t0)); return lerp(GIANT_END.from, GIANT_END.to, 1 - (1 - u) * (1 - u) * (1 - 0.35 * u)); }
 // the #1 at time t: { t, name, who } (who is undefined before the kings play)
 export function topAt(t) { const E = boardTops(); let e = E[0]; for (const x of E) { if (x.t > t) break; e = x; } return e; }

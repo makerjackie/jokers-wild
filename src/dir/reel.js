@@ -35,7 +35,7 @@ function presses() {
   for (const id of IDS) if (AUTO[id] < 1e9) add(id, AUTO[id], BTN.auto, 'point', 'auto', id === 'openai' ? 0.5 : 0.25, id === 'openai' ? 1.25 : 0.5);   // (v11) his own finger, on purpose: it hangs over the key, then presses
   for (const id of HOLD) OUT[id].pass.forEach((t, i) => add(id, t, slotUV(0, 3 + i), 'point', 'tap'));   // too late: 超时
   for (const id in CANCEL) CANCEL[id].forEach((t, i) => add(id, t, BTN.cancel, i < 2 ? 'point' : 'fist', 'cancel', 0.06));
-  for (const id of FINAL) add(id, REACH[id] + 0.9, [0.56, 0.5], 'point', 'reach', 9);
+  for (const id of FINAL) add(id, REACH[id] + 0.9, [0.6, 0.56], 'point', 'reach', 9);
   for (const id in PRESS) PRESS[id].sort((a, b) => a.t - b.t);
   return PRESS;
 }
@@ -489,7 +489,7 @@ export function base(t, world) {
   if (t > S.CRUSH - 0.5 && t < S.CRUSH + 0.05) { const u = clamp((t - (S.CRUSH - 0.5)) / 0.5); st.look.shade = { at: [S.ANT_CRUSH[0], S.ANT_CRUSH[1]], r: [lerp(0.16, 0.05, u), lerp(0.22, 0.07, u)], k: 0.85 * u }; }
   if (t >= BLACK && (t < AFTER || t >= CUES.title)) st.look.fade = 1;
   // ---- the title; the credits roll and stop on the writer, the one human; a card falls on his name. Black.
-  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '', en: 'OUT OF CONTROL', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
+  if (t > CUES.title && t < CUES.credits) st.titles = { zh: '', en: 'TOO SLOW', alpha: ease(t, CUES.title + 0.4, CUES.title + 1.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)),
     sub: 'A story from another world. Any resemblance to this one is purely coincidental.', subAlpha: ease(t, CUES.title + 1.6, CUES.title + 2.4) * (1 - ease(t, CUES.credits - 0.8, CUES.credits - 0.1)) };
   if (t >= CUES.credits) {
     const lines = ['Directed by', 'Storyboards', 'Animation', 'Characters', 'Art direction', 'Lighting', 'Modeling', 'Music', 'Sound', 'Editing'].map((r) => [r, 'AI']).concat([['', ''], ['', ''], ['', ''], ['Written by a human', 'MakerJackie']]);
