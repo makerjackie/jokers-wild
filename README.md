@@ -33,7 +33,7 @@ Every frame is a pure function of time, so any frame can be rendered alone and t
 
 ## Numbers / 数据
 
-- 64 shots, 3,895 frames at 24 fps, 3840×2160
+- 82 shots, 3,895 frames at 24 fps, 3840×2160
 - about 23,000 lines of JavaScript in `src/`
 - written by a human (MakerJackie); directed, animated, scored and edited by Claude
 

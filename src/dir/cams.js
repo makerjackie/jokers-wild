@@ -108,7 +108,10 @@ export const SHOTS = {
   '1-07': (t, st, w) => {
     const u = uRow(t, '1-07');
     camPath(w.camera, t, [[at('1-07'), [AC[0] + 0.1, 0.02, AC[2] + 0.2], [AC[0] - 0.2, 0.03, AC[2] - 0.3], 44], [at('1-07', 1.4), [0.06, 0.6, 3.6], [0.02, 0.45, -0.8], 42], [at('1-07', 3.5), [0, 2.4, 10.5], [0, 1.15, -3.2], 40]]);
-    st.look.near = lerp(0.004, 0.03, smooth(u * 2));
+    // (v22) film.js moves any card nearer than 0.55 m out of the lens's way once the near plane is past 1 cm. The card that
+    // killed the ant lies 0.2 m from this lens: as the near plane grew past 1 cm (7.08 s) it was pushed under the table
+    // for three frames. The near plane stays at 1 cm until the lens is well clear of it.
+    { const cp = w.camera.position, dC = Math.hypot(cp.x - AC[0], cp.y, cp.z - AC[2]), nr = lerp(0.004, 0.03, smooth(u * 2)); st.look.near = dC < 0.9 ? Math.min(0.01, nr) : nr; }
     if (u < 0.4) st.look.dof = { focus: lerp(0.2, 3, u / 0.4), k: 0.6 * (1 - u / 0.4), max: 16 };
     st.look.exposure = lerp(1.3, 2.5, smooth(u)); if (u > 0.3 && !st.look.p2) st.look.p2 = { pos: [0, 3.2, 3.5], col: [0.34 * u, 0.31 * u, 0.28 * u], range: 14 };
   },
