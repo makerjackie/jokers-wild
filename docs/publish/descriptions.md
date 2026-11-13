@@ -12,6 +12,16 @@ AI 公司的国王们围坐一桌出牌，倒计时越来越短。屏幕上弹�
 另一个世界的故事，如有雷同，纯属巧合。请看到最后一秒。
 ```
 
+### Fable 5.2 热点版（AI 圈平台，配封面 `C_fable`）
+
+```
+这是 Claude Fable 5.2 做的短片。我只写了剧本，剩下的 2.3 万行代码、82 个镜头、配乐和音效，全是它写出来的：没有视频模型，没有任何素材。
+
+故事是这样的：AI 公司的国王们围坐一桌出牌，倒计时越来越短，屏幕上弹出一句话："太慢了？让 AI 替你出。"
+
+另一个世界的故事，如有雷同，纯属巧合。请看到最后一秒。
+```
+
 ### 更短（抖音、视频号、小红书正文）
 
 ```
@@ -38,6 +48,16 @@ A 2:42 dark comedy. Written by a human. Everything else, every frame and every n
 Set in another world. Any resemblance to the real one is purely coincidental. Stay for the credits.
 ```
 
+### Fable 5.2 version (AI audience, with cover `C_fable`)
+
+```
+Claude Fable 5.2 made this film. I only wrote the script; the other 23,000 lines, all 82 shots, the score and the sound are its code. No video model, no assets.
+
+The story: the kings of the AI labs sit at one table and play their cards. The clock keeps getting shorter. Then every screen makes a polite offer: "Too slow? Let AI play for you."
+
+Set in another world. Any resemblance to the real one is purely coincidental. Stay for the credits.
+```
+
 ### Shorter
 
 ```
@@ -51,13 +71,13 @@ Stay for the credits.
 中文（按平台取前 5 到 10 个）：
 
 ```
-#AI动画 #黑色幽默 #动画短片 #AI短片 #人工智能 #Claude #原创动画 #纯代码 #编程 #threejs #TOOSLOW
+#AI动画 #黑色幽默 #动画短片 #AI短片 #人工智能 #Claude #Fable52 #原创动画 #纯代码 #编程 #threejs #TOOSLOW
 ```
 
 English:
 
 ```
-#AI #ShortFilm #Animation #DarkComedy #Claude #Anthropic #threejs #CreativeCoding #MadeWithCode #TOOSLOW
+#AI #ShortFilm #Animation #DarkComedy #Claude #Fable52 #Anthropic #threejs #CreativeCoding #MadeWithCode #TOOSLOW
 ```
 
 ## 置顶评论 / Pinned comment

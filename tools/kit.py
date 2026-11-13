@@ -14,7 +14,7 @@ still = lambda t: J('out', 'covers', 'stills', 't%06.2f.jpg' % t)
 
 if not all(os.path.exists(still(t)) for t, _ in STILLS):
     subprocess.check_call(['node', 'tools/snap.mjs', '--w', '3840', '--h', '2160', '--scale', '2', '--out', 'out/covers/stills'] + [str(t) for t, _ in STILLS], cwd=root)
-need = [J('out', 'final', 'TOO_SLOW_4K.mp4'), J('out', 'final', 'TOO_SLOW_1080p.mp4')] + [J('out', 'covers', l, f'{d}_{r}.jpg') for l in ('zh', 'en') for d in ('A_standoff', 'B_eye') for r in ('16x9', '4x3', '3x4', '9x16')]
+need = [J('out', 'final', 'TOO_SLOW_4K.mp4'), J('out', 'final', 'TOO_SLOW_1080p.mp4')] + [J('out', 'covers', l, f'{d}_{r}.jpg') for l in ('zh', 'en') for d in ('A_standoff', 'B_eye', 'C_fable', 'D_offer', 'E_out', 'F_first', 'G_stamp') for r in ('16x9', '4x3', '3x4', '9x16')]
 missing = [p for p in need if not os.path.exists(p)]
 if missing: sys.exit('missing:\n  ' + '\n  '.join(missing))
 
@@ -25,6 +25,9 @@ for f in ('titles.md', 'descriptions.md', 'publish.json'): shutil.copy2(J('docs'
 for l in ('zh', 'en'):
     for f in sorted(os.listdir(J('out', 'covers', l))):
         if f.endswith('.jpg'): shutil.copy2(J('out', 'covers', l, f), os.path.join(kit, 'covers', l, f))
+for l in ('zh', 'en'):   # one sheet of every design, to choose from
+    o = J('out', 'covers', f'overview_{l}.jpg')
+    if os.path.exists(o): shutil.copy2(o, os.path.join(kit, 'covers', f'overview_{l}.jpg'))
 for t, n in STILLS: shutil.copy2(still(t), os.path.join(kit, 'stills', n + '.jpg'))
 for f in ('TOO_SLOW_4K.mp4', 'TOO_SLOW_1080p.mp4'): shutil.copy2(J('out', 'final', f), os.path.join(kit, 'video', f))
 

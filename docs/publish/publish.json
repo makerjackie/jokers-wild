@@ -13,19 +13,40 @@
     "video_4k": "video/TOO_SLOW_4K.mp4",
     "video_1080p": "video/TOO_SLOW_1080p.mp4",
     "covers": {
-      "zh": {
-        "16x9": "covers/zh/A_standoff_16x9.jpg",
-        "4x3": "covers/zh/A_standoff_4x3.jpg",
-        "3x4": "covers/zh/A_standoff_3x4.jpg",
-        "9x16": "covers/zh/A_standoff_9x16.jpg"
+      "pattern": "covers/{lang}/{design}_{size}.jpg",
+      "langs": [
+        "zh",
+        "en"
+      ],
+      "sizes": {
+        "16x9": [
+          1920,
+          1080
+        ],
+        "4x3": [
+          1600,
+          1200
+        ],
+        "3x4": [
+          1080,
+          1440
+        ],
+        "9x16": [
+          1080,
+          1920
+        ]
       },
-      "en": {
-        "16x9": "covers/en/A_standoff_16x9.jpg",
-        "4x3": "covers/en/A_standoff_4x3.jpg",
-        "3x4": "covers/en/A_standoff_3x4.jpg",
-        "9x16": "covers/en/A_standoff_9x16.jpg"
+      "designs": {
+        "A_standoff": "general first choice: the kings blaming each other; text: humans were too slow, so an AI made this film",
+        "C_fable": "when riding the Fable 5.2 wave: same picture; text: made by Fable 5.2",
+        "D_offer": "the offer on the screen; text: too slow? let AI play for you",
+        "E_out": "the grey screen TOO SLOW / ELIMINATED; text: keep up or you are out",
+        "F_first": "the giant #1 card; text: everyone wants to be #1",
+        "B_eye": "the eye of cards on black; text as A",
+        "G_stamp": "type only, the red TOO SLOW stamp; text as A"
       },
-      "alternative_design": "B_eye (same sizes, same folders)"
+      "default_design": "A_standoff",
+      "fable_design": "C_fable"
     },
     "stills": "stills/"
   },
@@ -36,26 +57,131 @@
       "description": "AI 公司的国王们围坐一桌出牌，倒计时越来越短。屏幕上弹出一句话：\"太慢了？让 AI 替你出。\"\n\n这部 2 分 42 秒的短片，编剧是人类，其余全部由 Claude Fable 5.2 用代码完成：没有视频模型，没有任何素材，画面和配乐都是一行行代码算出来的。\n\n另一个世界的故事，如有雷同，纯属巧合。请看到最后一秒。",
       "description_short": "人类太慢了，所以这部短片是 AI 做的。\n编剧是人，画面、配乐、剪辑全是 AI 用代码写出来的，没有用任何视频模型。\n请看到最后一秒。",
       "one_line": "我只写了剧本。剩下的 2.3 万行代码，是 AI 写的。",
-      "tags": ["AI动画", "黑色幽默", "动画短片", "AI短片", "人工智能", "Claude", "原创动画", "纯代码", "编程", "threejs", "TOOSLOW"],
-      "pinned_comment": "制作说明：编剧是我（人类）。导演、动画、配乐、音效、剪辑由 Claude Fable 5.2 用代码完成，约 2.3 万行 JavaScript，82 个镜头，前后改了 22 版。没有使用任何图像、视频或音频生成模型，也没有任何素材文件，画面由 three.js 算出，配乐和音效由代码合成。\n片中出现的公司名称和标志仅用于讽刺，故事发生在另一个世界，如有雷同，纯属巧合。"
+      "tags": [
+        "AI动画",
+        "黑色幽默",
+        "动画短片",
+        "AI短片",
+        "人工智能",
+        "Claude",
+        "Fable52",
+        "原创动画",
+        "纯代码",
+        "编程",
+        "threejs",
+        "TOOSLOW"
+      ],
+      "pinned_comment": "制作说明：编剧是我（人类）。导演、动画、配乐、音效、剪辑由 Claude Fable 5.2 用代码完成，约 2.3 万行 JavaScript，82 个镜头，前后改了 22 版。没有使用任何图像、视频或音频生成模型，也没有任何素材文件，画面由 three.js 算出，配乐和音效由代码合成。\n片中出现的公司名称和标志仅用于讽刺，故事发生在另一个世界，如有雷同，纯属巧合。",
+      "title_with_fable": "人类太慢了，所以这部短片是 AI 做的｜Claude Fable 5.2 纯代码制作",
+      "title_fable": "Claude Fable 5.2 做了一部黑色幽默短片：人类太慢了",
+      "title_short_fable": "Fable 5.2 做的短片：人类太慢了",
+      "description_fable": "这是 Claude Fable 5.2 做的短片。我只写了剧本，剩下的 2.3 万行代码、82 个镜头、配乐和音效，全是它写出来的：没有视频模型，没有任何素材。\n\n故事是这样的：AI 公司的国王们围坐一桌出牌，倒计时越来越短，屏幕上弹出一句话：\"太慢了？让 AI 替你出。\"\n\n另一个世界的故事，如有雷同，纯属巧合。请看到最后一秒。"
     },
     "en": {
       "title": "Humans Were Too Slow. So an AI Made This Film. | TOO SLOW (4K)",
       "title_short": "Humans were too slow, so an AI made this film.",
       "description": "The kings of the AI labs sit at one table and play their cards. The clock keeps getting shorter. Then every screen makes a polite offer: \"Too slow? Let AI play for you.\"\n\nA 2:42 dark comedy. Written by a human. Everything else, every frame and every note, was made in code by Claude Fable 5.2: no video model, no image model, no assets.\n\nSet in another world. Any resemblance to the real one is purely coincidental. Stay for the credits.",
       "description_short": "Humans were too slow, so an AI made this film.\nWritten by a human. Every frame and every note was coded by an AI. No video model.\nStay for the credits.",
-      "tags": ["AI", "ShortFilm", "Animation", "DarkComedy", "Claude", "Anthropic", "threejs", "CreativeCoding", "MadeWithCode", "TOOSLOW"],
-      "pinned_comment": "How it was made: I (a human) wrote the script. Directing, animation, score, sound and editing were done in code by Claude Fable 5.2: about 23,000 lines of JavaScript, 82 shots, 22 versions. No image, video or audio model was used and there are no asset files; the picture is rendered with three.js and the score is synthesized in code.\nCompany names and logos appear as satire. The story is set in another world; any resemblance to the real one is purely coincidental."
+      "tags": [
+        "AI",
+        "ShortFilm",
+        "Animation",
+        "DarkComedy",
+        "Claude",
+        "Fable52",
+        "Anthropic",
+        "threejs",
+        "CreativeCoding",
+        "MadeWithCode",
+        "TOOSLOW"
+      ],
+      "pinned_comment": "How it was made: I (a human) wrote the script. Directing, animation, score, sound and editing were done in code by Claude Fable 5.2: about 23,000 lines of JavaScript, 82 shots, 22 versions. No image, video or audio model was used and there are no asset files; the picture is rendered with three.js and the score is synthesized in code.\nCompany names and logos appear as satire. The story is set in another world; any resemblance to the real one is purely coincidental.",
+      "title_fable": "Claude Fable 5.2 Made This Short Film. I Only Wrote the Script. | TOO SLOW",
+      "description_fable": "Claude Fable 5.2 made this film. I only wrote the script; the other 23,000 lines, all 82 shots, the score and the sound are its code. No video model, no assets.\n\nThe story: the kings of the AI labs sit at one table and play their cards. The clock keeps getting shorter. Then every screen makes a polite offer: \"Too slow? Let AI play for you.\"\n\nSet in another world. Any resemblance to the real one is purely coincidental. Stay for the credits."
     }
   },
   "platforms": {
-    "bilibili": { "lang": "zh", "title": "recommended.zh.title", "description": "recommended.zh.description", "covers": ["16x9", "4x3"], "video": "video_4k", "notes": "简介不超过 250 字；勾选 AI 生成内容声明；分区选动画类的原创短片，以平台当前分区为准" },
-    "douyin": { "lang": "zh", "title": "一定要看到最后一秒：一部 AI 做的黑色幽默短片", "description": "recommended.zh.description_short", "covers": ["3x4", "9x16"], "video": "video_4k", "fallback_video": "video_1080p", "notes": "勾选 AI 生成声明；取前 5 个标签" },
-    "wechat_channels": { "lang": "zh", "title": "recommended.zh.title", "description": "recommended.zh.description_short", "covers": ["3x4"], "video": "video_4k", "fallback_video": "video_1080p", "notes": "声明含 AI 生成内容" },
-    "xiaohongshu": { "lang": "zh", "title": "recommended.zh.title_short", "description": "recommended.zh.description_short", "covers": ["3x4"], "video": "video_4k", "fallback_video": "video_1080p", "notes": "标题 20 字内；勾选 AI 生成声明" },
-    "zhihu": { "lang": "zh", "title": "我只写了剧本，剩下的全是 AI 做的｜黑色幽默短片 TOO SLOW", "description": "recommended.zh.description", "covers": ["16x9"], "video": "video_4k" },
-    "youtube": { "lang": "en", "title": "recommended.en.title", "description": "recommended.en.description", "covers": ["16x9"], "video": "video_4k", "notes": "Declare altered or synthetic content: yes (AI-generated). Not made for kids." },
-    "x": { "lang": "en", "title": "recommended.en.title_short", "description": "recommended.en.description_short", "covers": ["16x9"], "video": "video_1080p", "notes": "Check the account's video length limit (the film is 2:42); if over the limit, post stills with a link instead." }
+    "bilibili": {
+      "lang": "zh",
+      "title": "recommended.zh.title_with_fable",
+      "description": "recommended.zh.description",
+      "covers": [
+        "16x9",
+        "4x3"
+      ],
+      "video": "video_4k",
+      "notes": "简介不超过 250 字；勾选 AI 生成内容声明；分区选动画类的原创短片，以平台当前分区为准",
+      "cover_design": "A_standoff or C_fable"
+    },
+    "douyin": {
+      "lang": "zh",
+      "title": "一定要看到最后一秒：一部 AI 做的黑色幽默短片",
+      "description": "recommended.zh.description_short",
+      "covers": [
+        "3x4",
+        "9x16"
+      ],
+      "video": "video_4k",
+      "fallback_video": "video_1080p",
+      "notes": "勾选 AI 生成声明；取前 5 个标签",
+      "cover_design": "A_standoff"
+    },
+    "wechat_channels": {
+      "lang": "zh",
+      "title": "recommended.zh.title",
+      "description": "recommended.zh.description_short",
+      "covers": [
+        "3x4"
+      ],
+      "video": "video_4k",
+      "fallback_video": "video_1080p",
+      "notes": "声明含 AI 生成内容",
+      "cover_design": "A_standoff"
+    },
+    "xiaohongshu": {
+      "lang": "zh",
+      "title": "recommended.zh.title_short",
+      "description": "recommended.zh.description_short",
+      "covers": [
+        "3x4"
+      ],
+      "video": "video_4k",
+      "fallback_video": "video_1080p",
+      "notes": "标题 20 字内；勾选 AI 生成声明",
+      "cover_design": "A_standoff or C_fable"
+    },
+    "zhihu": {
+      "lang": "zh",
+      "title": "recommended.zh.title_with_fable",
+      "description": "recommended.zh.description_fable",
+      "covers": [
+        "16x9"
+      ],
+      "video": "video_4k",
+      "cover_design": "C_fable"
+    },
+    "youtube": {
+      "lang": "en",
+      "title": "recommended.en.title",
+      "description": "recommended.en.description",
+      "covers": [
+        "16x9"
+      ],
+      "video": "video_4k",
+      "notes": "Declare altered or synthetic content: yes (AI-generated). Not made for kids.",
+      "cover_design": "A_standoff or C_fable"
+    },
+    "x": {
+      "lang": "en",
+      "title": "recommended.en.title_fable",
+      "description": "recommended.en.description_short",
+      "covers": [
+        "16x9"
+      ],
+      "video": "video_1080p",
+      "notes": "Check the account's video length limit (the film is 2:42); if over the limit, post stills with a link instead.",
+      "cover_design": "C_fable"
+    }
   },
   "rules": {
     "must": [
@@ -63,7 +189,8 @@
       "发布后置顶 pinned_comment",
       "中文平台用中文一套，海外平台用英文一套",
       "只发到 MakerJackie 的账号；平台只绑定了其他品牌账号时先问作者",
-      "字数、大小、时长限制以平台当前页面为准"
+      "字数、大小、时长限制以平台当前页面为准",
+      "封面和标题要呼应：C_fable 配带 Fable 5.2 的标题，D_offer 配\"太慢了？让 AI 替你出牌\""
     ],
     "must_not": [
       "不要改动视频、片名和封面文字",
