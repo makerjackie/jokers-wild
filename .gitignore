@@ -7,3 +7,4 @@ private/
 *.mp4
 *.wav
 *.tgz
+/dev/
