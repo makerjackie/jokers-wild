@@ -1,25 +1,30 @@
 # TOO SLOW
 
-**A 2:42 animated short made entirely in code.** Every frame is rendered with three.js and every sound, the score included, is synthesized in JavaScript. There are no image, video or audio files in this repository and no generative image, video or audio model was used.
+English | [简体中文](README.zh-CN.md)
 
-**一部 2 分 42 秒、完全用代码做的动画短片。** 每一帧都由 three.js 渲染，配乐和音效全部用 JavaScript 合成。仓库里没有任何图片、视频或音频素材，也没有用任何图像、视频或音频生成模型。
+[![TOO SLOW: click to watch the film on X](docs/cover.jpg)](https://x.com/maker_jackie/status/2121167705160261634)
+
+**▶ [Watch the film on X](https://x.com/maker_jackie/status/2121167705160261634)**
+
+**A 2:42 animated short made entirely in code.** Every frame is rendered with three.js and every sound, the score included, is synthesized in JavaScript. The film uses no image, video or audio assets and no generative image, video or audio model.
 
 > The kings of the AI labs sit at one table and play model cards: the stronger card takes #1. The round timer keeps getting shorter. A polite offer appears on every screen: *"Too slow? Let AI play for you."* The ones who decline are eliminated for being too slow. The ones who accept find that CANCEL no longer answers.
->
-> AI 公司的国王们围坐一桌出模型牌，谁的牌更强谁就是第一。出牌倒计时越来越短，每块屏幕上弹出一句客气的话："太慢了？让 AI 替你出。"不肯托管的人因为太慢被淘汰；按了托管的人发现，取消键再也没有反应。
 
-A black satire set in another world. Company names and logos appear as satire; any resemblance to the real world is purely coincidental.
+A dark comedy set in another world. Written by a human (MakerJackie); directed, animated, scored and edited in code by Claude Fable 5.2, with Claude Opus 5.5 on parts of the work. Company names and logos appear as satire; any resemblance to the real world is purely coincidental.
 
-## Watch / 观看
+## Watch
 
-```bash
-npm install
-npm run build        # dist/jokers_wild.html
-```
+- **On X**: [x.com/maker_jackie](https://x.com/maker_jackie/status/2121167705160261634)
+- **In your browser, rendered live from this code**:
 
-Open `dist/jokers_wild.html` in Chrome or Edge and press PLAY. Space pauses, ← → seek, F is fullscreen, `?t=90` starts at a time.
+  ```bash
+  npm install
+  npm run build        # dist/jokers_wild.html
+  ```
 
-## Render the final cut / 渲染成片
+  Open `dist/jokers_wild.html` in Chrome or Edge and press PLAY. Space pauses, ← → seek, F is fullscreen, `?t=90` starts at a time.
+
+## Render the final cut
 
 Needs Node 20+, ffmpeg on the PATH and Chrome (set `CHROME=/path/to/chrome` if it is not found).
 
@@ -31,13 +36,13 @@ node tools/final.mjs --only 1080 # the 1080p alone (about five minutes)
 
 Every frame is a pure function of time, so any frame can be rendered alone and the film can be rendered again at any size. The score is rendered offline from the same event list the picture uses.
 
-## Numbers / 数据
+## Numbers
 
 - 82 shots, 3,895 frames at 24 fps, 3840×2160
 - about 23,000 lines of JavaScript in `src/`
-- written by a human (MakerJackie); directed, animated, scored and edited by Claude
+- 7 days and 22 versions from the first script to the final cut
 
-## Layout / 结构
+## Layout
 
 | Path | What it is |
 |---|---|
@@ -47,11 +52,12 @@ Every frame is a pure function of time, so any frame can be rendered alone and t
 | `src/screens.js`, `src/cards.js`, `src/kings.js`, `src/leaderboard.js` | the kings' screens, the cards, the kings, the #1 board |
 | `src/sound-events.js`, `src/audio*.js` | every sound as data from the same story; the score and the mix |
 | `tools/` | build, stills (`snap`), probes, the frame renderer, the audio renderer, `final.mjs` |
+| `tools/covers.mjs`, `tools/kit.py`, `docs/publish/` | the covers (composed from stills of the film), titles, descriptions and the publishing kit |
 | `archive/` | earlier versions of the film (v1 to v3), kept for reference |
 
 Other files under `docs/` describe earlier versions of the film and are kept as history.
 
-## Tools / 工具
+## Tools
 
 ```bash
 npm run serve                    # http://localhost:5207
