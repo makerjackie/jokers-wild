@@ -1,7 +1,7 @@
 {
   "name": "jokers-wild",
   "version": "0.1.0",
-  "description": "王炸 / JOKERS WILD: a pure-code animated short about the AI arms race. three.js rendering, synthesized score, one offline HTML file.",
+  "description": "TOO SLOW: a pure-code animated short, a black satire about the AI race. three.js rendering, synthesized score, one offline HTML file.",
   "author": "MakerJackie",
   "license": "MIT",
   "type": "module",
@@ -15,6 +15,7 @@
     "contact": "node tools/contact.mjs",
     "audio": "node tools/render-audio.mjs",
     "render": "node tools/render.mjs",
+    "final": "node tools/final.mjs",
     "pops": "node tools/pops.mjs",
     "perf": "node tools/perf.mjs",
     "shots": "python -X utf8 tools/shotlist.py"

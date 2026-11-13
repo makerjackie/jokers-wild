@@ -27,7 +27,7 @@ export function cueTable() {
   for (const s of SHOTS) { const l = out[out.length - 1]; if (l && l.id === s.cue) l.t1 = s.t1; else out.push({ id: s.cue, name: CUE_NAME[s.cue] ?? s.cue, t0: s.t0, t1: s.t1 }); }
   return out;
 }
-export const LV = { lazy: 1, warm: 1, race: 1, fear: 1, ai: 1, organ: 1, box: 1 };
+export const LV = { lazy: 1, warm: 1, race: 1, fear: 1, ai: 1, organ: 1, box: 1.7 };   // (v21) the box +4.6 dB: it was 15 dB under the credit ticks that follow it
 const NN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'], nn = (m) => NN[((Math.round(m) % 12) + 12) % 12];
 
 // THE THEME: scale steps from the tonic, eight beats; the bass on each beat and the off-beat chord, per half
@@ -35,6 +35,8 @@ const NN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'], nn
 export const THEME = { min: [0, 2, 3, 0, 2, -1, 0, -5], maj: [0, 2, 4, 0, 2, -1, 0, -5], void: [0, 2, 3, 0, 2, -1, 0, -5] };
 const OOM = [[0, -5, 0, -5], [-5, -10, -5, -10]];
 const PAH = { min: [[3, 7, 12], [-1, 2, 7]], maj: [[4, 7, 12], [-1, 2, 7]], void: [[7, 12, 19], [-5, 2, 7]] };
+// (v21) the level of the pedal between R4 and R5
+const BRIDGE = 0.13;
 // R9: the black before the music box comes in under the title (audio.js gates it to exact zero)
 export const TITLE_HOLD = 1.0;
 
@@ -267,7 +269,8 @@ export const SCORE = {
     for (let t = C.stuck + 0.3, i = 0; t < C.hint + 0.3; t += 0.78, i++) { k.TIMP(t, 38, 0.45, 0.6, { gain: 0.25 }); k.TIMP(t + 0.24, 38, 0.3, 0.5, { gain: 0.2 }); }
     k.ST(C.stuck + 0.2, C.hints - C.stuck, [38, 50], 0.5, { n: 4, att: 0.8, rel: 0.5, gain: 0.04, bright: 2.4, maxCut: 800, swell: (u) => 1 - 0.6 * u });
     const E = X.events, tE = C.auto - 0.05, B = gridFrom(slapTimes(E, C.hints, tE, 0.6), C.hints + 0.1, tE, { pMin: 0.25, pMax: 0.5, win: 1.5 });
-    march(k, B, { tonic: 50, trAt: (b) => b, lay: (t) => ({ pzMel: 1, pzBass: 1, pzPah: 0.8, hnMel: 0.5 * smooth((t - C.hints) / 2), snare: 0.6, bd: 0.6, tuba: 0.6 }), vel: () => 0.8 });
+    // (v21) it stays in D minor (it used to climb a semitone and be cut there, a tritone from R5's pedal)
+    march(k, B, { tonic: 50, trAt: () => 0, lay: (t) => ({ pzMel: 1, pzBass: 1, pzPah: 0.8, hnMel: 0.5 * smooth((t - C.hints) / 2), snare: 0.6, bd: 0.6, tuba: 0.6 }), vel: () => 0.8 });
     cue(C.stuck, `R4: a heartbeat on D; 4-05 the theme light on ${B.length} beats (the dings and slaps)`);
     return [];
   },
@@ -299,7 +302,9 @@ export const SCORE = {
     const B0 = [];
     for (let t = t0; t < tTO - 0.22; t += Math.max(0.2, Math.exp(kk * (t - t0)))) B0.push({ t, slap: false });
     const tFr = Math.max(t0 + 1, tTO - 1.6), u0 = (t) => clamp((t - t0) / Math.max(0.5, tTO - t0));
-    k.ST(C.auto + 0.2, t0 - C.auto + 0.3, [57, 64], 0.5, { n: 4, att: 0.4, rel: 0.3, gain: 0.04, bright: 2.5, maxCut: 1500 });
+    // (v21) the bridge from R4: the dominant held (A, with its fifth), growing into the first beat of the major
+    k.ST(C.auto - 0.08, t0 - C.auto + 0.4, [45, 57, 64], 0.6, { n: 4, att: 0.25, rel: 0.3, gain: BRIDGE, bright: 2.5, maxCut: 1500, swell: (u) => 0.55 + 0.45 * u });
+    k.BR('horn', C.auto + 0.1, t0 - C.auto - 0.12, 57, 0.5, { att: 0.3, rel: 0.05, gain: BRIDGE * 0.6, swell: (u) => 0.5 + 0.5 * u });
     march(k, B0, { tonic: T0, mode: 'maj', trAt: (b) => Math.max(0, b - 1), bars: barsOf(B0, 0.3).bars,
       lay: (t) => { const u = u0(t), m = 1 - 0.5 * u; return { tuba: m, pzBass: 0.7, pzPah: 0.8 * m, hnMel: 0.9 * m, trPah: (0.3 + 0.35 * u) * m, tpMel: 0.3 * u, stMel: 0.3 + 0.15 * u, snare: 0.2 + 0.3 * u, bd: 0.4 + 0.2 * u, timp: 0.35 * u, trem: 0.4 * u }; },
       vel: (t) => 0.76 + 0.1 * u0(t) });
@@ -352,8 +357,18 @@ export const SCORE = {
     }
     for (const d of drags) chairGliss(k, d.t + 0.1, Math.max(0.8, d.dur || 1.2), 50, isUS(d.who) ? 1 : -1);
     // ---- the empty places: nothing; then the laughs pick the theme back up
-    [0, 0.165, 0.33].forEach((x, i) => k.PZ(tL + x, [57, 54, 50][i] + 12, 0.7, { n: 2, gain: 0.16, dur: 0.15, pan: 0.15 }));
-    k.BR('tuba', tL + 0.55, Math.max(0.3, C.allAuto - tL - 0.58), 45, 0.55, { att: 0.15, rel: 0.05, gain: 0.2, scoop: 0.3 });
+    [0, 0.165, 0.33].forEach((x, i) => k.PZ(tL + x, [[57, 54, 50][i] + 12, [57, 54, 50][i] + 24], 0.8, { n: 3, gain: 0.3, dur: 0.15, pan: 0.15 }));
+    const dTu = Math.max(0.3, C.allAuto - tL - 0.58), tUp = C.allAuto - Math.min(1.0, dTu), qU = 0.24;
+    k.BR('tuba', tL + 0.55, dTu, 45, 0.6, { att: 0.15, rel: 0.05, gain: 0.22, scoop: 0.3, swell: (u) => 0.6 + 0.4 * u * u });
+    // (v21) the laugh runs into the flock (it was a soft note, then the tutti 16 dB louder on the cut): a roll on A growing
+    // under the tuba, and the horns' three steps up to the D (A B C#)
+    for (let t = tUp; t < C.allAuto - 0.03; t += 0.06) { const c = (t - tUp) / (C.allAuto - tUp); k.TIMP(t, 33, 0.25 + 0.6 * c, 0.4, { gain: 0.32 }); k.SNARE(t + 0.03, 0.12 + 0.5 * c * c, { gain: 0.4, pan: 0.12 }); }
+    [57, 59, 61].forEach((m, i) => {
+      const t = C.allAuto - (3 - i) * qU, v = 0.72 + 0.08 * i;
+      k.BR('horn', t, qU * 0.8, m, v, { accent: 1, att: 0.006, rel: 0.05, gain: 0.11 });
+      k.BR('trombone', t, qU * 0.8, m - 12, v, { n: 2, accent: 1, att: 0.006, rel: 0.05, gain: 0.06 });
+      k.PZ(t, m + 12, 0.8, { n: 3, gain: 0.2, dur: qU * 0.8, pan: 0.2 });
+    });
     // ---- the flock: the theme tutti on its grid, climbing over the drones; the third draining out at the mountain
     const tE = C.red - 0.04, B2 = gridFrom(slapTimes(E, C.allAuto - 0.2, tE, 0.6), C.allAuto, tE, { pMin: 0.2, pMax: 0.4, win: 1.5, acc: 1 });
     const bar2 = barsOf(B2, 0.3), iM = B2.findIndex((b) => b.t >= C.mountain), nA = iM < 0 ? B2.length : iM, tr = (b) => Math.min(6, b);

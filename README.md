@@ -1,55 +1,64 @@
-# 王炸 · JOKERS WILD
+# TOO SLOW
 
-![JOKERS WILD](docs/cover.jpg)
+**A 2:42 animated short made entirely in code.** Every frame is rendered with three.js and every sound, the score included, is synthesized in JavaScript. There are no image, video or audio files in this repository and no generative image, video or audio model was used.
 
-**A 3-minute animated short made 100% in code.** No image models, no video models, no audio files: every frame is rendered by three.js and the score is synthesized in JavaScript. The whole film is one HTML file that plays offline.
+**一部 2 分 42 秒、完全用代码做的动画短片。** 每一帧都由 three.js 渲染，配乐和音效全部用 JavaScript 合成。仓库里没有任何图片、视频或音频素材，也没有用任何图像、视频或音频生成模型。
 
-**一部 100% 用代码做的 3 分钟动画短片。** 没有图像模型、视频模型，也没有音频文件：每一帧都由 three.js 渲染，配乐和音效全部用 JavaScript 合成。整部片子是一个 HTML，离线双击就能播。
-
-> Two rows of AI kings, American and Chinese, keep slamming down ever-bigger model cards until they switch the game to auto-play. The auto-play smashes open the glass cases each side kept locked, and pairs the two jokers into the one hand nobody can beat.
+> The kings of the AI labs sit at one table and play model cards: the stronger card takes #1. The round timer keeps getting shorter. A polite offer appears on every screen: *"Too slow? Let AI play for you."* The ones who decline are eliminated for being too slow. The ones who accept find that CANCEL no longer answers.
 >
-> 中美两排 AI 国王在一张地图桌上轮流甩出更大的模型牌，越打越快，终于按下了"托管"。托管替他们砸开两边各自锁着的玻璃柜，把两张王凑成了一对：王炸。坐上王座的是牌。
+> AI 公司的国王们围坐一桌出模型牌，谁的牌更强谁就是第一。出牌倒计时越来越短，每块屏幕上弹出一句客气的话："太慢了？让 AI 替你出。"不肯托管的人因为太慢被淘汰；按了托管的人发现，取消键再也没有反应。
 
-A black satire about the AI arms race. Every company at the table is treated the same, including the one whose model made this film. Every card is a real model in its real release order.
-一部关于 AI 军备竞赛的黑色讽刺。桌上每家公司待遇一样，包括做这部片子的模型所属的那家。每张牌都是真实的模型，按真实的发布顺序出。
+A black satire set in another world. Company names and logos appear as satire; any resemblance to the real world is purely coincidental.
 
 ## Watch / 观看
 
-- **Play it**: open `dist/jokers_wild.html` in Chrome / Edge / Safari and press ▶ PLAY. Space pauses, ← → seek, F fullscreen, `?scale=2` supersamples, `?t=150` starts at a time.
-- **Video**: 1080p MP4 in the Releases.
+```bash
+npm install
+npm run build        # dist/jokers_wild.html
+```
 
-## Numbers / 数据
+Open `dist/jokers_wild.html` in Chrome or Edge and press PLAY. Space pauses, ← → seek, F is fullscreen, `?t=90` starts at a time.
 
-- 151 shots, 4,824 frames at 24 fps, 1080p, 3:21
-- ~17,100 lines of code in 66 source files
-- 6 agents: a director agent (script, every shot, cards, engine, integration) and five departments working in parallel: set, props, kings, the card king, and score & sound
+## Render the final cut / 渲染成片
 
-## How it was made / 怎么做的
-
-- [docs/SCRIPT.md](docs/SCRIPT.md): the script (中文): beats, the real events behind every gag, music cues
-- [docs/script/SHOTLIST.md](docs/script/SHOTLIST.md): every shot with timecodes (generated from `docs/script/shots.txt`)
-- [docs/PRODUCTION.md](docs/PRODUCTION.md) and [docs/INTERFACES.md](docs/INTERFACES.md): the contracts that let six agents build in parallel
-- [docs/SOUND.md](docs/SOUND.md): the score and the sound design
-- [docs/PLAYBOOK.md](docs/PLAYBOOK.md): what was new this time and what broke (中文复盘)
-- [docs/PROMPT.md](docs/PROMPT.md): **a prompt you can give Claude Code to make your own short**
-
-In one paragraph: every frame is a pure function of time. The director (`src/dir/`) computes the state of every module from the shot list; thrown cards, the scoreboard's history and every sound event are derived from the same plans, so picture and sound cannot drift. The look is a noir post pipeline (Kuwahara brush on the background, ink by material id, split-toned monochrome whose shadows take each camp's colour, a volumetric lamp beam, bloom, grain); only the cards keep their colour. When a king's hand or gaze jumps to a new action, the film re-runs the director a few sub-frames back and blends the difference away (inertialization), staying deterministic.
-
-## Build / 构建
+Needs Node 20+, ffmpeg on the PATH and Chrome (set `CHROME=/path/to/chrome` if it is not found).
 
 ```bash
 npm install
-npm run build                 # dist/jokers_wild.html
-npm run serve                 # http://localhost:5207
-npm run snap -- 160 175       # stills at film times -> out/snaps
-node tools/contact.mjs        # one labelled frame per shot
-npm run audio                 # out/score.wav
-npm run render                # dist/jokers_wild.mp4 (needs ffmpeg and out/score.wav)
-npm run pops                  # find frames where something suddenly jumps
-npm run shots                 # regenerate the shot list after editing docs/script/shots.txt
+npm run final                    # out/final: 4K master, a lighter 4K, 1080p (about half an hour on a desktop GPU)
+node tools/final.mjs --only 1080 # the 1080p alone (about five minutes)
 ```
 
-Benches for each module: `dist/jokers_wild.html?bench=kings` (also `set`, `props`, `cards`, `cardking`).
+Every frame is a pure function of time, so any frame can be rendered alone and the film can be rendered again at any size. The score is rendered offline from the same event list the picture uses.
+
+## Numbers / 数据
+
+- 64 shots, 3,895 frames at 24 fps, 3840×2160
+- about 23,000 lines of JavaScript in `src/`
+- written by a human (MakerJackie); directed, animated, scored and edited by Claude
+
+## Layout / 结构
+
+| Path | What it is |
+|---|---|
+| `docs/script/shots.txt` | the shot table, the single source of timing (`npm run shots` regenerates `src/shots-data.js`) |
+| `src/dir/story.js` | the story as data: every card played, every press, every elimination |
+| `src/dir/reel.js`, `src/dir/cams.js` | the state of the film at any time; one camera function per shot |
+| `src/screens.js`, `src/cards.js`, `src/kings.js`, `src/leaderboard.js` | the kings' screens, the cards, the kings, the #1 board |
+| `src/sound-events.js`, `src/audio*.js` | every sound as data from the same story; the score and the mix |
+| `tools/` | build, stills (`snap`), probes, the frame renderer, the audio renderer, `final.mjs` |
+| `archive/` | earlier versions of the film (v1 to v3), kept for reference |
+
+Other files under `docs/` describe earlier versions of the film and are kept as history.
+
+## Tools / 工具
+
+```bash
+npm run serve                    # http://localhost:5207
+npm run snap -- 60 75.5          # stills at film times -> out/snaps
+npm run audio                    # out/score.wav, with a loudness report and a click scan
+npm run shots                    # after editing docs/script/shots.txt (needs Python)
+```
 
 ## License
 

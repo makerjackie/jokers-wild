@@ -283,7 +283,7 @@ function paintFuture(c, x0, y0, id, name) {
   c.restore();
 }
 // the card the eye deals: gold, a big #1
-function paintAiAuto(c, x0, y0) {
+function paintAiAuto(c, x0, y0, dot = true) {
   c.save(); c.translate(x0, y0);
   const g = c.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, '#f7dc8a'); g.addColorStop(0.5, '#c49433'); g.addColorStop(1, '#f3d477');
   c.fillStyle = '#16120c'; c.fillRect(0, 0, CW, CH);
@@ -295,8 +295,24 @@ function paintAiAuto(c, x0, y0) {
   c.font = `900 118px ${SANS}`; c.fillText('AI', CW / 2, CH * 0.42);
   c.fillRect(CW / 2 - 70, CH * 0.585, 140, 3);
   c.font = `900 31px ${SANS}`; c.fillText('AUTOPILOT', CW / 2, CH * 0.68, CW - 64);
-  c.font = `900 19px ${SANS}`; c.letterSpacing = '4px'; c.fillText('● ON', CW / 2 + 2, CH * 0.815); c.letterSpacing = '0px';
+  c.font = `900 19px ${SANS}`; c.letterSpacing = '4px';
+  // (v21) where the light of '● ON' is: from the text's left edge to the gap after the dot (card pixels)
+  const wAll = c.measureText('● ON').width, wDot = c.measureText('●').width, xL = CW / 2 + 2 - wAll / 2, xR = xL + wDot + 3;
+  if (!dot) { c.save(); c.beginPath(); c.rect(xR, 0, CW, CH); c.clip(); }
+  c.fillText('● ON', CW / 2 + 2, CH * 0.815);
+  if (!dot) c.restore();
+  c.letterSpacing = '0px';
   c.restore();
+  return [xL - 4, xR];
+}
+// (v21) the last card of the film as two pictures at `s` times the atlas cell (the cell is 256 px wide: at 4K the card
+// was drawn four times its size, soft): `off` is the card without the light of '● ON', `on` the card with it; dot = the
+// light's box as fractions of the card [x0, y0, x1, y1]
+export function aiAutoCard(s) {
+  let box = null;
+  const mk = (dot) => { const cv = document.createElement('canvas'); cv.width = Math.round(CW * s); cv.height = Math.round(CH * s); const c = cv.getContext('2d'); c.scale(cv.width / CW, cv.height / CH); box = paintAiAuto(c, 0, 0, dot); return cv; };
+  const on = mk(true), off = mk(false);
+  return { on, off, dot: [box[0] / CW, 0.775, box[1] / CW, 0.855] };
 }
 function paintNum1(c, x0, y0) {
   c.save(); c.translate(x0, y0);

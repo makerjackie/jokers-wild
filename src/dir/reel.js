@@ -675,7 +675,8 @@ export function base(t, world) {
     }
     if (t >= C.out && t < hit) tt.stamp = { k: (t - C.out) / 0.09, y: 0.5 + jolt };
     // the swat: nothing moves, then in two frames the card is on him: a white flash, a hard jolt
-    if (t > hit - 0.07) tt.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.5 + jolt, dx: 0, h: 0.72, cell: 'aiAuto', fast: 1, alpha: tt.alpha };
+    // (v21) it lies there long enough to read (9-03 = 5.0 s); the light of its '● ON' breathes: the autopilot is running
+    if (t > hit - 0.07) tt.slap = { u: clamp((t - (hit - 0.07)) / 0.07), y: 0.5 + jolt, dx: 0, h: 0.72, cell: 'aiAuto', fast: 1, alpha: tt.alpha, dot: t < hit + 0.5 ? 1 : 0.28 + 0.72 * (0.5 + 0.5 * Math.cos(((t - hit - 0.5) / 1.15) * 2 * Math.PI)) };
     if (t > hit && t < hit + 0.09) tt.flash = 1 - (t - hit) / 0.09;
   }
   return st;

@@ -71,7 +71,7 @@ export function soundEvents() {
   // ---- the rise, the eye, the deal, the last card (heard only in the black)
   E(S.RISE.t0, 'rise', { dur: S.RISE.t1 - S.RISE.t0 + 1.2 });
   E(S.RISE.t0 + 0.3, 'lampSpin', { dur: 4.5 });
-  for (const id of S.FINAL) { E(S.DEAL, 'screenDeal', { who: id }); E(CUES.smile + 0.5, 'smile', { who: id }); }
+  for (const id of S.FINAL) { E(S.DEAL, 'screenDeal', { who: id }); E(CUES.smile + 0.5, 'smile', { who: id }); E(S.REACH[id] + 0.9, 'screenTap', { who: id, gain: 0.7 }); }   // (v21) the touch of 8-03 is heard, like every other touch
   E(S.GIANT_END.t0, 'pressure', { dur: S.BLACK - S.GIANT_END.t0 });
   E(S.SLAM, 'endSlam');
   // (v11) the offer ("Too slow? Let AI play for you"): a sweet ding on each screen before he takes it

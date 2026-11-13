@@ -13,12 +13,13 @@ import { makeRollers } from './rollers.js';
 import { makeAnt } from './ant.js';
 import { makeMachines } from './machine.js';
 import { makeLeaderboard } from './leaderboard.js';
-import { CARD, cardAtlas } from './cards.js';
+import { CARD, cardAtlas, aiAutoCard } from './cards.js';
 import { CELL } from './cards-cells.js';
 import { KINGS, KING, SIDE_SIGN } from './layout.js';
 import { direct } from './director.js';
 import { shotAt } from './shots.js';
 import { smooth } from './util.js';
+let HI_CARD = null;   // (v21) the last card painted at its shown size (cards.js aiAutoCard)
 
 const LAMP_POW = G.uLampPow.value;
 const _pivot = new THREE.Vector3();
@@ -263,7 +264,15 @@ export function makeFilm({ scene, overlay, camera, engine }) {
         const cx = W / 2 + H * (k.dx ?? (k.flat ? 0.235 : 0.2)), cy = H * k.y + (1 - e) * (k.fast ? -H * 0.2 : -H * 0.75), sc = k.fast ? 1 + 2.4 * (1 - u) : 1 + 0.5 * (1 - e);
         c.save(); c.globalAlpha = k.alpha ?? 1; c.translate(cx, cy); c.rotate((k.flat ? Math.PI / 2 : 0) - 0.07 + (k.fast ? 0.12 : 0.3) * (1 - e)); c.scale(sc, sc);
         c.shadowColor = 'rgba(0,0,0,0.85)'; c.shadowBlur = H * 0.04; c.shadowOffsetY = H * 0.01 * (1 + 3 * (1 - e));
-        c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);
+        if (k.cell === 'aiAuto') {
+          // (v21) the last card, sharp at any size; the light of its '● ON' breathes while it lies there (k.dot)
+          const key = Math.round(ch);
+          if (!HI_CARD || HI_CARD.key !== key) HI_CARD = { key, ...aiAutoCard((ch / ACH) * 1.25) };
+          const hi = HI_CARD, [dx0, dy0, dx1, dy1] = hi.dot;
+          c.drawImage(hi.off, -cw / 2, -ch / 2, cw, ch);
+          c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0; c.globalAlpha = (k.alpha ?? 1) * (k.dot ?? 1);
+          c.drawImage(hi.on, dx0 * hi.on.width, dy0 * hi.on.height, (dx1 - dx0) * hi.on.width, (dy1 - dy0) * hi.on.height, -cw / 2 + dx0 * cw, -ch / 2 + dy0 * ch, (dx1 - dx0) * cw, (dy1 - dy0) * ch);
+        } else c.drawImage(img, ax, ay, ACW, ACH, -cw / 2, -ch / 2, cw, ch);
         c.restore();
       }
       if (tt.flash) { c.save(); c.globalAlpha = Math.min(1, tt.flash) * 0.85; c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.restore(); }
